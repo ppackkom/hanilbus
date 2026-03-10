@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한일운수 도로정보</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="한일운수">
+<meta name="theme-color" content="#f97316">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Bebas+Neue&display=swap');
+  :root {
+    --bg:#0d1117; --surface:#161b22; --surface2:#21262d; --border:#30363d;
+    --accent:#f97316; --green:#22c55e; --red:#ef4444; --yellow:#eab308;
+    --blue:#3b82f6; --purple:#a855f7; --text:#e6edf3; --text2:#8b949e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;padding-bottom:80px;}
+
+  header{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:42px;height:42px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
+  .logo-text{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;}
+  .logo-sub{font-size:11px;color:var(--text2);}
+  .header-right{display:flex;align-items:center;gap:8px;}
+  .live-badge{display:flex;align-items:center;gap:6px;background:rgba(239,68,68,0.15);border:1px solid var(--red);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--red);}
+  .live-dot{width:8px;height:8px;background:var(--red);border-radius:50%;animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .voice-toggle{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .voice-toggle.on{border-color:var(--green);background:rgba(34,197,94,0.15);color:var(--green);}
+  .voice-dot{width:8px;height:8px;border-radius:50%;background:var(--text2);}
+  .voice-toggle.on .voice-dot{background:var(--green);animation:pulse 1s infinite;}
+
+  /* ── 탭 (노선 + 자유게시판) ── */
+  .route-filter{padding:12px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);}
+  .route-filter::-webkit-scrollbar{display:none;}
+  .route-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .route-btn.active{background:var(--accent);border-color:var(--accent);color:white;}
+  /* 자유게시판 탭은 보라색 */
+  .route-btn.free-tab{border-color:var(--purple);color:var(--purple);}
+  .route-btn.free-tab.active{background:var(--purple);border-color:var(--purple);color:white;}
+
+  .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .stat-item{background:var(--surface);padding:12px;text-align:center;}
+  .stat-num{font-size:24px;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:12px;color:var(--text2);margin-top:2px;}
+
+  .voice-banner{display:flex;align-items:center;gap:10px;padding:11px 16px;background:rgba(34,197,94,0.1);border-bottom:1px solid rgba(34,197,94,0.25);}
+  .voice-banner.hidden{display:none;}
+  .voice-banner-text{flex:1;font-size:13px;color:var(--green);font-weight:500;}
+  .voice-banner-text strong{display:block;font-size:14px;margin-bottom:1px;}
+  .voice-banner-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:0 4px;}
+
+  .feed{padding:12px 16px;display:flex;flex-direction:column;gap:12px;}
+
+  /* ── 도로정보 카드 ── */
+  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;flex-wrap:wrap;}
+  .route-badge{background:var(--accent);color:white;font-size:16px;font-weight:900;padding:5px 13px;border-radius:8px;min-width:56px;text-align:center;}
+  .type-badge{padding:5px 12px;border-radius:20px;font-size:14px;font-weight:700;}
+  .type-accident{background:rgba(239,68,68,0.15);color:var(--red);}
+  .type-slow{background:rgba(234,179,8,0.15);color:var(--yellow);}
+  .type-clear{background:rgba(34,197,94,0.15);color:var(--green);}
+  .type-construction{background:rgba(59,130,246,0.15);color:var(--blue);}
+  .post-time{margin-left:auto;font-size:16px;font-weight:900;color:#ff2222;}
+  .card-body{padding:0 16px 14px;}
+  .post-location{font-size:17px;font-weight:900;color:#fb923c;margin-bottom:8px;line-height:1.5;}
+  .post-message{font-size:16px;line-height:1.7;color:var(--text);font-weight:500;}
+  .post-image{width:100%;border-radius:8px;margin-top:10px;max-height:220px;object-fit:cover;}
+  .status-update-area{padding:12px 16px 14px;border-top:1px dashed var(--border);}
+  .status-update-label{font-size:12px;color:var(--text2);font-weight:700;margin-bottom:9px;}
+  .status-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .status-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+  .status-btn.voted{border-color:var(--green);color:var(--green);background:rgba(34,197,94,0.15);}
+  .status-count{background:rgba(255,255,255,0.1);border-radius:10px;padding:2px 7px;font-size:13px;}
+  .card-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2);}
+  .like-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;padding:0;}
+  .like-btn.liked{color:var(--accent);}
+  .author-info{margin-left:auto;font-size:12px;color:var(--text2);}
+  .vote-result-area{border-top:1px solid var(--border);padding:10px 16px 12px;background:var(--surface2);border-radius:0 0 14px 14px;}
+  .vote-result-title{font-size:12px;color:var(--text2);font-weight:700;margin-bottom:8px;}
+  .vote-result-rows{display:flex;flex-direction:column;gap:6px;}
+  .vote-row{display:flex;align-items:center;gap:8px;}
+  .vote-row-badge{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;min-width:115px;}
+  .vote-row-badge.clear{color:var(--green);}
+  .vote-row-badge.smooth{color:var(--green);}
+  .vote-row-badge.improving{color:var(--yellow);}
+  .vote-row-badge.still{color:var(--red);}
+  .vote-bar-wrap{flex:1;height:9px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .vote-bar{height:100%;border-radius:4px;transition:width 0.4s ease;}
+  .vote-bar.clear,.vote-bar.smooth{background:var(--green);}
+  .vote-bar.improving{background:var(--yellow);}
+  .vote-bar.still{background:var(--red);}
+  .vote-cnt{font-size:13px;font-weight:700;color:var(--text2);min-width:30px;text-align:right;}
+  .vote-time{font-size:11px;color:var(--text2);margin-top:6px;text-align:right;}
+
+  /* ── 자유게시판 카드 ── */
+  .free-card{background:var(--surface);border:1.5px solid rgba(168,85,247,0.3);border-radius:14px;overflow:hidden;}
+  .free-card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;}
+  .free-badge{background:var(--purple);color:white;font-size:14px;font-weight:900;padding:4px 12px;border-radius:8px;}
+  .free-card-title{font-size:17px;font-weight:900;color:var(--text);flex:1;}
+  .free-card-time{font-size:14px;font-weight:700;color:var(--text2);}
+  .free-card-body{padding:0 16px 14px;}
+  .free-card-message{font-size:16px;line-height:1.7;color:var(--text);font-weight:500;}
+  .free-card-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2);}
+
+  .fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;background:var(--accent);border:none;border-radius:16px;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(249,115,22,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+  /* 자유게시판일 때 FAB 보라색 */
+  .fab.free{background:var(--purple);box-shadow:0 4px 20px rgba(168,85,247,0.4);}
+
+  /* ── 모달 (도로정보) ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 38px;width:100%;max-width:480px;border-top:2px solid var(--accent);max-height:90vh;overflow-y:auto;}
+  .modal.free-modal{border-top-color:var(--purple);}
+  .modal-title{font-size:20px;font-weight:900;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+  .close-btn{background:var(--surface2);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:17px;}
+  .form-group{margin-bottom:16px;}
+  .form-label{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
+  .form-input,.form-textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:16px;outline:none;}
+  .form-input:focus,.form-textarea:focus{border-color:var(--accent);}
+  .form-textarea{resize:none;height:100px;line-height:1.6;}
+  .form-textarea.free-focus:focus{border-color:var(--purple);}
+  .route-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .route-select-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:center;}
+  .route-select-btn.selected{background:var(--accent);border-color:var(--accent);color:white;}
+  .type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .type-select-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .type-select-btn.selected-accident{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red);}
+  .type-select-btn.selected-slow{background:rgba(234,179,8,0.2);border-color:var(--yellow);color:var(--yellow);}
+  .type-select-btn.selected-clear{background:rgba(34,197,94,0.2);border-color:var(--green);color:var(--green);}
+  .type-select-btn.selected-construction{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);}
+  .photo-upload{display:flex;align-items:center;gap:10px;padding:13px 15px;background:var(--surface2);border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;}
+  .photo-upload input{display:none;}
+  .photo-preview{width:54px;height:54px;object-fit:cover;border-radius:6px;display:none;}
+  .submit-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;cursor:pointer;margin-top:6px;}
+  .submit-btn.free-btn{background:var(--purple);}
+  .submit-btn:disabled{opacity:0.6;}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text2);}
+  .empty-state .icon{font-size:52px;margin-bottom:12px;}
+  .empty-state p{font-size:15px;}
+  .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--accent);color:white;padding:13px 22px;border-radius:25px;font-size:15px;font-weight:700;z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .date-divider{display:flex;align-items:center;gap:10px;margin:4px 0;}
+  .date-divider span{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;}
+  .date-divider::before,.date-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .pwa-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;align-items:center;justify-content:center;padding:20px;}
+  .pwa-modal-overlay.show{display:flex;}
+  .pwa-modal{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:360px;border:1px solid var(--accent);}
+  .pwa-modal-title{font-size:19px;font-weight:900;margin-bottom:6px;color:var(--accent);}
+  .pwa-modal-sub{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;}
+  .pwa-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}
+  .pwa-step-num{width:26px;height:26px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;flex-shrink:0;margin-top:1px;}
+  .pwa-step-text{font-size:14px;line-height:1.6;color:var(--text);}
+  .pwa-step-text strong{color:var(--accent);}
+  .pwa-modal-btns{display:flex;gap:8px;margin-top:20px;}
+  .pwa-confirm-btn{flex:1;padding:13px;background:var(--accent);border:none;border-radius:10px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+  .pwa-cancel-btn{padding:13px 18px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon" onclick="showPwaModal()" title="홈화면에 추가">🚌</div>
+    <div>
+      <div class="logo-text">한일운수 도로정보</div>
+      <div class="logo-sub">🏠 아이콘을 누르면 홈화면에 저장돼요</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">
+      <div class="voice-dot"></div>
+      <span id="voiceLabel">음성 OFF</span>
+    </button>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+</header>
+
+<div class="voice-banner hidden" id="voiceBanner">
+  <span style="font-size:24px">🔊</span>
+  <div class="voice-banner-text">
+    <strong>음성 알림이 켜져 있어요!</strong>
+    새 도로 정보가 올라오면 자동으로 읽어드려요
+  </div>
+  <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- 노선 + 자유게시판 탭 -->
+<div class="route-filter">
+  <button class="route-btn active" onclick="filterRoute('전체')">전체</button>
+  <button class="route-btn" onclick="filterRoute('204')">204번</button>
+  <button class="route-btn" onclick="filterRoute('609')">609번</button>
+  <button class="route-btn" onclick="filterRoute('894')">894번</button>
+  <button class="route-btn" onclick="filterRoute('937')">937번</button>
+  <button class="route-btn" onclick="filterRoute('달서6')">달서6번</button>
+  <button class="route-btn free-tab" onclick="filterRoute('자유')">💬 자유게시판</button>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat-item"><div class="stat-num" id="totalCount">0</div><div class="stat-label">오늘 총 알림</div></div>
+  <div class="stat-item"><div class="stat-num" style="color:var(--red)" id="accidentCount">0</div><div class="stat-label">사고/장애</div></div>
+  <div class="stat-item"><div class="stat-num" style="color:var(--yellow)" id="slowCount">0</div><div class="stat-label">정체 구간</div></div>
+</div>
+
+<div class="feed" id="feed">
+  <div class="empty-state"><div class="icon">🛣️</div><p>연결 중입니다...<br>잠시만 기다려 주세요.</p></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="fab" id="fab" onclick="openModal()">＋</button>
+
+<!-- 도로정보 작성 모달 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-title">
+      <span id="modalTitleText">🚨 도로 정보 올리기</span>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+
+    <!-- 도로정보 폼 -->
+    <div id="roadForm">
+      <div class="form-group">
+        <label class="form-label">노선 번호</label>
+        <div class="route-select-grid">
+          <button class="route-select-btn" onclick="selectRoute(this,'204')">204번</button>
+          <button class="route-select-btn" onclick="selectRoute(this,'609')">609번</button>
+          <button class="route-select-btn" onclick="selectRoute(this,'894')">894번</button>
+          <button class="route-select-btn" onclick="selectRoute(this,'937')">937번</button>
+          <button class="route-select-btn" onclick="selectRoute(this,'달서6')">달서6번</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상황 유형</label>
+        <div class="type-grid">
+          <button class="type-select-btn" onclick="selectType(this,'accident','🚨 사고')">🚨 사고</button>
+          <button class="type-select-btn" onclick="selectType(this,'slow','🐢 정체')">🐢 정체</button>
+          <button class="type-select-btn" onclick="selectType(this,'clear','✅ 소통원활')">✅ 소통원활</button>
+          <button class="type-select-btn" onclick="selectType(this,'construction','🚧 공사')">🚧 공사</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">구간 / 정류장</label>
+        <input class="form-input" id="locationInput" type="text" placeholder="예) 반월당역 ~ 동대구역">
+      </div>
+      <div class="form-group">
+        <label class="form-label">상세 내용</label>
+        <textarea class="form-textarea" id="messageInput" placeholder="예) 반월당역 앞 차량 접촉사고로 1차선 막힘. 우회 필요."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">사진 첨부 (선택)</label>
+        <label class="photo-upload" for="photoInput">
+          <span style="font-size:24px">📷</span>
+          <span style="font-size:14px;color:var(--text2)" id="photoLabel">사진을 선택하세요</span>
+          <img id="photoPreview" class="photo-preview">
+          <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(event)">
+        </label>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitPost()">📤 지금 올리기</button>
+    </div>
+
+    <!-- 자유게시판 폼 -->
+    <div id="freeForm" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">제목</label>
+        <input class="form-input" id="freeTitleInput" type="text" placeholder="예) 오늘 날씨 너무 좋네요 😊">
+      </div>
+      <div class="form-group">
+        <label class="form-label">내용</label>
+        <textarea class="form-textarea free-focus" id="freeMessageInput" placeholder="자유롭게 이야기를 나눠보세요!"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">사진 첨부 (선택)</label>
+        <label class="photo-upload" for="freePhotoInput">
+          <span style="font-size:24px">📷</span>
+          <span style="font-size:14px;color:var(--text2)" id="freePhotoLabel">사진을 선택하세요</span>
+          <img id="freePhotoPreview" class="photo-preview">
+          <input type="file" id="freePhotoInput" accept="image/*" onchange="previewFreePhoto(event)">
+        </label>
+      </div>
+      <button class="submit-btn free-btn" id="freeSubmitBtn" onclick="submitFreePost()">💬 게시글 올리기</button>
+    </div>
+  </div>
+</div>
+
+<div class="pwa-modal-overlay" id="pwaModalOverlay" onclick="closePwaModalOnOverlay(event)">
+  <div class="pwa-modal">
+    <div class="pwa-modal-title">📲 홈화면에 저장하기</div>
+    <div class="pwa-modal-sub">앱처럼 홈화면에서 바로 실행할 수 있어요!</div>
+    <div id="pwaAndroid">
+      <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">브라우저 오른쪽 상단 <strong>점 세 개 (⋮) 메뉴</strong>를 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text"><strong>"홈 화면에 추가"</strong> 또는 <strong>"앱 설치"</strong>를 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text"><strong>"추가"</strong> 버튼을 누르면 완료! 🎉</div></div>
+    </div>
+    <div id="pwaIos" style="display:none">
+      <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">Safari 하단 가운데 <strong>공유 버튼 (□↑)</strong>을 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text"><strong>"홈 화면에 추가"</strong>를 찾아서 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text">오른쪽 상단 <strong>"추가"</strong>를 누르면 완료! 🎉</div></div>
+    </div>
+    <div class="pwa-modal-btns">
+      <button class="pwa-confirm-btn" id="pwaInstallBtn" onclick="triggerPwaInstall()">✅ 바로 설치하기</button>
+      <button class="pwa-cancel-btn" onclick="closePwaModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+var firebaseConfig={
+  apiKey:"AIzaSyCKXI4AYBIrotyF3VHv6Gr0GP-p1ii4Bww",
+  authDomain:"hanilbus-760ae.firebaseapp.com",
+  projectId:"hanilbus-760ae",
+  storageBucket:"hanilbus-760ae.firebasestorage.app",
+  messagingSenderId:"454505545954",
+  appId:"1:454505545954:web:a1951147f2b4b34d019ebb"
+};
+var app; try{app=firebase.app();}catch(e){app=firebase.initializeApp(firebaseConfig);}
+var db=firebase.firestore();
+
+var posts=[],freePosts=[];
+var selectedRoute='',selectedType='',selectedTypeLabel='';
+var photoDataUrl=null,freePhotoDataUrl=null;
+var currentFilter='전체',isFirstLoad=true,knownIds={};
+var likedPosts={},myVotes={},voiceOn=false;
+try{likedPosts=JSON.parse(localStorage.getItem('likedPosts')||'{}');}catch(e){}
+try{myVotes=JSON.parse(localStorage.getItem('myVotes')||'{}');}catch(e){}
+try{voiceOn=localStorage.getItem('voiceOn')==='true';}catch(e){}
+
+var STATUS_INFO={
+  clear:{emoji:'✅',label:'소통원활',cls:'clear'},
+  smooth:{emoji:'🟢',label:'매우쾌적',cls:'smooth'},
+  improving:{emoji:'📉',label:'점점풀림',cls:'improving'},
+  still:{emoji:'🔴',label:'아직정체',cls:'still'}
+};
+var STATUS_ORDER=['clear','smooth','improving','still'];
+
+// 3일 자동 삭제
+function deleteOldPosts(){
+  var cutoff=new Date(Date.now()-(3*24*60*60*1000));
+  var ts=firebase.firestore.Timestamp.fromDate(cutoff);
+  db.collection('posts').where('timestamp','<',ts).get().then(function(snap){
+    if(snap.empty) return;
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).catch(function(){});
+  db.collection('freePosts').where('timestamp','<',ts).get().then(function(snap){
+    if(snap.empty) return;
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).catch(function(){});
+}
+
+// TTS
+function speak(text){
+  if(!voiceOn||!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var utter=new SpeechSynthesisUtterance(text);
+  utter.lang='ko-KR'; utter.rate=0.95; utter.pitch=1.0; utter.volume=1.0;
+  var voices=window.speechSynthesis.getVoices();
+  for(var i=0;i<voices.length;i++){
+    if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){utter.voice=voices[i];break;}
+  }
+  window.speechSynthesis.speak(utter);
+}
+function announceNewPost(p){
+  var typeText={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};
+  speak(p.route+'번 노선. '+p.location+'. '+(typeText[p.type]||'')+'. '+p.message);
+}
+function toggleVoice(){
+  if(!voiceOn){
+    var u=new SpeechSynthesisUtterance('음성 알림이 켜졌습니다');
+    u.lang='ko-KR'; u.volume=0.8; window.speechSynthesis.speak(u);
+    voiceOn=true; document.getElementById('voiceBanner').classList.remove('hidden');
+  } else {
+    window.speechSynthesis.cancel(); voiceOn=false;
+    document.getElementById('voiceBanner').classList.add('hidden');
+  }
+  try{localStorage.setItem('voiceOn',voiceOn);}catch(e){}
+  updateVoiceBtn();
+}
+function updateVoiceBtn(){
+  var btn=document.getElementById('voiceToggle'),lbl=document.getElementById('voiceLabel');
+  if(voiceOn){btn.classList.add('on');lbl.textContent='음성 ON';document.getElementById('voiceBanner').classList.remove('hidden');}
+  else{btn.classList.remove('on');lbl.textContent='음성 OFF';}
+}
+function playAlertSound(){
+  try{
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var o1=ctx.createOscillator(),g1=ctx.createGain();
+    o1.connect(g1);g1.connect(ctx.destination);
+    o1.frequency.value=880;o1.type='sine';
+    g1.gain.setValueAtTime(0.4,ctx.currentTime);
+    g1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
+    o1.start(ctx.currentTime);o1.stop(ctx.currentTime+0.3);
+    var o2=ctx.createOscillator(),g2=ctx.createGain();
+    o2.connect(g2);g2.connect(ctx.destination);
+    o2.frequency.value=1100;o2.type='sine';
+    g2.gain.setValueAtTime(0.4,ctx.currentTime+0.2);
+    g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    o2.start(ctx.currentTime+0.2);o2.stop(ctx.currentTime+0.5);
+  }catch(e){}
+}
+function playSuccessSound(){
+  try{
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var freqs=[523,659,784];
+    for(var i=0;i<freqs.length;i++){
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=freqs[i];o.type='sine';
+      var t=ctx.currentTime+i*0.15;
+      g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+      o.start(t);o.stop(t+0.3);
+    }
+  }catch(e){}
+}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3000);
+}
+function fmtTime(ts){
+  if(!ts) return '--:--';
+  var d=new Date(ts);
+  return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+}
+function fmtDate(ts){
+  if(!ts) return '';
+  var d=new Date(ts),today=new Date(),yest=new Date();
+  yest.setDate(today.getDate()-1);
+  if(d.toDateString()===today.toDateString()) return '오늘';
+  if(d.toDateString()===yest.toDateString()) return '어제';
+  return (d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+function timeAgo(ts){
+  if(!ts) return '방금 전';
+  var diff=Math.floor((Date.now()-ts)/1000);
+  if(diff<10) return '방금 전';
+  if(diff<60) return diff+'초 전';
+  var m=Math.floor(diff/60); if(m<60) return m+'분 전';
+  var h=Math.floor(m/60); if(h<24) return h+'시간 전';
+  return Math.floor(h/24)+'일 전';
+}
+
+// ── Firebase: 도로정보 ──────────────────────────
+db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
+  var newPosts=[];
+  snapshot.forEach(function(doc){
+    var data=doc.data(),ts=0;
+    try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+    newPosts.push({
+      id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',
+      location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,
+      photo:data.photo||null,
+      statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},
+      lastVoteTs:data.lastVoteTs||null,
+      myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]
+    });
+  });
+  if(!isFirstLoad){
+    for(var i=0;i<newPosts.length;i++){
+      if(!knownIds[newPosts[i].id]){
+        var np=newPosts[i];
+        playAlertSound(); vibrate(); showToast('🚨 새 도로 정보가 올라왔어요!');
+        if(voiceOn){ (function(p){setTimeout(function(){announceNewPost(p);},1500);})(np); }
+        break;
+      }
+    }
+  }
+  knownIds={};
+  for(var i=0;i<newPosts.length;i++) knownIds[newPosts[i].id]=true;
+  isFirstLoad=false; posts=newPosts;
+  if(currentFilter!=='자유') { renderFeed(); updateStats(); }
+},function(){});
+
+// ── Firebase: 자유게시판 ────────────────────────
+var freeKnownIds={}, freeFirstLoad=true;
+db.collection('freePosts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
+  var newFreePosts=[];
+  snapshot.forEach(function(doc){
+    var data=doc.data(),ts=0;
+    try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+    newFreePosts.push({
+      id:doc.id,title:data.title||'',message:data.message||'',
+      ts:ts,likes:data.likes||0,photo:data.photo||null,
+      liked:!!likedPosts['free_'+doc.id]
+    });
+  });
+  if(!freeFirstLoad){
+    for(var i=0;i<newFreePosts.length;i++){
+      if(!freeKnownIds[newFreePosts[i].id]){
+        showToast('💬 새 게시글이 올라왔어요!');
+        break;
+      }
+    }
+  }
+  freeKnownIds={};
+  for(var i=0;i<newFreePosts.length;i++) freeKnownIds[newFreePosts[i].id]=true;
+  freeFirstLoad=false; freePosts=newFreePosts;
+  if(currentFilter==='자유') renderFeed();
+},function(){});
+
+deleteOldPosts();
+
+// ── 렌더링 ─────────────────────────────────────
+function renderFeed(){
+  var feed=document.getElementById('feed');
+
+  // 자유게시판
+  if(currentFilter==='자유'){
+    if(freePosts.length===0){
+      feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.<br>첫 글을 올려주세요!</p></div>';
+      return;
+    }
+    var html='',lastDate='';
+    for(var i=0;i<freePosts.length;i++){
+      var p=freePosts[i];
+      var dl=fmtDate(p.ts);
+      if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
+      html+='<div class="free-card">'+
+        '<div class="free-card-header">'+
+          '<div class="free-badge">💬 자유</div>'+
+          '<div class="free-card-title">'+p.title+'</div>'+
+          '<div class="free-card-time">'+fmtTime(p.ts)+'</div>'+
+        '</div>'+
+        '<div class="free-card-body">'+
+          '<div class="free-card-message">'+p.message+'</div>'+
+          (p.photo?'<img src="'+p.photo+'" class="post-image">':'')+
+        '</div>'+
+        '<div class="free-card-footer">'+
+          '<button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button>'+
+          '<div class="author-info">'+timeAgo(p.ts)+'</div>'+
+        '</div>'+
+      '</div>';
+    }
+    feed.innerHTML=html;
+    return;
+  }
+
+  // 도로정보
+  var filtered=[];
+  for(var i=0;i<posts.length;i++){
+    if(currentFilter==='전체'||posts[i].route===currentFilter) filtered.push(posts[i]);
+  }
+  if(filtered.length===0){
+    feed.innerHTML='<div class="empty-state"><div class="icon">🛣️</div><p>이 노선의 정보가 없습니다.<br>첫 정보를 올려주세요!</p></div>';
+    return;
+  }
+  var html='',lastDate='';
+  for(var i=0;i<filtered.length;i++){
+    var p=filtered[i];
+    var dl=fmtDate(p.ts);
+    if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
+    var v=p.statusVotes||{clear:0,smooth:0,improving:0,still:0};
+    var tv=(v.clear||0)+(v.smooth||0)+(v.improving||0)+(v.still||0);
+    var btns='';
+    for(var b=0;b<STATUS_ORDER.length;b++){
+      var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0,voted=p.myVote===key;
+      btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+
+        si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+
+      '</button>';
+    }
+    var voteHtml='';
+    if(tv>0){
+      var rows='';
+      for(var b=0;b<STATUS_ORDER.length;b++){
+        var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0;
+        if(cnt===0) continue;
+        var pct=Math.round((cnt/tv)*100);
+        rows+='<div class="vote-row">'+
+          '<div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div>'+
+          '<div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div>'+
+          '<div class="vote-cnt">'+cnt+'명</div>'+
+        '</div>';
+      }
+      var vts=p.lastVoteTs?'🕐 마지막 응답: '+fmtTime(p.lastVoteTs)+' ('+timeAgo(p.lastVoteTs)+')':'';
+      voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div>'+
+        '<div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+
+      '</div>';
+    }
+    html+='<div class="post-card">'+
+      '<div class="card-header">'+
+        '<div class="route-badge">'+p.route+'번</div>'+
+        '<div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div>'+
+        '<div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div>'+
+      '</div>'+
+      '<div class="card-body">'+
+        '<div class="post-location">📍 '+p.location+'</div>'+
+        '<div class="post-message">'+p.message+'</div>'+
+        (p.photo?'<img src="'+p.photo+'" class="post-image">':'')+
+      '</div>'+
+      '<div class="status-update-area">'+
+        '<div class="status-update-label">🔄 현재 상황은 어떤가요?</div>'+
+        '<div class="status-btns">'+btns+'</div>'+
+      '</div>'+
+      '<div class="card-footer">'+
+        '<button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button>'+
+        '<div class="author-info">기사님 공유</div>'+
+      '</div>'+
+      voteHtml+
+    '</div>';
+  }
+  feed.innerHTML=html;
+}
+
+function updateStats(){
+  var acc=0,slow=0;
+  for(var i=0;i<posts.length;i++){
+    if(posts[i].type==='accident') acc++;
+    if(posts[i].type==='slow') slow++;
+  }
+  document.getElementById('totalCount').textContent=posts.length;
+  document.getElementById('accidentCount').textContent=acc;
+  document.getElementById('slowCount').textContent=slow;
+}
+
+// ── 탭 필터 ────────────────────────────────────
+function filterRoute(route){
+  currentFilter=route;
+  var btns=document.querySelectorAll('.route-btn');
+  for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
+  // 클릭한 버튼에 active 추가
+  for(var i=0;i<btns.length;i++){
+    var txt=btns[i].textContent.trim();
+    if(route==='전체'&&txt==='전체'){btns[i].classList.add('active');break;}
+    if(route==='자유'&&txt==='💬 자유게시판'){btns[i].classList.add('active');break;}
+    if(txt===route+'번'){btns[i].classList.add('active');break;}
+  }
+  // 자유게시판이면 FAB 보라색, 통계바 숨김
+  var fab=document.getElementById('fab');
+  var statsBar=document.getElementById('statsBar');
+  if(route==='자유'){
+    fab.classList.add('free');
+    statsBar.style.display='none';
+  } else {
+    fab.classList.remove('free');
+    statsBar.style.display='';
+    updateStats();
+  }
+  renderFeed();
+}
+
+// ── 모달 ───────────────────────────────────────
+function openModal(){
+  document.getElementById('modalOverlay').classList.add('show');
+  if(currentFilter==='자유'){
+    // 자유게시판 폼
+    document.getElementById('modalTitleText').textContent='💬 자유게시판 글쓰기';
+    document.getElementById('modalBox').classList.add('free-modal');
+    document.getElementById('roadForm').style.display='none';
+    document.getElementById('freeForm').style.display='block';
+    document.getElementById('freeTitleInput').value='';
+    document.getElementById('freeMessageInput').value='';
+    document.getElementById('freePhotoLabel').textContent='사진을 선택하세요';
+    document.getElementById('freePhotoPreview').style.display='none';
+    freePhotoDataUrl=null;
+  } else {
+    // 도로정보 폼
+    document.getElementById('modalTitleText').textContent='🚨 도로 정보 올리기';
+    document.getElementById('modalBox').classList.remove('free-modal');
+    document.getElementById('roadForm').style.display='block';
+    document.getElementById('freeForm').style.display='none';
+    selectedRoute='';selectedType='';selectedTypeLabel='';photoDataUrl=null;
+    document.getElementById('locationInput').value='';
+    document.getElementById('messageInput').value='';
+    document.getElementById('photoLabel').textContent='사진을 선택하세요';
+    document.getElementById('photoPreview').style.display='none';
+    var rb=document.querySelectorAll('.route-select-btn');
+    for(var i=0;i<rb.length;i++) rb[i].classList.remove('selected');
+    var tb=document.querySelectorAll('.type-select-btn');
+    for(var i=0;i<tb.length;i++) tb[i].className='type-select-btn';
+  }
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function closeOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+function selectRoute(btn,route){
+  var rb=document.querySelectorAll('.route-select-btn');
+  for(var i=0;i<rb.length;i++) rb[i].classList.remove('selected');
+  btn.classList.add('selected');selectedRoute=route;
+}
+function selectType(btn,type,label){
+  var tb=document.querySelectorAll('.type-select-btn');
+  for(var i=0;i<tb.length;i++) tb[i].className='type-select-btn';
+  btn.classList.add('selected-'+type);selectedType=type;selectedTypeLabel=label;
+}
+function previewPhoto(e){
+  var file=e.target.files[0];if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    photoDataUrl=ev.target.result;
+    document.getElementById('photoPreview').src=photoDataUrl;
+    document.getElementById('photoPreview').style.display='block';
+    document.getElementById('photoLabel').textContent=file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function previewFreePhoto(e){
+  var file=e.target.files[0];if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    freePhotoDataUrl=ev.target.result;
+    document.getElementById('freePhotoPreview').src=freePhotoDataUrl;
+    document.getElementById('freePhotoPreview').style.display='block';
+    document.getElementById('freePhotoLabel').textContent=file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── 도로정보 올리기 ────────────────────────────
+function submitPost(){
+  var loc=document.getElementById('locationInput').value.trim();
+  var msg=document.getElementById('messageInput').value.trim();
+  if(!selectedRoute){alert('노선 번호를 선택해주세요!');return;}
+  if(!selectedType){alert('상황 유형을 선택해주세요!');return;}
+  if(!loc){alert('구간/정류장을 입력해주세요!');return;}
+  if(!msg){alert('상세 내용을 입력해주세요!');return;}
+  var btn=document.getElementById('submitBtn');
+  btn.textContent='올리는 중...';btn.disabled=true;
+  db.collection('posts').add({
+    route:selectedRoute,type:selectedType,typeLabel:selectedTypeLabel,
+    location:loc,message:msg,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+    likes:0,photo:photoDataUrl,
+    statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null
+  }).then(function(){
+    playSuccessSound();closeModal();
+    showToast('✅ 도로 정보가 올라갔어요!');
+  }).catch(function(e){alert('저장 오류: '+e.message);})
+  .finally(function(){btn.textContent='📤 지금 올리기';btn.disabled=false;});
+}
+
+// ── 자유게시판 올리기 ──────────────────────────
+function submitFreePost(){
+  var title=document.getElementById('freeTitleInput').value.trim();
+  var msg=document.getElementById('freeMessageInput').value.trim();
+  if(!title){alert('제목을 입력해주세요!');return;}
+  if(!msg){alert('내용을 입력해주세요!');return;}
+  var btn=document.getElementById('freeSubmitBtn');
+  btn.textContent='올리는 중...';btn.disabled=true;
+  db.collection('freePosts').add({
+    title:title,message:msg,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+    likes:0,photo:freePhotoDataUrl
+  }).then(function(){
+    playSuccessSound();closeModal();
+    showToast('💬 게시글이 올라갔어요!');
+  }).catch(function(e){alert('저장 오류: '+e.message);})
+  .finally(function(){btn.textContent='💬 게시글 올리기';btn.disabled=false;});
+}
+
+// ── 좋아요 ─────────────────────────────────────
+function toggleLike(id){
+  var post=null;
+  for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
+  if(!post) return;
+  var likes=post.likes||0;
+  if(likedPosts[id]){delete likedPosts[id];likes=Math.max(0,likes-1);}
+  else{likedPosts[id]=true;likes++;}
+  try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}
+  db.collection('posts').doc(id).update({likes:likes});
+}
+function toggleFreeLike(id){
+  var post=null;
+  for(var i=0;i<freePosts.length;i++){if(freePosts[i].id===id){post=freePosts[i];break;}}
+  if(!post) return;
+  var likes=post.likes||0,key='free_'+id;
+  if(likedPosts[key]){delete likedPosts[key];likes=Math.max(0,likes-1);}
+  else{likedPosts[key]=true;likes++;}
+  try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}
+  db.collection('freePosts').doc(id).update({likes:likes});
+}
+
+// ── 현황 투표 ──────────────────────────────────
+function voteStatus(id,key){
+  var post=null;
+  for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
+  if(!post) return;
+  var v={clear:post.statusVotes.clear||0,smooth:post.statusVotes.smooth||0,improving:post.statusVotes.improving||0,still:post.statusVotes.still||0};
+  var prev=myVotes[id]||null;
+  if(prev===key){v[key]=Math.max(0,v[key]-1);delete myVotes[id];}
+  else{if(prev&&v[prev]!==undefined)v[prev]=Math.max(0,v[prev]-1);v[key]++;myVotes[id]=key;}
+  try{localStorage.setItem('myVotes',JSON.stringify(myVotes));}catch(e){}
+  db.collection('posts').doc(id).update({statusVotes:v,lastVoteTs:Date.now()});
+}
+
+// ── PWA ────────────────────────────────────────
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
+function showPwaModal(){
+  var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  document.getElementById('pwaAndroid').style.display=isIos?'none':'block';
+  document.getElementById('pwaIos').style.display=isIos?'block':'none';
+  document.getElementById('pwaInstallBtn').style.display=isIos?'none':'block';
+  document.getElementById('pwaModalOverlay').classList.add('show');
+}
+function closePwaModal(){document.getElementById('pwaModalOverlay').classList.remove('show');}
+function closePwaModalOnOverlay(e){if(e.target===document.getElementById('pwaModalOverlay'))closePwaModal();}
+function triggerPwaInstall(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(result){
+      if(result.outcome==='accepted')showToast('✅ 홈화면에 추가됐어요!');
+      deferredPrompt=null;closePwaModal();
+    });
+  }else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}
+}
+
+updateVoiceBtn();
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};
+}
+</script>
+</body>
+</html>
