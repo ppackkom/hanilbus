@@ -11,10 +11,10 @@
 <meta name="theme-color" content="#f97316">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Bebas+Neue&display=swap');
-  :root {
-    --bg:#0d1117; --surface:#161b22; --surface2:#21262d; --border:#30363d;
-    --accent:#f97316; --green:#22c55e; --red:#ef4444; --yellow:#eab308;
-    --blue:#3b82f6; --purple:#a855f7; --text:#e6edf3; --text2:#8b949e;
+  :root{
+    --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+    --accent:#f97316;--green:#22c55e;--red:#ef4444;--yellow:#eab308;
+    --blue:#3b82f6;--purple:#a855f7;--teal:#14b8a6;--text:#e6edf3;--text2:#8b949e;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;padding-bottom:80px;}
@@ -39,18 +39,19 @@
   .route-btn.active{background:var(--accent);border-color:var(--accent);color:white;}
   .route-btn.free-tab{border-color:var(--purple);color:var(--purple);}
   .route-btn.free-tab.active{background:var(--purple);border-color:var(--purple);color:white;}
+  .route-btn.relay-tab{border-color:var(--teal);color:var(--teal);}
+  .route-btn.relay-tab.active{background:var(--teal);border-color:var(--teal);color:white;}
 
   .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
   .stat-item{background:var(--surface);padding:12px;text-align:center;}
   .stat-num{font-size:24px;font-weight:900;color:var(--accent);}
   .stat-label{font-size:12px;color:var(--text2);margin-top:2px;}
 
-  /* ── 원터치 퀵제보 영역 ── */
   .quick-report{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
   .quick-report-label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
   .quick-btns{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}
   .quick-btns::-webkit-scrollbar{display:none;}
-  .quick-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;active:transform:scale(0.96);}
+  .quick-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;}
   .quick-btn:active{transform:scale(0.96);}
   .quick-btn.accident{background:rgba(239,68,68,0.15);color:var(--red);border:1.5px solid rgba(239,68,68,0.3);}
   .quick-btn.slow{background:rgba(234,179,8,0.15);color:var(--yellow);border:1.5px solid rgba(234,179,8,0.3);}
@@ -102,8 +103,6 @@
   .vote-bar.still{background:var(--red);}
   .vote-cnt{font-size:13px;font-weight:700;color:var(--text2);min-width:30px;text-align:right;}
   .vote-time{font-size:11px;color:var(--text2);margin-top:6px;text-align:right;}
-
-  /* 자유게시판 카드 */
   .free-card{background:var(--surface);border:1.5px solid rgba(168,85,247,0.3);border-radius:14px;overflow:hidden;}
   .free-card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;}
   .free-badge{background:var(--purple);color:white;font-size:14px;font-weight:900;padding:4px 12px;border-radius:8px;}
@@ -113,10 +112,83 @@
   .free-card-message{font-size:16px;line-height:1.7;color:var(--text);font-weight:500;}
   .free-card-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2);}
 
+  /* ── 교대 탭 ── */
+  .relay-wrap{padding:12px 16px;display:flex;flex-direction:column;gap:12px;}
+  .relay-header-card{background:linear-gradient(135deg,rgba(20,184,166,0.15),rgba(20,184,166,0.05));border:1.5px solid rgba(20,184,166,0.3);border-radius:14px;padding:16px;}
+  .relay-header-title{font-size:18px;font-weight:900;color:var(--teal);margin-bottom:4px;}
+  .relay-header-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+  .relay-route-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+  .relay-route-tab{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .relay-route-tab.active{background:var(--teal);border-color:var(--teal);color:white;}
+  .relay-num-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+
+  /* 순번 카드 — 상태별 */
+  .relay-num-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+  .relay-num-card:active{transform:scale(0.96);}
+  .relay-num-card.full{border-color:var(--red);background:rgba(239,68,68,0.06);cursor:not-allowed;opacity:0.7;}
+  .relay-num-card.has-driver{border-color:var(--teal);background:rgba(20,184,166,0.08);}
+  .relay-num-card.has-changer{border-color:var(--green);background:rgba(34,197,94,0.08);}
+  .relay-num-card.has-both{border-color:var(--yellow);background:rgba(234,179,8,0.08);}
+  .relay-num-num{font-size:20px;font-weight:900;color:var(--text);}
+  .relay-num-label{font-size:10px;color:var(--text2);margin-top:2px;}
+  .relay-num-status{font-size:10px;margin-top:5px;font-weight:700;}
+  .relay-num-status.driver{color:var(--teal);}
+  .relay-num-status.changer{color:var(--green);}
+  .relay-num-status.both{color:var(--yellow);}
+  .relay-num-status.full{color:var(--red);}
+  .relay-online-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;animation:pulse 1s infinite;}
+  .relay-online-dot.teal{background:var(--teal);}
+  .relay-online-dot.yellow{background:var(--yellow);}
+
+  /* 역할 선택 카드 */
+  .relay-room{display:none;flex-direction:column;gap:12px;}
+  .relay-room.show{display:flex;}
+  .relay-room-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1.5px solid rgba(20,184,166,0.3);border-radius:14px;}
+  .relay-room-title{font-size:17px;font-weight:900;color:var(--teal);}
+  .relay-room-sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5;}
+  .relay-back-btn{margin-left:auto;background:var(--surface2);border:none;color:var(--text2);padding:8px 14px;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;}
+
+  /* 역할 선택 버튼 */
+  .relay-role-select{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .relay-role-btn{padding:20px 12px;border-radius:14px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Noto Sans KR',sans-serif;cursor:pointer;text-align:center;transition:all 0.2s;position:relative;}
+  .relay-role-btn:active:not(:disabled){transform:scale(0.97);}
+  .relay-role-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .relay-role-btn.driver-btn{border-color:var(--teal);}
+  .relay-role-btn.driver-btn:not(:disabled):hover{background:rgba(20,184,166,0.15);}
+  .relay-role-btn.changer-btn{border-color:var(--green);}
+  .relay-role-btn.changer-btn:not(:disabled):hover{background:rgba(34,197,94,0.15);}
+  .relay-role-icon{font-size:32px;margin-bottom:8px;}
+  .relay-role-label{font-size:15px;font-weight:900;}
+  .relay-role-desc{font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5;}
+  .relay-role-full-badge{display:inline-block;margin-top:6px;padding:2px 8px;background:rgba(239,68,68,0.2);border:1px solid var(--red);border-radius:10px;font-size:10px;font-weight:700;color:var(--red);}
+  .relay-role-empty-badge{display:inline-block;margin-top:6px;padding:2px 8px;background:rgba(34,197,94,0.15);border:1px solid var(--green);border-radius:10px;font-size:10px;font-weight:700;color:var(--green);}
+
+  /* 활성화된 방 */
+  .relay-active-room{background:var(--surface);border:1.5px solid rgba(20,184,166,0.4);border-radius:14px;overflow:hidden;}
+  .relay-active-header{padding:14px 16px;background:rgba(20,184,166,0.1);border-bottom:1px solid rgba(20,184,166,0.2);display:flex;align-items:center;justify-content:space-between;}
+  .relay-active-title{font-size:15px;font-weight:900;color:var(--teal);}
+  .relay-active-badge{padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700;}
+  .relay-active-badge.driver{background:rgba(20,184,166,0.2);color:var(--teal);}
+  .relay-active-badge.changer{background:rgba(34,197,94,0.2);color:var(--green);}
+  #relayMap{width:100%;height:280px;background:#1a2332;}
+  .relay-info-bar{padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+  .relay-distance-row{display:flex;gap:8px;}
+  .relay-dist-badge{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;}
+  .relay-dist-badge.driver{background:rgba(20,184,166,0.15);color:var(--teal);border:1px solid rgba(20,184,166,0.3);}
+  .relay-dist-badge.changer{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+  .relay-eta{padding:12px 16px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:10px;font-size:15px;font-weight:700;color:var(--accent);text-align:center;}
+  .relay-member-status{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 14px;}
+  .relay-member-card{padding:10px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);}
+  .relay-member-card.online{border-color:var(--teal);}
+  .relay-member-card.online .relay-member-name{color:var(--teal);}
+  .relay-member-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+  .relay-member-loc{font-size:11px;color:var(--text2);}
+  .relay-leave-btn{margin:0 16px 16px;padding:13px;background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;color:var(--red);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:calc(100% - 32px);}
+
   .fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;background:var(--accent);border:none;border-radius:16px;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(249,115,22,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
   .fab.free{background:var(--purple);box-shadow:0 4px 20px rgba(168,85,247,0.4);}
+  .fab.relay-hide{display:none;}
 
-  /* 모달 */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;}
   .modal-overlay.show{display:flex;}
   .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 38px;width:100%;max-width:480px;border-top:2px solid var(--accent);max-height:90vh;overflow-y:auto;}
@@ -125,25 +197,19 @@
   .close-btn{background:var(--surface2);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:17px;}
   .form-group{margin-bottom:16px;}
   .form-label{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
-
-  /* 입력 필드 + 마이크/GPS 버튼 묶음 */
   .input-row{display:flex;gap:8px;align-items:stretch;}
   .input-row .form-input{flex:1;}
   .mic-btn{width:48px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
   .mic-btn.listening{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red);animation:pulse 0.8s infinite;}
-  .gps-btn{width:48px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .gps-btn{width:48px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .gps-btn.loading{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);}
-
   .form-input,.form-textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:16px;outline:none;}
   .form-input:focus,.form-textarea:focus{border-color:var(--accent);}
   .form-textarea{resize:none;height:100px;line-height:1.6;}
   .form-textarea.free-focus:focus{border-color:var(--purple);}
-
-  /* 음성 입력 상태 표시 */
   .voice-status{display:none;align-items:center;gap:8px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;margin-bottom:10px;font-size:13px;color:var(--red);font-weight:700;}
   .voice-status.show{display:flex;}
   .voice-status-dot{width:8px;height:8px;background:var(--red);border-radius:50%;animation:pulse 0.6s infinite;flex-shrink:0;}
-
   .route-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .route-select-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:center;}
   .route-select-btn.selected{background:var(--accent);border-color:var(--accent);color:white;}
@@ -159,8 +225,6 @@
   .submit-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;cursor:pointer;margin-top:6px;}
   .submit-btn.free-btn{background:var(--purple);}
   .submit-btn:disabled{opacity:0.6;}
-
-  /* 퀵제보 노선 선택 모달 */
   .quick-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:350;align-items:center;justify-content:center;padding:20px;}
   .quick-modal-overlay.show{display:flex;}
   .quick-modal{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:360px;}
@@ -170,7 +234,6 @@
   .quick-route-btn{padding:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:900;cursor:pointer;text-align:center;}
   .quick-route-btn:active{background:var(--accent);border-color:var(--accent);color:white;}
   .quick-cancel-btn{width:100%;padding:13px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;}
-
   .empty-state{text-align:center;padding:50px 20px;color:var(--text2);}
   .empty-state .icon{font-size:52px;margin-bottom:12px;}
   .empty-state p{font-size:15px;}
@@ -179,7 +242,6 @@
   .date-divider{display:flex;align-items:center;gap:10px;margin:4px 0;}
   .date-divider span{font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;}
   .date-divider::before,.date-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-
   .pwa-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;align-items:center;justify-content:center;padding:20px;}
   .pwa-modal-overlay.show{display:flex;}
   .pwa-modal{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:360px;border:1px solid var(--accent);}
@@ -198,7 +260,7 @@
 
 <header>
   <div class="logo">
-    <div class="logo-icon" onclick="showPwaModal()" title="홈화면에 추가">🚌</div>
+    <div class="logo-icon" onclick="showPwaModal()">🚌</div>
     <div>
       <div class="logo-text">한일운수 도로정보</div>
       <div class="logo-sub">🏠 아이콘을 누르면 홈화면에 저장돼요</div>
@@ -206,8 +268,7 @@
   </div>
   <div class="header-right">
     <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">
-      <div class="voice-dot"></div>
-      <span id="voiceLabel">음성 OFF</span>
+      <div class="voice-dot"></div><span id="voiceLabel">음성 OFF</span>
     </button>
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
   </div>
@@ -215,14 +276,10 @@
 
 <div class="voice-banner hidden" id="voiceBanner">
   <span style="font-size:24px">🔊</span>
-  <div class="voice-banner-text">
-    <strong>음성 알림이 켜져 있어요!</strong>
-    새 도로 정보가 올라오면 자동으로 읽어드려요
-  </div>
+  <div class="voice-banner-text"><strong>음성 알림이 켜져 있어요!</strong>새 도로 정보가 올라오면 자동으로 읽어드려요</div>
   <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
 </div>
 
-<!-- 노선 탭 -->
 <div class="route-filter">
   <button class="route-btn active" onclick="filterRoute('전체')">전체</button>
   <button class="route-btn" onclick="filterRoute('204')">204번</button>
@@ -230,12 +287,12 @@
   <button class="route-btn" onclick="filterRoute('894')">894번</button>
   <button class="route-btn" onclick="filterRoute('937')">937번</button>
   <button class="route-btn" onclick="filterRoute('달서6')">달서6번</button>
-  <button class="route-btn free-tab" onclick="filterRoute('자유')">💬 자유게시판</button>
+  <button class="route-btn free-tab" onclick="filterRoute('자유')">💬 자유</button>
+  <button class="route-btn relay-tab" onclick="filterRoute('교대')">🔄 교대</button>
 </div>
 
-<!-- 원터치 퀵제보 -->
 <div class="quick-report" id="quickReportArea">
-  <div class="quick-report-label">⚡ 원터치 퀵제보 — 버튼 하나로 즉시 올리기</div>
+  <div class="quick-report-label">⚡ 원터치 퀵제보</div>
   <div class="quick-btns">
     <button class="quick-btn accident" onclick="openQuickModal('accident','🚨 사고')">🚨 사고 발생</button>
     <button class="quick-btn slow" onclick="openQuickModal('slow','🐢 정체')">🐢 정체 중</button>
@@ -254,14 +311,85 @@
   <div class="empty-state"><div class="icon">🛣️</div><p>연결 중입니다...<br>잠시만 기다려 주세요.</p></div>
 </div>
 
+<!-- ── 교대 탭 ── -->
+<div id="relaySection" style="display:none;">
+  <div class="relay-wrap">
+    <div class="relay-header-card" id="relayHeaderCard">
+      <div class="relay-header-title">🔄 교대 위치공유</div>
+      <div class="relay-header-sub">순번을 선택하면 운전기사·교대기사 각 1명씩만 입장할 수 있어요. 두 사람의 실시간 위치가 공유됩니다.</div>
+    </div>
+    <div class="relay-route-tabs" id="relayRouteTabs">
+      <button class="relay-route-tab active" onclick="selectRelayRoute('609',this)">609번</button>
+      <button class="relay-route-tab" onclick="selectRelayRoute('204',this)">204번</button>
+      <button class="relay-route-tab" onclick="selectRelayRoute('937',this)">937번</button>
+      <button class="relay-route-tab" onclick="selectRelayRoute('894',this)">894번</button>
+      <button class="relay-route-tab" onclick="selectRelayRoute('달서6',this)">달서6번</button>
+    </div>
+    <div class="relay-num-grid" id="relayNumGrid"></div>
+
+    <!-- 방 내부 -->
+    <div class="relay-room" id="relayRoom">
+      <div class="relay-room-header">
+        <div>
+          <div class="relay-room-title" id="relayRoomTitle"></div>
+          <div class="relay-room-sub" id="relayRoomSub">역할을 선택해 주세요 (각 1명만 입장 가능)</div>
+        </div>
+        <button class="relay-back-btn" onclick="leaveRelayRoom()">← 뒤로</button>
+      </div>
+
+      <!-- ★ 역할 선택 — 2명 제한 적용 -->
+      <div class="relay-role-select" id="relayRoleSelect">
+        <button class="relay-role-btn driver-btn" id="driverRoleBtn" onclick="joinRelayRoom('driver')">
+          <div class="relay-role-icon">👨‍✈️</div>
+          <div class="relay-role-label">운전기사</div>
+          <div class="relay-role-desc">내 위치를 실시간으로 공유해요</div>
+          <div id="driverSlotBadge" class="relay-role-empty-badge">자리 있음</div>
+        </button>
+        <button class="relay-role-btn changer-btn" id="changerRoleBtn" onclick="joinRelayRoom('changer')">
+          <div class="relay-role-icon">🧍</div>
+          <div class="relay-role-label">교대기사</div>
+          <div class="relay-role-desc">운전기사님 위치를 확인해요</div>
+          <div id="changerSlotBadge" class="relay-role-empty-badge">자리 있음</div>
+        </button>
+      </div>
+
+      <!-- 활성화된 방 -->
+      <div class="relay-active-room" id="relayActiveRoom" style="display:none;">
+        <div class="relay-active-header">
+          <div class="relay-active-title" id="relayActiveTitle"></div>
+          <div class="relay-active-badge" id="relayActiveBadge"></div>
+        </div>
+        <div id="relayMap"></div>
+        <div class="relay-info-bar">
+          <div class="relay-distance-row">
+            <div class="relay-dist-badge driver" id="driverLocInfo">👨‍✈️ 대기 중</div>
+            <div class="relay-dist-badge changer" id="changerLocInfo">🧍 대기 중</div>
+          </div>
+          <div class="relay-eta" id="relayEta">📍 상대방 위치를 기다리는 중...</div>
+        </div>
+        <div class="relay-member-status">
+          <div class="relay-member-card" id="driverCard">
+            <div class="relay-member-name">👨‍✈️ 운전기사</div>
+            <div class="relay-member-loc" id="driverLocText">대기 중</div>
+          </div>
+          <div class="relay-member-card" id="changerCard">
+            <div class="relay-member-name">🧍 교대기사</div>
+            <div class="relay-member-loc" id="changerLocText">대기 중</div>
+          </div>
+        </div>
+        <button class="relay-leave-btn" onclick="leaveRelayRoom()">🚪 방 나가기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <button class="fab" id="fab" onclick="openModal()">＋</button>
 
-<!-- 원터치 퀵제보 노선 선택 모달 -->
 <div class="quick-modal-overlay" id="quickModalOverlay">
   <div class="quick-modal">
     <div class="quick-modal-title" id="quickModalTitle">🚨 사고 발생</div>
-    <div class="quick-modal-sub">노선을 선택하면 현재 위치와 함께 즉시 올라가요!</div>
+    <div class="quick-modal-sub">노선을 선택하면 즉시 올라가요!</div>
     <div class="quick-route-grid">
       <button class="quick-route-btn" onclick="submitQuick('204')">204번</button>
       <button class="quick-route-btn" onclick="submitQuick('609')">609번</button>
@@ -273,24 +401,21 @@
   </div>
 </div>
 
-<!-- 일반 글작성 모달 -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
   <div class="modal" id="modalBox">
     <div class="modal-title">
       <span id="modalTitleText">🚨 도로 정보 올리기</span>
       <button class="close-btn" onclick="closeModal()">✕</button>
     </div>
-
-    <!-- 도로정보 폼 -->
     <div id="roadForm">
       <div class="form-group">
         <label class="form-label">노선 번호</label>
         <div class="route-select-grid">
-          <button class="route-select-btn" onclick="selectRoute(this,'204')">204번</button>
-          <button class="route-select-btn" onclick="selectRoute(this,'609')">609번</button>
-          <button class="route-select-btn" onclick="selectRoute(this,'894')">894번</button>
-          <button class="route-select-btn" onclick="selectRoute(this,'937')">937번</button>
-          <button class="route-select-btn" onclick="selectRoute(this,'달서6')">달서6번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'204')">204번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'609')">609번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'894')">894번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'937')">937번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'달서6')">달서6번</button>
         </div>
       </div>
       <div class="form-group">
@@ -303,21 +428,21 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">구간 / 정류장 <span style="color:var(--blue);font-size:11px;">📍GPS 버튼으로 자동입력 가능</span></label>
+        <label class="form-label">구간 / 정류장 <span style="color:var(--blue);font-size:11px;">📍GPS 자동입력 가능</span></label>
         <div class="input-row">
           <input class="form-input" id="locationInput" type="text" placeholder="예) 반월당역 ~ 동대구역">
-          <button class="gps-btn" id="gpsBtn" onclick="getGpsLocation()" title="현재 위치 자동입력">📍</button>
+          <button class="gps-btn" id="gpsBtn" onclick="getGpsLocation()">📍</button>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">상세 내용 <span style="color:var(--red);font-size:11px;">🎙️ 마이크 버튼으로 음성입력 가능</span></label>
+        <label class="form-label">상세 내용 <span style="color:var(--red);font-size:11px;">🎙️ 음성입력 가능</span></label>
         <div class="voice-status" id="voiceStatus">
           <div class="voice-status-dot"></div>
           <span id="voiceStatusText">듣고 있어요... 말씀해 주세요</span>
         </div>
         <div class="input-row">
           <textarea class="form-textarea" id="messageInput" placeholder="예) 반월당역 앞 차량 접촉사고로 1차선 막힘.&#10;🎙️ 마이크 버튼을 누르고 말해보세요!"></textarea>
-          <button class="mic-btn" id="micBtn" onclick="toggleSpeechInput()" title="음성으로 입력">🎙️</button>
+          <button class="mic-btn" id="micBtn" onclick="toggleSpeechInput()">🎙️</button>
         </div>
       </div>
       <div class="form-group">
@@ -331,22 +456,19 @@
       </div>
       <button class="submit-btn" id="submitBtn" onclick="submitPost()">📤 지금 올리기</button>
     </div>
-
-    <!-- 자유게시판 폼 -->
     <div id="freeForm" style="display:none;">
       <div class="form-group">
         <label class="form-label">제목</label>
         <input class="form-input" id="freeTitleInput" type="text" placeholder="예) 오늘 날씨 너무 좋네요 😊">
       </div>
       <div class="form-group">
-        <label class="form-label">내용 <span style="color:var(--red);font-size:11px;">🎙️ 마이크 버튼으로 음성입력 가능</span></label>
+        <label class="form-label">내용 <span style="color:var(--red);font-size:11px;">🎙️ 음성입력 가능</span></label>
         <div class="voice-status" id="freeVoiceStatus">
-          <div class="voice-status-dot"></div>
-          <span>듣고 있어요... 말씀해 주세요</span>
+          <div class="voice-status-dot"></div><span>듣고 있어요...</span>
         </div>
         <div class="input-row">
           <textarea class="form-textarea free-focus" id="freeMessageInput" placeholder="자유롭게 이야기를 나눠보세요!"></textarea>
-          <button class="mic-btn" id="freeMicBtn" onclick="toggleFreeSpeechInput()" title="음성으로 입력">🎙️</button>
+          <button class="mic-btn" id="freeMicBtn" onclick="toggleFreeSpeechInput()">🎙️</button>
         </div>
       </div>
       <div class="form-group">
@@ -387,648 +509,353 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script>
-var firebaseConfig={
-  apiKey:"AIzaSyCKXI4AYBIrotyF3VHv6Gr0GP-p1ii4Bww",
-  authDomain:"hanilbus-760ae.firebaseapp.com",
-  projectId:"hanilbus-760ae",
-  storageBucket:"hanilbus-760ae.firebasestorage.app",
-  messagingSenderId:"454505545954",
-  appId:"1:454505545954:web:a1951147f2b4b34d019ebb"
-};
-var app; try{app=firebase.app();}catch(e){app=firebase.initializeApp(firebaseConfig);}
+var firebaseConfig={apiKey:"AIzaSyCKXI4AYBIrotyF3VHv6Gr0GP-p1ii4Bww",authDomain:"hanilbus-760ae.firebaseapp.com",projectId:"hanilbus-760ae",storageBucket:"hanilbus-760ae.firebasestorage.app",messagingSenderId:"454505545954",appId:"1:454505545954:web:a1951147f2b4b34d019ebb"};
+var app;try{app=firebase.app();}catch(e){app=firebase.initializeApp(firebaseConfig);}
 var db=firebase.firestore();
+
+var RELAY_ROUTES={'609':{min:1,max:21},'204':{min:1,max:14},'937':{min:10,max:27},'894':{min:1,max:25},'달서6':{min:1,max:6}};
 
 var posts=[],freePosts=[];
 var selectedRoute='',selectedType='',selectedTypeLabel='';
 var photoDataUrl=null,freePhotoDataUrl=null;
 var currentFilter='전체',isFirstLoad=true,knownIds={};
 var likedPosts={},myVotes={},voiceOn=false;
-// 퀵제보용
 var quickType='',quickTypeLabel='';
-// 음성인식
 var recognition=null,isListening=false;
 var freeRecognition=null,freeIsListening=false;
+var currentRelayRoute='609',currentRelayNum=0,currentRelayRole='';
+var relayWatchId=null,relayListener=null,relayRoomRef=null,relayRoomId='';
 
 try{likedPosts=JSON.parse(localStorage.getItem('likedPosts')||'{}');}catch(e){}
 try{myVotes=JSON.parse(localStorage.getItem('myVotes')||'{}');}catch(e){}
 try{voiceOn=localStorage.getItem('voiceOn')==='true';}catch(e){}
 
-var STATUS_INFO={
-  clear:{emoji:'✅',label:'소통원활',cls:'clear'},
-  smooth:{emoji:'🟢',label:'매우쾌적',cls:'smooth'},
-  improving:{emoji:'📉',label:'점점풀림',cls:'improving'},
-  still:{emoji:'🔴',label:'아직정체',cls:'still'}
-};
+var STATUS_INFO={clear:{emoji:'✅',label:'소통원활',cls:'clear'},smooth:{emoji:'🟢',label:'매우쾌적',cls:'smooth'},improving:{emoji:'📉',label:'점점풀림',cls:'improving'},still:{emoji:'🔴',label:'아직정체',cls:'still'}};
 var STATUS_ORDER=['clear','smooth','improving','still'];
 
-// ── 3일 자동삭제 ──────────────────────────────
 function deleteOldPosts(){
   var cutoff=new Date(Date.now()-(3*24*60*60*1000));
   var ts=firebase.firestore.Timestamp.fromDate(cutoff);
-  db.collection('posts').where('timestamp','<',ts).get().then(function(snap){
-    if(snap.empty) return;
-    var batch=db.batch();
-    snap.forEach(function(doc){batch.delete(doc.ref);});
-    return batch.commit();
-  }).catch(function(){});
-  db.collection('freePosts').where('timestamp','<',ts).get().then(function(snap){
-    if(snap.empty) return;
-    var batch=db.batch();
-    snap.forEach(function(doc){batch.delete(doc.ref);});
-    return batch.commit();
-  }).catch(function(){});
+  ['posts','freePosts'].forEach(function(col){db.collection(col).where('timestamp','<',ts).get().then(function(snap){if(snap.empty)return;var b=db.batch();snap.forEach(function(d){b.delete(d.ref);});b.commit();}).catch(function(){});});
+  var cutoff2=new Date(Date.now()-(24*60*60*1000));
+  var ts2=firebase.firestore.Timestamp.fromDate(cutoff2);
+  db.collection('relayRooms').where('updatedAt','<',ts2).get().then(function(snap){if(snap.empty)return;var b=db.batch();snap.forEach(function(d){b.delete(d.ref);});b.commit();}).catch(function(){});
 }
 
-// ── GPS 현재 위치 자동입력 ────────────────────
+// ── GPS ───────────────────────────────────────
 function getGpsLocation(){
   var btn=document.getElementById('gpsBtn');
-  if(!navigator.geolocation){showToast('이 기기는 GPS를 지원하지 않아요');return;}
-  btn.classList.add('loading');
-  btn.textContent='⏳';
-  navigator.geolocation.getCurrentPosition(
-    function(pos){
-      var lat=pos.coords.latitude, lon=pos.coords.longitude;
-      // 카카오 reverse geocoding (무료)
-      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
-        .then(function(r){return r.json();})
-        .then(function(data){
-          var addr=data.address||{};
-          // 도로명 또는 지역명 조합
-          var parts=[];
-          if(addr.road) parts.push(addr.road);
-          else if(addr.neighbourhood) parts.push(addr.neighbourhood);
-          else if(addr.suburb) parts.push(addr.suburb);
-          if(addr.city_district) parts.push(addr.city_district);
-          var result=parts.length>0?parts.join(' '):(addr.county||addr.city||'현재위치');
-          document.getElementById('locationInput').value=result+' 부근';
-          showToast('📍 현재 위치가 입력됐어요!');
-        })
-        .catch(function(){
-          // API 실패 시 좌표만 입력
-          document.getElementById('locationInput').value='현재위치 ('+lat.toFixed(4)+', '+lon.toFixed(4)+')';
-          showToast('📍 위치 정보가 입력됐어요!');
-        })
-        .finally(function(){
-          btn.classList.remove('loading');
-          btn.textContent='📍';
-        });
-    },
-    function(err){
-      btn.classList.remove('loading');
-      btn.textContent='📍';
-      if(err.code===1) showToast('위치 권한을 허용해 주세요!');
-      else showToast('위치를 가져올 수 없어요');
-    },
-    {timeout:10000,enableHighAccuracy:true}
-  );
-}
-
-// ── 퀵제보용 GPS (백그라운드에서 위치 가져오기) ──
-function getGpsForQuick(callback){
-  if(!navigator.geolocation){callback('현재위치');return;}
-  navigator.geolocation.getCurrentPosition(
-    function(pos){
-      var lat=pos.coords.latitude,lon=pos.coords.longitude;
-      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
-        .then(function(r){return r.json();})
-        .then(function(data){
-          var addr=data.address||{};
-          var parts=[];
-          if(addr.road) parts.push(addr.road);
-          else if(addr.neighbourhood) parts.push(addr.neighbourhood);
-          else if(addr.suburb) parts.push(addr.suburb);
-          if(addr.city_district) parts.push(addr.city_district);
-          callback(parts.length>0?parts.join(' ')+' 부근':'현재위치');
-        })
-        .catch(function(){callback('현재위치');});
-    },
-    function(){callback('현재위치');},
-    {timeout:8000,enableHighAccuracy:true}
-  );
-}
-
-// ── 음성인식 (도로정보) ───────────────────────
-function initSpeechRecognition(){
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR) return null;
-  var r=new SR();
-  r.lang='ko-KR';
-  r.continuous=false;
-  r.interimResults=true;
-  r.maxAlternatives=1;
-  r.onstart=function(){
-    isListening=true;
-    document.getElementById('micBtn').classList.add('listening');
-    document.getElementById('micBtn').textContent='⏹️';
-    document.getElementById('voiceStatus').classList.add('show');
-    document.getElementById('voiceStatusText').textContent='듣고 있어요... 말씀해 주세요';
-  };
-  r.onresult=function(e){
-    var interim='',final='';
-    for(var i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
-      else interim+=e.results[i][0].transcript;
-    }
-    if(interim) document.getElementById('voiceStatusText').textContent='인식 중: '+interim;
-    if(final){
-      var cur=document.getElementById('messageInput').value;
-      document.getElementById('messageInput').value=(cur?cur+' ':'')+final;
-    }
-  };
-  r.onerror=function(e){
-    stopSpeech();
-    if(e.error==='not-allowed') showToast('마이크 권한을 허용해 주세요!');
-    else showToast('음성 인식 오류가 발생했어요');
-  };
-  r.onend=function(){ stopSpeech(); };
-  return r;
-}
-function toggleSpeechInput(){
-  if(!isListening){
-    recognition=initSpeechRecognition();
-    if(!recognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}
-    try{recognition.start();}catch(e){}
-  } else {
-    if(recognition) recognition.stop();
-    stopSpeech();
-  }
-}
-function stopSpeech(){
-  isListening=false;
-  var btn=document.getElementById('micBtn');
-  if(btn){btn.classList.remove('listening');btn.textContent='🎙️';}
-  var vs=document.getElementById('voiceStatus');
-  if(vs) vs.classList.remove('show');
-}
-
-// ── 음성인식 (자유게시판) ─────────────────────
-function initFreeSpeechRecognition(){
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR) return null;
-  var r=new SR();
-  r.lang='ko-KR'; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
-  r.onstart=function(){
-    freeIsListening=true;
-    document.getElementById('freeMicBtn').classList.add('listening');
-    document.getElementById('freeMicBtn').textContent='⏹️';
-    document.getElementById('freeVoiceStatus').classList.add('show');
-  };
-  r.onresult=function(e){
-    var final='';
-    for(var i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
-    }
-    if(final){
-      var cur=document.getElementById('freeMessageInput').value;
-      document.getElementById('freeMessageInput').value=(cur?cur+' ':'')+final;
-    }
-  };
-  r.onerror=function(e){
-    stopFreeSpeech();
-    if(e.error==='not-allowed') showToast('마이크 권한을 허용해 주세요!');
-  };
-  r.onend=function(){stopFreeSpeech();};
-  return r;
-}
-function toggleFreeSpeechInput(){
-  if(!freeIsListening){
-    freeRecognition=initFreeSpeechRecognition();
-    if(!freeRecognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}
-    try{freeRecognition.start();}catch(e){}
-  } else {
-    if(freeRecognition) freeRecognition.stop();
-    stopFreeSpeech();
-  }
-}
-function stopFreeSpeech(){
-  freeIsListening=false;
-  var btn=document.getElementById('freeMicBtn');
-  if(btn){btn.classList.remove('listening');btn.textContent='🎙️';}
-  var vs=document.getElementById('freeVoiceStatus');
-  if(vs) vs.classList.remove('show');
-}
-
-// ── 원터치 퀵제보 ────────────────────────────
-function openQuickModal(type,label){
-  quickType=type; quickTypeLabel=label;
-  document.getElementById('quickModalTitle').textContent=label+' — 노선을 선택해주세요';
-  document.getElementById('quickModalOverlay').classList.add('show');
-}
-function closeQuickModal(){
-  document.getElementById('quickModalOverlay').classList.remove('show');
-}
-function submitQuick(route){
-  closeQuickModal();
-  showToast('📍 위치 확인 중...');
-  getGpsForQuick(function(location){
-    var typeMessages={
-      accident:'현재 위치 사고 발생. 주의 바랍니다.',
-      slow:'현재 위치 정체 중입니다.',
-      clear:'현재 구간 소통 원활합니다.',
-      construction:'현재 위치 공사 중입니다.'
-    };
-    db.collection('posts').add({
-      route:route, type:quickType, typeLabel:quickTypeLabel,
-      location:location,
-      message:typeMessages[quickType]||'퀵제보',
-      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-      likes:0, photo:null,
-      statusVotes:{clear:0,smooth:0,improving:0,still:0},
-      lastVoteTs:null
-    }).then(function(){
-      playSuccessSound();
-      showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');
-    }).catch(function(e){showToast('오류: '+e.message);});
-  });
-}
-
-// ── TTS ──────────────────────────────────────
-function speak(text){
-  if(!voiceOn||!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var utter=new SpeechSynthesisUtterance(text);
-  utter.lang='ko-KR'; utter.rate=0.95; utter.pitch=1.0; utter.volume=1.0;
-  var voices=window.speechSynthesis.getVoices();
-  for(var i=0;i<voices.length;i++){
-    if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){utter.voice=voices[i];break;}
-  }
-  window.speechSynthesis.speak(utter);
-}
-function announceNewPost(p){
-  var typeText={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};
-  speak(p.route+'번 노선. '+p.location+'. '+(typeText[p.type]||'')+'. '+p.message);
-}
-function toggleVoice(){
-  if(!voiceOn){
-    var u=new SpeechSynthesisUtterance('음성 알림이 켜졌습니다');
-    u.lang='ko-KR'; u.volume=0.8; window.speechSynthesis.speak(u);
-    voiceOn=true; document.getElementById('voiceBanner').classList.remove('hidden');
-  } else {
-    window.speechSynthesis.cancel(); voiceOn=false;
-    document.getElementById('voiceBanner').classList.add('hidden');
-  }
-  try{localStorage.setItem('voiceOn',voiceOn);}catch(e){}
-  updateVoiceBtn();
-}
-function updateVoiceBtn(){
-  var btn=document.getElementById('voiceToggle'),lbl=document.getElementById('voiceLabel');
-  if(voiceOn){btn.classList.add('on');lbl.textContent='음성 ON';document.getElementById('voiceBanner').classList.remove('hidden');}
-  else{btn.classList.remove('on');lbl.textContent='음성 OFF';}
-}
-function playAlertSound(){
-  try{
-    var ctx=new(window.AudioContext||window.webkitAudioContext)();
-    var o1=ctx.createOscillator(),g1=ctx.createGain();
-    o1.connect(g1);g1.connect(ctx.destination);
-    o1.frequency.value=880;o1.type='sine';
-    g1.gain.setValueAtTime(0.4,ctx.currentTime);
-    g1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
-    o1.start(ctx.currentTime);o1.stop(ctx.currentTime+0.3);
-    var o2=ctx.createOscillator(),g2=ctx.createGain();
-    o2.connect(g2);g2.connect(ctx.destination);
-    o2.frequency.value=1100;o2.type='sine';
-    g2.gain.setValueAtTime(0.4,ctx.currentTime+0.2);
-    g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
-    o2.start(ctx.currentTime+0.2);o2.stop(ctx.currentTime+0.5);
-  }catch(e){}
-}
-function playSuccessSound(){
-  try{
-    var ctx=new(window.AudioContext||window.webkitAudioContext)();
-    var freqs=[523,659,784];
-    for(var i=0;i<freqs.length;i++){
-      var o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      o.frequency.value=freqs[i];o.type='sine';
-      var t=ctx.currentTime+i*0.15;
-      g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
-      o.start(t);o.stop(t+0.3);
-    }
-  }catch(e){}
-}
-function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
-function showToast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},3000);
-}
-function fmtTime(ts){
-  if(!ts) return '--:--';
-  var d=new Date(ts);
-  return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
-}
-function fmtDate(ts){
-  if(!ts) return '';
-  var d=new Date(ts),today=new Date(),yest=new Date();
-  yest.setDate(today.getDate()-1);
-  if(d.toDateString()===today.toDateString()) return '오늘';
-  if(d.toDateString()===yest.toDateString()) return '어제';
-  return (d.getMonth()+1)+'월 '+d.getDate()+'일';
-}
-function timeAgo(ts){
-  if(!ts) return '방금 전';
-  var diff=Math.floor((Date.now()-ts)/1000);
-  if(diff<10) return '방금 전';
-  if(diff<60) return diff+'초 전';
-  var m=Math.floor(diff/60); if(m<60) return m+'분 전';
-  var h=Math.floor(m/60); if(h<24) return h+'시간 전';
-  return Math.floor(h/24)+'일 전';
-}
-
-// ── Firebase ─────────────────────────────────
-db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
-  var newPosts=[];
-  snapshot.forEach(function(doc){
-    var data=doc.data(),ts=0;
-    try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
-    newPosts.push({
-      id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',
-      location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,
-      photo:data.photo||null,
-      statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},
-      lastVoteTs:data.lastVoteTs||null,
-      myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]
+  if(!navigator.geolocation){showToast('GPS를 지원하지 않는 기기예요');return;}
+  btn.classList.add('loading');btn.textContent='⏳';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    fetchAddress(pos.coords.latitude,pos.coords.longitude,function(addr){
+      document.getElementById('locationInput').value=addr;
+      showToast('📍 현재 위치가 입력됐어요!');
+      btn.classList.remove('loading');btn.textContent='📍';
     });
-  });
-  if(!isFirstLoad){
-    for(var i=0;i<newPosts.length;i++){
-      if(!knownIds[newPosts[i].id]){
-        var np=newPosts[i];
-        playAlertSound();vibrate();showToast('🚨 새 도로 정보가 올라왔어요!');
-        if(voiceOn){(function(p){setTimeout(function(){announceNewPost(p);},1500);})(np);}
-        break;
-      }
-    }
-  }
-  knownIds={};
-  for(var i=0;i<newPosts.length;i++) knownIds[newPosts[i].id]=true;
-  isFirstLoad=false; posts=newPosts;
-  if(currentFilter!=='자유'){renderFeed();updateStats();}
-},function(){});
+  },function(err){btn.classList.remove('loading');btn.textContent='📍';if(err.code===1)showToast('위치 권한을 허용해 주세요!');else showToast('위치를 가져올 수 없어요');},{timeout:10000,enableHighAccuracy:true});
+}
+function fetchAddress(lat,lon,cb){
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
+    .then(function(r){return r.json();})
+    .then(function(data){var a=data.address||{},parts=[];if(a.road)parts.push(a.road);else if(a.neighbourhood)parts.push(a.neighbourhood);else if(a.suburb)parts.push(a.suburb);if(a.city_district)parts.push(a.city_district);cb(parts.length>0?parts.join(' ')+' 부근':'현재위치');})
+    .catch(function(){cb('현재위치 ('+lat.toFixed(4)+', '+lon.toFixed(4)+')');});
+}
+function getGpsForQuick(cb){if(!navigator.geolocation){cb('현재위치');return;}navigator.geolocation.getCurrentPosition(function(pos){fetchAddress(pos.coords.latitude,pos.coords.longitude,cb);},function(){cb('현재위치');},{timeout:8000,enableHighAccuracy:true});}
 
+// ── 음성인식 ──────────────────────────────────
+function initSR(onResult,onEnd){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;var r=new SR();r.lang='ko-KR';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;r.onresult=function(e){var interim='',final='';for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}onResult(interim,final);};r.onerror=function(e){onEnd();if(e.error==='not-allowed')showToast('마이크 권한을 허용해 주세요!');};r.onend=onEnd;return r;}
+function toggleSpeechInput(){
+  if(!isListening){recognition=initSR(function(interim,final){if(interim)document.getElementById('voiceStatusText').textContent='인식 중: '+interim;if(final){var cur=document.getElementById('messageInput').value;document.getElementById('messageInput').value=(cur?cur+' ':'')+final;}},stopSpeech);if(!recognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}isListening=true;document.getElementById('micBtn').classList.add('listening');document.getElementById('micBtn').textContent='⏹️';document.getElementById('voiceStatus').classList.add('show');try{recognition.start();}catch(e){}}else{if(recognition)recognition.stop();stopSpeech();}
+}
+function stopSpeech(){isListening=false;var b=document.getElementById('micBtn');if(b){b.classList.remove('listening');b.textContent='🎙️';}var v=document.getElementById('voiceStatus');if(v)v.classList.remove('show');}
+function toggleFreeSpeechInput(){
+  if(!freeIsListening){freeRecognition=initSR(function(interim,final){if(final){var cur=document.getElementById('freeMessageInput').value;document.getElementById('freeMessageInput').value=(cur?cur+' ':'')+final;}},stopFreeSpeech);if(!freeRecognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}freeIsListening=true;document.getElementById('freeMicBtn').classList.add('listening');document.getElementById('freeMicBtn').textContent='⏹️';document.getElementById('freeVoiceStatus').classList.add('show');try{freeRecognition.start();}catch(e){}}else{if(freeRecognition)freeRecognition.stop();stopFreeSpeech();}
+}
+function stopFreeSpeech(){freeIsListening=false;var b=document.getElementById('freeMicBtn');if(b){b.classList.remove('listening');b.textContent='🎙️';}var v=document.getElementById('freeVoiceStatus');if(v)v.classList.remove('show');}
+
+// ── 퀵제보 ────────────────────────────────────
+function openQuickModal(type,label){quickType=type;quickTypeLabel=label;document.getElementById('quickModalTitle').textContent=label+' — 노선 선택';document.getElementById('quickModalOverlay').classList.add('show');}
+function closeQuickModal(){document.getElementById('quickModalOverlay').classList.remove('show');}
+function submitQuick(route){closeQuickModal();showToast('📍 위치 확인 중...');getGpsForQuick(function(location){var msg={accident:'현재 위치 사고 발생. 주의 바랍니다.',slow:'현재 위치 정체 중입니다.',clear:'현재 구간 소통 원활합니다.',construction:'현재 위치 공사 중입니다.'};db.collection('posts').add({route:route,type:quickType,typeLabel:quickTypeLabel,location:location,message:msg[quickType]||'퀵제보',timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:null,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null}).then(function(){playSuccessSound();showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');}).catch(function(e){showToast('오류: '+e.message);});});}
+
+// ── 교대 탭 ──────────────────────────────────
+function selectRelayRoute(route,btn){
+  currentRelayRoute=route;
+  var tabs=document.querySelectorAll('.relay-route-tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+  btn.classList.add('active');
+  renderRelayGrid();
+}
+
+function renderRelayGrid(){
+  var r=RELAY_ROUTES[currentRelayRoute];
+  if(!r)return;
+  var grid=document.getElementById('relayNumGrid');
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text2);font-size:13px;">순번 목록 불러오는 중...</div>';
+  db.collection('relayRooms').where('route','==',currentRelayRoute).get().then(function(snap){
+    var roomMap={};
+    snap.forEach(function(doc){var d=doc.data();roomMap[d.num]=d;});
+    grid.innerHTML='';
+    for(var n=r.min;n<=r.max;n++){
+      var room=roomMap[n]||null;
+      var hasDriver=room&&room.driverActive;
+      var hasChanger=room&&room.changerActive;
+      var hasBoth=hasDriver&&hasChanger;
+      var card=document.createElement('div');
+      var statusClass=hasBoth?'has-both':(hasDriver?'has-driver':(hasChanger?'has-changer':''));
+      card.className='relay-num-card'+(statusClass?' '+statusClass:'');
+      var statusHtml='';
+      var dotHtml='';
+      if(hasBoth){statusHtml='<div class="relay-num-status both">🟡 교대 진행 중</div>';dotHtml='<div class="relay-online-dot yellow"></div>';}
+      else if(hasDriver){statusHtml='<div class="relay-num-status driver">👨‍✈️ 운전기사 접속</div>';dotHtml='<div class="relay-online-dot teal"></div>';}
+      else if(hasChanger){statusHtml='<div class="relay-num-status changer">🧍 교대기사 접속</div>';dotHtml='<div class="relay-online-dot teal"></div>';}
+      card.innerHTML=dotHtml+'<div class="relay-num-num">'+n+'번</div><div class="relay-num-label">순번</div>'+statusHtml;
+      (function(num){card.onclick=function(){openRelayRoom(num);};})(n);
+      grid.appendChild(card);
+    }
+  }).catch(function(){
+    grid.innerHTML='';
+    var r2=RELAY_ROUTES[currentRelayRoute];
+    for(var n=r2.min;n<=r2.max;n++){
+      var card=document.createElement('div');
+      card.className='relay-num-card';
+      card.innerHTML='<div class="relay-num-num">'+n+'번</div><div class="relay-num-label">순번</div>';
+      (function(num){card.onclick=function(){openRelayRoom(num);};})(n);
+      grid.appendChild(card);
+    }
+  });
+}
+
+function openRelayRoom(num){
+  currentRelayNum=num;
+  relayRoomId='relay_'+currentRelayRoute+'_'+num;
+  document.getElementById('relayRoomTitle').textContent='🔄 '+currentRelayRoute+'번 · '+num+'번 순번';
+  document.getElementById('relayRoomSub').textContent='역할을 선택해 주세요 (각 1명만 입장 가능)';
+  document.getElementById('relayRoleSelect').style.display='grid';
+  document.getElementById('relayActiveRoom').style.display='none';
+  document.getElementById('relayRoom').classList.add('show');
+  document.getElementById('relayNumGrid').style.display='none';
+  document.getElementById('relayRouteTabs').style.display='none';
+  document.getElementById('relayHeaderCard').style.display='none';
+
+  // ★ 현재 방 상태 확인 → 버튼 활성/비활성 처리
+  db.collection('relayRooms').doc(relayRoomId).get().then(function(doc){
+    var driverTaken=false,changerTaken=false;
+    if(doc.exists){var d=doc.data();driverTaken=!!d.driverActive;changerTaken=!!d.changerActive;}
+    var dBtn=document.getElementById('driverRoleBtn');
+    var cBtn=document.getElementById('changerRoleBtn');
+    var dBadge=document.getElementById('driverSlotBadge');
+    var cBadge=document.getElementById('changerSlotBadge');
+    if(driverTaken){
+      dBtn.disabled=true;
+      dBadge.className='relay-role-full-badge';dBadge.textContent='이미 입장함';
+    }else{
+      dBtn.disabled=false;
+      dBadge.className='relay-role-empty-badge';dBadge.textContent='자리 있음';
+    }
+    if(changerTaken){
+      cBtn.disabled=true;
+      cBadge.className='relay-role-full-badge';cBadge.textContent='이미 입장함';
+    }else{
+      cBtn.disabled=false;
+      cBadge.className='relay-role-empty-badge';cBadge.textContent='자리 있음';
+    }
+    if(driverTaken&&changerTaken){
+      document.getElementById('relayRoomSub').textContent='⚠️ 이 방은 현재 교대 진행 중이에요 (2명 모두 입장)';
+    }
+  }).catch(function(){});
+}
+
+function joinRelayRoom(role){
+  // ★ 입장 직전 다시 한번 확인 (동시 입장 방지)
+  var roomRef=db.collection('relayRooms').doc(relayRoomId);
+  roomRef.get().then(function(doc){
+    var d=doc.exists?doc.data():{};
+    if(role==='driver'&&d.driverActive){showToast('❌ 운전기사 자리가 이미 찼어요!');return;}
+    if(role==='changer'&&d.changerActive){showToast('❌ 교대기사 자리가 이미 찼어요!');return;}
+    // 입장 처리
+    currentRelayRole=role;
+    relayRoomRef=roomRef;
+    var updateData={route:currentRelayRoute,num:currentRelayNum,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(role==='driver')updateData.driverActive=true;
+    else updateData.changerActive=true;
+    roomRef.set(updateData,{merge:true}).then(function(){
+      document.getElementById('relayRoleSelect').style.display='none';
+      document.getElementById('relayActiveRoom').style.display='block';
+      var badge=document.getElementById('relayActiveBadge');
+      var title=document.getElementById('relayActiveTitle');
+      title.textContent=currentRelayRoute+'번 '+currentRelayNum+'번 순번';
+      if(role==='driver'){badge.className='relay-active-badge driver';badge.textContent='👨‍✈️ 운전기사';}
+      else{badge.className='relay-active-badge changer';badge.textContent='🧍 교대기사';}
+      initRelayMap();
+      // 교대기사 입장 시 운전기사에게 알림 저장
+      if(role==='changer'){roomRef.set({changerJoinedAlert:true,_notifiedDriver:false},{merge:true});}
+      // 실시간 구독
+      relayListener=roomRef.onSnapshot(function(snap){
+        if(!snap.exists)return;
+        var data=snap.data();
+        // 운전기사에게 교대기사 입장 알림
+        if(currentRelayRole==='driver'&&data.changerJoinedAlert&&!data._notifiedDriver){
+          playAlertSound();vibrate();speak('교대기사님이 입장하셨습니다');showToast('🧍 교대기사님이 입장하셨어요!');
+          roomRef.update({_notifiedDriver:true});
+        }
+        updateRelayMap(data);
+      });
+      startLocationShare();
+    });
+  }).catch(function(){showToast('오류가 발생했어요. 다시 시도해 주세요.');});
+}
+
+function initRelayMap(){
+  var mapDiv=document.getElementById('relayMap');
+  mapDiv.innerHTML='';
+  var iframe=document.createElement('iframe');
+  iframe.id='relayMapIframe';
+  iframe.style.cssText='width:100%;height:280px;border:none;';
+  iframe.src='https://www.openstreetmap.org/export/embed.html?bbox=128.5300%2C35.8200%2C128.6500%2C35.9200&layer=mapnik&marker=35.8714%2C128.6014';
+  mapDiv.appendChild(iframe);
+  document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 대기 중';
+  document.getElementById('changerLocInfo').textContent='🧍 위치 대기 중';
+  document.getElementById('relayEta').textContent='📍 상대방 위치를 기다리는 중...';
+  document.getElementById('driverCard').classList.remove('online');
+  document.getElementById('changerCard').classList.remove('online');
+}
+function startLocationShare(){
+  if(!navigator.geolocation)return;
+  relayWatchId=navigator.geolocation.watchPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    var updateData={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(currentRelayRole==='driver'){updateData.driverLat=lat;updateData.driverLon=lon;}
+    else{updateData.changerLat=lat;updateData.changerLon=lon;}
+    if(relayRoomRef)relayRoomRef.set(updateData,{merge:true});
+  },function(){},{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+}
+function updateRelayMap(data){
+  var dLat=data.driverLat,dLon=data.driverLon,cLat=data.changerLat,cLon=data.changerLon;
+  if(dLat){document.getElementById('driverCard').classList.add('online');document.getElementById('driverLocText').textContent='위치 공유 중 📍';document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 공유 중';}
+  if(cLat){document.getElementById('changerCard').classList.add('online');document.getElementById('changerLocText').textContent='위치 공유 중 📍';document.getElementById('changerLocInfo').textContent='🧍 위치 공유 중';}
+  if(dLat&&cLat){
+    var dist=calcDist(dLat,dLon,cLat,cLon);
+    var etaMin=Math.round(dist/400);
+    var etaText='';
+    if(dist<50)etaText='🟢 거의 도착! ('+Math.round(dist)+'m)';
+    else if(dist<200)etaText='🟡 약 '+Math.round(dist)+'m — 1분 이내 도착 예정';
+    else etaText='🚶 약 '+Math.round(dist)+'m — '+etaMin+'분 후 도착 예정';
+    document.getElementById('relayEta').textContent=etaText;
+    var midLat=(dLat+cLat)/2,midLon=(dLon+cLon)/2;
+    var span=Math.max(Math.abs(dLat-cLat),Math.abs(dLon-cLon))*1.5+0.005;
+    var bbox=(midLon-span)+'%2C'+(midLat-span)+'%2C'+(midLon+span)+'%2C'+(midLat+span);
+    var iframe=document.getElementById('relayMapIframe');
+    if(iframe)iframe.src='https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+dLat+'%2C'+dLon;
+  }
+}
+function calcDist(lat1,lon1,lat2,lon2){var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+function leaveRelayRoom(){
+  if(relayWatchId!==null){navigator.geolocation.clearWatch(relayWatchId);relayWatchId=null;}
+  if(relayListener){relayListener();relayListener=null;}
+  if(relayRoomRef){
+    var clearData={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(currentRelayRole==='driver'){clearData.driverActive=firebase.firestore.FieldValue.delete();clearData.driverLat=firebase.firestore.FieldValue.delete();clearData.driverLon=firebase.firestore.FieldValue.delete();}
+    else{clearData.changerActive=firebase.firestore.FieldValue.delete();clearData.changerLat=firebase.firestore.FieldValue.delete();clearData.changerLon=firebase.firestore.FieldValue.delete();clearData.changerJoinedAlert=firebase.firestore.FieldValue.delete();}
+    relayRoomRef.update(clearData).catch(function(){});
+    relayRoomRef=null;
+  }
+  currentRelayRole='';currentRelayNum=0;relayRoomId='';
+  document.getElementById('relayRoom').classList.remove('show');
+  document.getElementById('relayNumGrid').style.display='grid';
+  document.getElementById('relayRouteTabs').style.display='flex';
+  document.getElementById('relayHeaderCard').style.display='block';
+  renderRelayGrid();
+}
+
+// ── TTS / 소리 ────────────────────────────────
+function speak(text){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=0.95;u.volume=1.0;var voices=window.speechSynthesis.getVoices();for(var i=0;i<voices.length;i++){if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}}window.speechSynthesis.speak(u);}
+function announceNewPost(p){if(!voiceOn)return;var t={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};speak(p.route+'번 노선. '+p.location+'. '+(t[p.type]||'')+'. '+p.message);}
+function toggleVoice(){if(!voiceOn){var u=new SpeechSynthesisUtterance('음성 알림이 켜졌습니다');u.lang='ko-KR';u.volume=0.8;window.speechSynthesis.speak(u);voiceOn=true;document.getElementById('voiceBanner').classList.remove('hidden');}else{window.speechSynthesis.cancel();voiceOn=false;document.getElementById('voiceBanner').classList.add('hidden');}try{localStorage.setItem('voiceOn',voiceOn);}catch(e){}updateVoiceBtn();}
+function updateVoiceBtn(){var b=document.getElementById('voiceToggle'),l=document.getElementById('voiceLabel');if(voiceOn){b.classList.add('on');l.textContent='음성 ON';document.getElementById('voiceBanner').classList.remove('hidden');}else{b.classList.remove('on');l.textContent='음성 OFF';}}
+function playAlertSound(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var o1=ctx.createOscillator(),g1=ctx.createGain();o1.connect(g1);g1.connect(ctx.destination);o1.frequency.value=880;o1.type='sine';g1.gain.setValueAtTime(0.4,ctx.currentTime);g1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);o1.start(ctx.currentTime);o1.stop(ctx.currentTime+0.3);var o2=ctx.createOscillator(),g2=ctx.createGain();o2.connect(g2);g2.connect(ctx.destination);o2.frequency.value=1100;o2.type='sine';g2.gain.setValueAtTime(0.4,ctx.currentTime+0.2);g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o2.start(ctx.currentTime+0.2);o2.stop(ctx.currentTime+0.5);}catch(e){}}
+function playSuccessSound(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var freqs=[523,659,784];for(var i=0;i<freqs.length;i++){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freqs[i];o.type='sine';var t=ctx.currentTime+i*0.15;g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.start(t);o.stop(t+0.3);}}catch(e){}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
+function fmtTime(ts){if(!ts)return'--:--';var d=new Date(ts);return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function fmtDate(ts){if(!ts)return'';var d=new Date(ts),today=new Date(),yest=new Date();yest.setDate(today.getDate()-1);if(d.toDateString()===today.toDateString())return'오늘';if(d.toDateString()===yest.toDateString())return'어제';return(d.getMonth()+1)+'월 '+d.getDate()+'일';}
+function timeAgo(ts){if(!ts)return'방금 전';var diff=Math.floor((Date.now()-ts)/1000);if(diff<10)return'방금 전';if(diff<60)return diff+'초 전';var m=Math.floor(diff/60);if(m<60)return m+'분 전';var h=Math.floor(m/60);if(h<24)return h+'시간 전';return Math.floor(h/24)+'일 전';}
+
+// ── Firebase 실시간 ───────────────────────────
+db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
+  var newPosts=[];snapshot.forEach(function(doc){var data=doc.data(),ts=0;try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}newPosts.push({id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},lastVoteTs:data.lastVoteTs||null,myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]});});
+  if(!isFirstLoad){for(var i=0;i<newPosts.length;i++){if(!knownIds[newPosts[i].id]){var np=newPosts[i];playAlertSound();vibrate();showToast('🚨 새 도로 정보가 올라왔어요!');if(voiceOn){(function(p){setTimeout(function(){announceNewPost(p);},1500);})(np);}break;}}}
+  knownIds={};for(var i=0;i<newPosts.length;i++)knownIds[newPosts[i].id]=true;
+  isFirstLoad=false;posts=newPosts;if(currentFilter!=='자유'&&currentFilter!=='교대'){renderFeed();updateStats();}
+},function(){});
 var freeKnownIds={},freeFirstLoad=true;
 db.collection('freePosts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
-  var newFreePosts=[];
-  snapshot.forEach(function(doc){
-    var data=doc.data(),ts=0;
-    try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
-    newFreePosts.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});
-  });
-  if(!freeFirstLoad){
-    for(var i=0;i<newFreePosts.length;i++){
-      if(!freeKnownIds[newFreePosts[i].id]){showToast('💬 새 게시글이 올라왔어요!');break;}
-    }
-  }
-  freeKnownIds={};
-  for(var i=0;i<newFreePosts.length;i++) freeKnownIds[newFreePosts[i].id]=true;
-  freeFirstLoad=false; freePosts=newFreePosts;
-  if(currentFilter==='자유') renderFeed();
+  var np=[];snapshot.forEach(function(doc){var data=doc.data(),ts=0;try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}np.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});});
+  if(!freeFirstLoad){for(var i=0;i<np.length;i++){if(!freeKnownIds[np[i].id]){showToast('💬 새 게시글이 올라왔어요!');break;}}}
+  freeKnownIds={};for(var i=0;i<np.length;i++)freeKnownIds[np[i].id]=true;
+  freeFirstLoad=false;freePosts=np;if(currentFilter==='자유')renderFeed();
 },function(){});
-
 deleteOldPosts();
 
 // ── 렌더링 ───────────────────────────────────
 function renderFeed(){
   var feed=document.getElementById('feed');
   if(currentFilter==='자유'){
-    if(freePosts.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.<br>첫 글을 올려주세요!</p></div>';return;}
+    if(freePosts.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.</p></div>';return;}
     var html='',lastDate='';
-    for(var i=0;i<freePosts.length;i++){
-      var p=freePosts[i],dl=fmtDate(p.ts);
-      if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
-      html+='<div class="free-card">'+
-        '<div class="free-card-header"><div class="free-badge">💬 자유</div><div class="free-card-title">'+p.title+'</div><div class="free-card-time">'+fmtTime(p.ts)+'</div></div>'+
-        '<div class="free-card-body"><div class="free-card-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div>'+
-        '<div class="free-card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button><div class="author-info">'+timeAgo(p.ts)+'</div></div>'+
-      '</div>';
-    }
-    feed.innerHTML=html; return;
+    for(var i=0;i<freePosts.length;i++){var p=freePosts[i],dl=fmtDate(p.ts);if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}html+='<div class="free-card"><div class="free-card-header"><div class="free-badge">💬 자유</div><div class="free-card-title">'+p.title+'</div><div class="free-card-time">'+fmtTime(p.ts)+'</div></div><div class="free-card-body"><div class="free-card-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div><div class="free-card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button><div class="author-info">'+timeAgo(p.ts)+'</div></div></div>';}
+    feed.innerHTML=html;return;
   }
-  var filtered=[];
-  for(var i=0;i<posts.length;i++){
-    if(currentFilter==='전체'||posts[i].route===currentFilter) filtered.push(posts[i]);
-  }
+  var filtered=[];for(var i=0;i<posts.length;i++){if(currentFilter==='전체'||posts[i].route===currentFilter)filtered.push(posts[i]);}
   if(filtered.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">🛣️</div><p>이 노선의 정보가 없습니다.<br>첫 정보를 올려주세요!</p></div>';return;}
   var html='',lastDate='';
   for(var i=0;i<filtered.length;i++){
-    var p=filtered[i],dl=fmtDate(p.ts);
-    if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
-    var v=p.statusVotes||{clear:0,smooth:0,improving:0,still:0};
-    var tv=(v.clear||0)+(v.smooth||0)+(v.improving||0)+(v.still||0);
-    var btns='';
-    for(var b=0;b<STATUS_ORDER.length;b++){
-      var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0,voted=p.myVote===key;
-      btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+' </button>';
-    }
-    var voteHtml='';
-    if(tv>0){
-      var rows='';
-      for(var b=0;b<STATUS_ORDER.length;b++){
-        var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0;
-        if(cnt===0) continue;
-        var pct=Math.round((cnt/tv)*100);
-        rows+='<div class="vote-row"><div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div><div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div><div class="vote-cnt">'+cnt+'명</div></div>';
-      }
-      var vts=p.lastVoteTs?'🕐 마지막 응답: '+fmtTime(p.lastVoteTs)+' ('+timeAgo(p.lastVoteTs)+')':'';
-      voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div><div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+' </div>';
-    }
-    html+='<div class="post-card">'+
-      '<div class="card-header"><div class="route-badge">'+p.route+'번</div><div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div><div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div></div>'+
-      '<div class="card-body"><div class="post-location">📍 '+p.location+'</div><div class="post-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div>'+
-      '<div class="status-update-area"><div class="status-update-label">🔄 현재 상황은 어떤가요?</div><div class="status-btns">'+btns+'</div></div>'+
-      '<div class="card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button><div class="author-info">기사님 공유</div></div>'+
-      voteHtml+
-    '</div>';
+    var p=filtered[i],dl=fmtDate(p.ts);if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
+    var v=p.statusVotes||{clear:0,smooth:0,improving:0,still:0};var tv=(v.clear||0)+(v.smooth||0)+(v.improving||0)+(v.still||0);
+    var btns='';for(var b=0;b<STATUS_ORDER.length;b++){var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0,voted=p.myVote===key;btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+' </button>';}
+    var voteHtml='';if(tv>0){var rows='';for(var b=0;b<STATUS_ORDER.length;b++){var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0;if(cnt===0)continue;var pct=Math.round((cnt/tv)*100);rows+='<div class="vote-row"><div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div><div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div><div class="vote-cnt">'+cnt+'명</div></div>';}var vts=p.lastVoteTs?'🕐 마지막 응답: '+fmtTime(p.lastVoteTs)+' ('+timeAgo(p.lastVoteTs)+')':'';voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div><div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+'</div>';}
+    html+='<div class="post-card"><div class="card-header"><div class="route-badge">'+p.route+'번</div><div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div><div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div></div><div class="card-body"><div class="post-location">📍 '+p.location+'</div><div class="post-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div><div class="status-update-area"><div class="status-update-label">🔄 현재 상황은 어떤가요?</div><div class="status-btns">'+btns+'</div></div><div class="card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button><div class="author-info">기사님 공유</div></div>'+voteHtml+'</div>';
   }
   feed.innerHTML=html;
 }
-function updateStats(){
-  var acc=0,slow=0;
-  for(var i=0;i<posts.length;i++){if(posts[i].type==='accident')acc++;if(posts[i].type==='slow')slow++;}
-  document.getElementById('totalCount').textContent=posts.length;
-  document.getElementById('accidentCount').textContent=acc;
-  document.getElementById('slowCount').textContent=slow;
-}
+function updateStats(){var acc=0,slow=0;for(var i=0;i<posts.length;i++){if(posts[i].type==='accident')acc++;if(posts[i].type==='slow')slow++;}document.getElementById('totalCount').textContent=posts.length;document.getElementById('accidentCount').textContent=acc;document.getElementById('slowCount').textContent=slow;}
+
 function filterRoute(route){
   currentFilter=route;
   var btns=document.querySelectorAll('.route-btn');
-  for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
-  for(var i=0;i<btns.length;i++){
-    var txt=btns[i].textContent.trim();
-    if(route==='전체'&&txt==='전체'){btns[i].classList.add('active');break;}
-    if(route==='자유'&&txt==='💬 자유게시판'){btns[i].classList.add('active');break;}
-    if(txt===route+'번'){btns[i].classList.add('active');break;}
-  }
-  var fab=document.getElementById('fab');
-  var qa=document.getElementById('quickReportArea');
-  var sb=document.getElementById('statsBar');
-  if(route==='자유'){
-    fab.classList.add('free');
-    qa.style.display='none';
-    sb.style.display='none';
-  } else {
-    fab.classList.remove('free');
-    qa.style.display='block';
-    sb.style.display='';
-    updateStats();
-  }
-  renderFeed();
+  for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');
+  for(var i=0;i<btns.length;i++){var txt=btns[i].textContent.trim();if(route==='전체'&&txt==='전체'){btns[i].classList.add('active');break;}if(route==='자유'&&txt==='💬 자유'){btns[i].classList.add('active');break;}if(route==='교대'&&txt==='🔄 교대'){btns[i].classList.add('active');break;}if(txt===route+'번'){btns[i].classList.add('active');break;}}
+  var fab=document.getElementById('fab'),qa=document.getElementById('quickReportArea'),sb=document.getElementById('statsBar'),feed=document.getElementById('feed'),rs=document.getElementById('relaySection');
+  if(route==='교대'){feed.style.display='none';rs.style.display='block';qa.style.display='none';sb.style.display='none';fab.classList.add('relay-hide');currentRelayRoute='609';var tabs=document.querySelectorAll('.relay-route-tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');if(tabs[0])tabs[0].classList.add('active');renderRelayGrid();}
+  else{feed.style.display='flex';rs.style.display='none';fab.classList.remove('relay-hide');if(route==='자유'){fab.style.background='var(--purple)';qa.style.display='none';sb.style.display='none';}else{fab.style.background='';qa.style.display='block';sb.style.display='';updateStats();}renderFeed();}
 }
+
 function openModal(){
   document.getElementById('modalOverlay').classList.add('show');
-  if(currentFilter==='자유'){
-    document.getElementById('modalTitleText').textContent='💬 자유게시판 글쓰기';
-    document.getElementById('modalBox').classList.add('free-modal');
-    document.getElementById('roadForm').style.display='none';
-    document.getElementById('freeForm').style.display='block';
-    document.getElementById('freeTitleInput').value='';
-    document.getElementById('freeMessageInput').value='';
-    document.getElementById('freePhotoLabel').textContent='사진을 선택하세요';
-    document.getElementById('freePhotoPreview').style.display='none';
-    freePhotoDataUrl=null;
-  } else {
-    document.getElementById('modalTitleText').textContent='🚨 도로 정보 올리기';
-    document.getElementById('modalBox').classList.remove('free-modal');
-    document.getElementById('roadForm').style.display='block';
-    document.getElementById('freeForm').style.display='none';
-    selectedRoute='';selectedType='';selectedTypeLabel='';photoDataUrl=null;
-    document.getElementById('locationInput').value='';
-    document.getElementById('messageInput').value='';
-    document.getElementById('photoLabel').textContent='사진을 선택하세요';
-    document.getElementById('photoPreview').style.display='none';
-    var rb=document.querySelectorAll('.route-select-btn');
-    for(var i=0;i<rb.length;i++) rb[i].classList.remove('selected');
-    var tb=document.querySelectorAll('.type-select-btn');
-    for(var i=0;i<tb.length;i++) tb[i].className='type-select-btn';
-    stopSpeech();
-  }
+  if(currentFilter==='자유'){document.getElementById('modalTitleText').textContent='💬 자유게시판 글쓰기';document.getElementById('modalBox').classList.add('free-modal');document.getElementById('roadForm').style.display='none';document.getElementById('freeForm').style.display='block';document.getElementById('freeTitleInput').value='';document.getElementById('freeMessageInput').value='';document.getElementById('freePhotoLabel').textContent='사진을 선택하세요';document.getElementById('freePhotoPreview').style.display='none';freePhotoDataUrl=null;}
+  else{document.getElementById('modalTitleText').textContent='🚨 도로 정보 올리기';document.getElementById('modalBox').classList.remove('free-modal');document.getElementById('roadForm').style.display='block';document.getElementById('freeForm').style.display='none';selectedRoute='';selectedType='';selectedTypeLabel='';photoDataUrl=null;document.getElementById('locationInput').value='';document.getElementById('messageInput').value='';document.getElementById('photoLabel').textContent='사진을 선택하세요';document.getElementById('photoPreview').style.display='none';var rb=document.querySelectorAll('.route-select-btn');for(var i=0;i<rb.length;i++)rb[i].classList.remove('selected');var tb=document.querySelectorAll('.type-select-btn');for(var i=0;i<tb.length;i++)tb[i].className='type-select-btn';stopSpeech();}
 }
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('show');
-  stopSpeech(); stopFreeSpeech();
-}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');stopSpeech();stopFreeSpeech();}
 function closeOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
-function selectRoute(btn,route){
-  var rb=document.querySelectorAll('.route-select-btn');
-  for(var i=0;i<rb.length;i++) rb[i].classList.remove('selected');
-  btn.classList.add('selected');selectedRoute=route;
-}
-function selectType(btn,type,label){
-  var tb=document.querySelectorAll('.type-select-btn');
-  for(var i=0;i<tb.length;i++) tb[i].className='type-select-btn';
-  btn.classList.add('selected-'+type);selectedType=type;selectedTypeLabel=label;
-}
-function previewPhoto(e){
-  var file=e.target.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    photoDataUrl=ev.target.result;
-    document.getElementById('photoPreview').src=photoDataUrl;
-    document.getElementById('photoPreview').style.display='block';
-    document.getElementById('photoLabel').textContent=file.name;
-  };
-  reader.readAsDataURL(file);
-}
-function previewFreePhoto(e){
-  var file=e.target.files[0];if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    freePhotoDataUrl=ev.target.result;
-    document.getElementById('freePhotoPreview').src=freePhotoDataUrl;
-    document.getElementById('freePhotoPreview').style.display='block';
-    document.getElementById('freePhotoLabel').textContent=file.name;
-  };
-  reader.readAsDataURL(file);
-}
-function submitPost(){
-  var loc=document.getElementById('locationInput').value.trim();
-  var msg=document.getElementById('messageInput').value.trim();
-  if(!selectedRoute){alert('노선 번호를 선택해주세요!');return;}
-  if(!selectedType){alert('상황 유형을 선택해주세요!');return;}
-  if(!loc){alert('구간/정류장을 입력해주세요!');return;}
-  if(!msg){alert('상세 내용을 입력해주세요!');return;}
-  var btn=document.getElementById('submitBtn');
-  btn.textContent='올리는 중...';btn.disabled=true;
-  stopSpeech();
-  db.collection('posts').add({
-    route:selectedRoute,type:selectedType,typeLabel:selectedTypeLabel,
-    location:loc,message:msg,
-    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-    likes:0,photo:photoDataUrl,
-    statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null
-  }).then(function(){
-    playSuccessSound();closeModal();showToast('✅ 도로 정보가 올라갔어요!');
-  }).catch(function(e){alert('저장 오류: '+e.message);})
-  .finally(function(){btn.textContent='📤 지금 올리기';btn.disabled=false;});
-}
-function submitFreePost(){
-  var title=document.getElementById('freeTitleInput').value.trim();
-  var msg=document.getElementById('freeMessageInput').value.trim();
-  if(!title){alert('제목을 입력해주세요!');return;}
-  if(!msg){alert('내용을 입력해주세요!');return;}
-  var btn=document.getElementById('freeSubmitBtn');
-  btn.textContent='올리는 중...';btn.disabled=true;
-  stopFreeSpeech();
-  db.collection('freePosts').add({
-    title:title,message:msg,
-    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-    likes:0,photo:freePhotoDataUrl
-  }).then(function(){
-    playSuccessSound();closeModal();showToast('💬 게시글이 올라갔어요!');
-  }).catch(function(e){alert('저장 오류: '+e.message);})
-  .finally(function(){btn.textContent='💬 게시글 올리기';btn.disabled=false;});
-}
-function toggleLike(id){
-  var post=null;
-  for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
-  if(!post)return;
-  var likes=post.likes||0;
-  if(likedPosts[id]){delete likedPosts[id];likes=Math.max(0,likes-1);}
-  else{likedPosts[id]=true;likes++;}
-  try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}
-  db.collection('posts').doc(id).update({likes:likes});
-}
-function toggleFreeLike(id){
-  var post=null;
-  for(var i=0;i<freePosts.length;i++){if(freePosts[i].id===id){post=freePosts[i];break;}}
-  if(!post)return;
-  var likes=post.likes||0,key='free_'+id;
-  if(likedPosts[key]){delete likedPosts[key];likes=Math.max(0,likes-1);}
-  else{likedPosts[key]=true;likes++;}
-  try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}
-  db.collection('freePosts').doc(id).update({likes:likes});
-}
-function voteStatus(id,key){
-  var post=null;
-  for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
-  if(!post)return;
-  var v={clear:post.statusVotes.clear||0,smooth:post.statusVotes.smooth||0,improving:post.statusVotes.improving||0,still:post.statusVotes.still||0};
-  var prev=myVotes[id]||null;
-  if(prev===key){v[key]=Math.max(0,v[key]-1);delete myVotes[id];}
-  else{if(prev&&v[prev]!==undefined)v[prev]=Math.max(0,v[prev]-1);v[key]++;myVotes[id]=key;}
-  try{localStorage.setItem('myVotes',JSON.stringify(myVotes));}catch(e){}
-  db.collection('posts').doc(id).update({statusVotes:v,lastVoteTs:Date.now()});
-}
+function selectRouteForm(btn,route){var rb=document.querySelectorAll('.route-select-btn');for(var i=0;i<rb.length;i++)rb[i].classList.remove('selected');btn.classList.add('selected');selectedRoute=route;}
+function selectType(btn,type,label){var tb=document.querySelectorAll('.type-select-btn');for(var i=0;i<tb.length;i++)tb[i].className='type-select-btn';btn.classList.add('selected-'+type);selectedType=type;selectedTypeLabel=label;}
+function previewPhoto(e){var file=e.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){photoDataUrl=ev.target.result;document.getElementById('photoPreview').src=photoDataUrl;document.getElementById('photoPreview').style.display='block';document.getElementById('photoLabel').textContent=file.name;};reader.readAsDataURL(file);}
+function previewFreePhoto(e){var file=e.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){freePhotoDataUrl=ev.target.result;document.getElementById('freePhotoPreview').src=freePhotoDataUrl;document.getElementById('freePhotoPreview').style.display='block';document.getElementById('freePhotoLabel').textContent=file.name;};reader.readAsDataURL(file);}
+function submitPost(){var loc=document.getElementById('locationInput').value.trim(),msg=document.getElementById('messageInput').value.trim();if(!selectedRoute){alert('노선 번호를 선택해주세요!');return;}if(!selectedType){alert('상황 유형을 선택해주세요!');return;}if(!loc){alert('구간/정류장을 입력해주세요!');return;}if(!msg){alert('상세 내용을 입력해주세요!');return;}var btn=document.getElementById('submitBtn');btn.textContent='올리는 중...';btn.disabled=true;stopSpeech();db.collection('posts').add({route:selectedRoute,type:selectedType,typeLabel:selectedTypeLabel,location:loc,message:msg,timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:photoDataUrl,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null}).then(function(){playSuccessSound();closeModal();showToast('✅ 도로 정보가 올라갔어요!');}).catch(function(e){alert('저장 오류: '+e.message);}).finally(function(){btn.textContent='📤 지금 올리기';btn.disabled=false;});}
+function submitFreePost(){var title=document.getElementById('freeTitleInput').value.trim(),msg=document.getElementById('freeMessageInput').value.trim();if(!title){alert('제목을 입력해주세요!');return;}if(!msg){alert('내용을 입력해주세요!');return;}var btn=document.getElementById('freeSubmitBtn');btn.textContent='올리는 중...';btn.disabled=true;stopFreeSpeech();db.collection('freePosts').add({title:title,message:msg,timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:freePhotoDataUrl}).then(function(){playSuccessSound();closeModal();showToast('💬 게시글이 올라갔어요!');}).catch(function(e){alert('저장 오류: '+e.message);}).finally(function(){btn.textContent='💬 게시글 올리기';btn.disabled=false;});}
+function toggleLike(id){var post=null;for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}if(!post)return;var likes=post.likes||0;if(likedPosts[id]){delete likedPosts[id];likes=Math.max(0,likes-1);}else{likedPosts[id]=true;likes++;}try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}db.collection('posts').doc(id).update({likes:likes});}
+function toggleFreeLike(id){var post=null;for(var i=0;i<freePosts.length;i++){if(freePosts[i].id===id){post=freePosts[i];break;}}if(!post)return;var likes=post.likes||0,key='free_'+id;if(likedPosts[key]){delete likedPosts[key];likes=Math.max(0,likes-1);}else{likedPosts[key]=true;likes++;}try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}db.collection('freePosts').doc(id).update({likes:likes});}
+function voteStatus(id,key){var post=null;for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}if(!post)return;var v={clear:post.statusVotes.clear||0,smooth:post.statusVotes.smooth||0,improving:post.statusVotes.improving||0,still:post.statusVotes.still||0};var prev=myVotes[id]||null;if(prev===key){v[key]=Math.max(0,v[key]-1);delete myVotes[id];}else{if(prev&&v[prev]!==undefined)v[prev]=Math.max(0,v[prev]-1);v[key]++;myVotes[id]=key;}try{localStorage.setItem('myVotes',JSON.stringify(myVotes));}catch(e){}db.collection('posts').doc(id).update({statusVotes:v,lastVoteTs:Date.now()});}
+
 var deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
-function showPwaModal(){
-  var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  document.getElementById('pwaAndroid').style.display=isIos?'none':'block';
-  document.getElementById('pwaIos').style.display=isIos?'block':'none';
-  document.getElementById('pwaInstallBtn').style.display=isIos?'none':'block';
-  document.getElementById('pwaModalOverlay').classList.add('show');
-}
+function showPwaModal(){var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);document.getElementById('pwaAndroid').style.display=isIos?'none':'block';document.getElementById('pwaIos').style.display=isIos?'block':'none';document.getElementById('pwaInstallBtn').style.display=isIos?'none':'block';document.getElementById('pwaModalOverlay').classList.add('show');}
 function closePwaModal(){document.getElementById('pwaModalOverlay').classList.remove('show');}
 function closePwaModalOnOverlay(e){if(e.target===document.getElementById('pwaModalOverlay'))closePwaModal();}
-function triggerPwaInstall(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(result){
-      if(result.outcome==='accepted')showToast('✅ 홈화면에 추가됐어요!');
-      deferredPrompt=null;closePwaModal();
-    });
-  }else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}
-}
+function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(result){if(result.outcome==='accepted')showToast('✅ 홈화면에 추가됐어요!');deferredPrompt=null;closePwaModal();});}else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}}
+
 updateVoiceBtn();
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 </script>
