@@ -33,12 +33,10 @@
   .voice-dot{width:8px;height:8px;border-radius:50%;background:var(--text2);}
   .voice-toggle.on .voice-dot{background:var(--green);animation:pulse 1s infinite;}
 
-  /* ── 탭 (노선 + 자유게시판) ── */
   .route-filter{padding:12px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);}
   .route-filter::-webkit-scrollbar{display:none;}
   .route-btn{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;}
   .route-btn.active{background:var(--accent);border-color:var(--accent);color:white;}
-  /* 자유게시판 탭은 보라색 */
   .route-btn.free-tab{border-color:var(--purple);color:var(--purple);}
   .route-btn.free-tab.active{background:var(--purple);border-color:var(--purple);color:white;}
 
@@ -47,15 +45,25 @@
   .stat-num{font-size:24px;font-weight:900;color:var(--accent);}
   .stat-label{font-size:12px;color:var(--text2);margin-top:2px;}
 
+  /* ── 원터치 퀵제보 영역 ── */
+  .quick-report{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+  .quick-report-label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
+  .quick-btns{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}
+  .quick-btns::-webkit-scrollbar{display:none;}
+  .quick-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;active:transform:scale(0.96);}
+  .quick-btn:active{transform:scale(0.96);}
+  .quick-btn.accident{background:rgba(239,68,68,0.15);color:var(--red);border:1.5px solid rgba(239,68,68,0.3);}
+  .quick-btn.slow{background:rgba(234,179,8,0.15);color:var(--yellow);border:1.5px solid rgba(234,179,8,0.3);}
+  .quick-btn.clear{background:rgba(34,197,94,0.15);color:var(--green);border:1.5px solid rgba(34,197,94,0.3);}
+  .quick-btn.construction{background:rgba(59,130,246,0.15);color:var(--blue);border:1.5px solid rgba(59,130,246,0.3);}
+
   .voice-banner{display:flex;align-items:center;gap:10px;padding:11px 16px;background:rgba(34,197,94,0.1);border-bottom:1px solid rgba(34,197,94,0.25);}
   .voice-banner.hidden{display:none;}
   .voice-banner-text{flex:1;font-size:13px;color:var(--green);font-weight:500;}
   .voice-banner-text strong{display:block;font-size:14px;margin-bottom:1px;}
-  .voice-banner-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:0 4px;}
+  .voice-banner-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;}
 
   .feed{padding:12px 16px;display:flex;flex-direction:column;gap:12px;}
-
-  /* ── 도로정보 카드 ── */
   .post-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
   .card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;flex-wrap:wrap;}
   .route-badge{background:var(--accent);color:white;font-size:16px;font-weight:900;padding:5px 13px;border-radius:8px;min-width:56px;text-align:center;}
@@ -84,8 +92,7 @@
   .vote-result-rows{display:flex;flex-direction:column;gap:6px;}
   .vote-row{display:flex;align-items:center;gap:8px;}
   .vote-row-badge{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;min-width:115px;}
-  .vote-row-badge.clear{color:var(--green);}
-  .vote-row-badge.smooth{color:var(--green);}
+  .vote-row-badge.clear,.vote-row-badge.smooth{color:var(--green);}
   .vote-row-badge.improving{color:var(--yellow);}
   .vote-row-badge.still{color:var(--red);}
   .vote-bar-wrap{flex:1;height:9px;background:var(--border);border-radius:4px;overflow:hidden;}
@@ -96,7 +103,7 @@
   .vote-cnt{font-size:13px;font-weight:700;color:var(--text2);min-width:30px;text-align:right;}
   .vote-time{font-size:11px;color:var(--text2);margin-top:6px;text-align:right;}
 
-  /* ── 자유게시판 카드 ── */
+  /* 자유게시판 카드 */
   .free-card{background:var(--surface);border:1.5px solid rgba(168,85,247,0.3);border-radius:14px;overflow:hidden;}
   .free-card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;}
   .free-badge{background:var(--purple);color:white;font-size:14px;font-weight:900;padding:4px 12px;border-radius:8px;}
@@ -107,10 +114,9 @@
   .free-card-footer{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2);}
 
   .fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;background:var(--accent);border:none;border-radius:16px;color:white;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(249,115,22,0.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
-  /* 자유게시판일 때 FAB 보라색 */
   .fab.free{background:var(--purple);box-shadow:0 4px 20px rgba(168,85,247,0.4);}
 
-  /* ── 모달 (도로정보) ── */
+  /* 모달 */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;}
   .modal-overlay.show{display:flex;}
   .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 20px 38px;width:100%;max-width:480px;border-top:2px solid var(--accent);max-height:90vh;overflow-y:auto;}
@@ -119,10 +125,25 @@
   .close-btn{background:var(--surface2);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:17px;}
   .form-group{margin-bottom:16px;}
   .form-label{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
+
+  /* 입력 필드 + 마이크/GPS 버튼 묶음 */
+  .input-row{display:flex;gap:8px;align-items:stretch;}
+  .input-row .form-input{flex:1;}
+  .mic-btn{width:48px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .mic-btn.listening{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red);animation:pulse 0.8s infinite;}
+  .gps-btn{width:48px;flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .gps-btn.loading{background:rgba(59,130,246,0.2);border-color:var(--blue);color:var(--blue);}
+
   .form-input,.form-textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:16px;outline:none;}
   .form-input:focus,.form-textarea:focus{border-color:var(--accent);}
   .form-textarea{resize:none;height:100px;line-height:1.6;}
   .form-textarea.free-focus:focus{border-color:var(--purple);}
+
+  /* 음성 입력 상태 표시 */
+  .voice-status{display:none;align-items:center;gap:8px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;margin-bottom:10px;font-size:13px;color:var(--red);font-weight:700;}
+  .voice-status.show{display:flex;}
+  .voice-status-dot{width:8px;height:8px;background:var(--red);border-radius:50%;animation:pulse 0.6s infinite;flex-shrink:0;}
+
   .route-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .route-select-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:center;}
   .route-select-btn.selected{background:var(--accent);border-color:var(--accent);color:white;}
@@ -138,6 +159,17 @@
   .submit-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;cursor:pointer;margin-top:6px;}
   .submit-btn.free-btn{background:var(--purple);}
   .submit-btn:disabled{opacity:0.6;}
+
+  /* 퀵제보 노선 선택 모달 */
+  .quick-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:350;align-items:center;justify-content:center;padding:20px;}
+  .quick-modal-overlay.show{display:flex;}
+  .quick-modal{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:360px;}
+  .quick-modal-title{font-size:18px;font-weight:900;margin-bottom:6px;}
+  .quick-modal-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
+  .quick-route-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .quick-route-btn{padding:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:900;cursor:pointer;text-align:center;}
+  .quick-route-btn:active{background:var(--accent);border-color:var(--accent);color:white;}
+  .quick-cancel-btn{width:100%;padding:13px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;}
 
   .empty-state{text-align:center;padding:50px 20px;color:var(--text2);}
   .empty-state .icon{font-size:52px;margin-bottom:12px;}
@@ -190,7 +222,7 @@
   <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
 </div>
 
-<!-- 노선 + 자유게시판 탭 -->
+<!-- 노선 탭 -->
 <div class="route-filter">
   <button class="route-btn active" onclick="filterRoute('전체')">전체</button>
   <button class="route-btn" onclick="filterRoute('204')">204번</button>
@@ -199,6 +231,17 @@
   <button class="route-btn" onclick="filterRoute('937')">937번</button>
   <button class="route-btn" onclick="filterRoute('달서6')">달서6번</button>
   <button class="route-btn free-tab" onclick="filterRoute('자유')">💬 자유게시판</button>
+</div>
+
+<!-- 원터치 퀵제보 -->
+<div class="quick-report" id="quickReportArea">
+  <div class="quick-report-label">⚡ 원터치 퀵제보 — 버튼 하나로 즉시 올리기</div>
+  <div class="quick-btns">
+    <button class="quick-btn accident" onclick="openQuickModal('accident','🚨 사고')">🚨 사고 발생</button>
+    <button class="quick-btn slow" onclick="openQuickModal('slow','🐢 정체')">🐢 정체 중</button>
+    <button class="quick-btn clear" onclick="openQuickModal('clear','✅ 소통원활')">✅ 소통원활</button>
+    <button class="quick-btn construction" onclick="openQuickModal('construction','🚧 공사')">🚧 공사 중</button>
+  </div>
 </div>
 
 <div class="stats-bar" id="statsBar">
@@ -214,7 +257,23 @@
 <div class="toast" id="toast"></div>
 <button class="fab" id="fab" onclick="openModal()">＋</button>
 
-<!-- 도로정보 작성 모달 -->
+<!-- 원터치 퀵제보 노선 선택 모달 -->
+<div class="quick-modal-overlay" id="quickModalOverlay">
+  <div class="quick-modal">
+    <div class="quick-modal-title" id="quickModalTitle">🚨 사고 발생</div>
+    <div class="quick-modal-sub">노선을 선택하면 현재 위치와 함께 즉시 올라가요!</div>
+    <div class="quick-route-grid">
+      <button class="quick-route-btn" onclick="submitQuick('204')">204번</button>
+      <button class="quick-route-btn" onclick="submitQuick('609')">609번</button>
+      <button class="quick-route-btn" onclick="submitQuick('894')">894번</button>
+      <button class="quick-route-btn" onclick="submitQuick('937')">937번</button>
+      <button class="quick-route-btn" onclick="submitQuick('달서6')">달서6번</button>
+    </div>
+    <button class="quick-cancel-btn" onclick="closeQuickModal()">취소</button>
+  </div>
+</div>
+
+<!-- 일반 글작성 모달 -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
   <div class="modal" id="modalBox">
     <div class="modal-title">
@@ -244,12 +303,22 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">구간 / 정류장</label>
-        <input class="form-input" id="locationInput" type="text" placeholder="예) 반월당역 ~ 동대구역">
+        <label class="form-label">구간 / 정류장 <span style="color:var(--blue);font-size:11px;">📍GPS 버튼으로 자동입력 가능</span></label>
+        <div class="input-row">
+          <input class="form-input" id="locationInput" type="text" placeholder="예) 반월당역 ~ 동대구역">
+          <button class="gps-btn" id="gpsBtn" onclick="getGpsLocation()" title="현재 위치 자동입력">📍</button>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">상세 내용</label>
-        <textarea class="form-textarea" id="messageInput" placeholder="예) 반월당역 앞 차량 접촉사고로 1차선 막힘. 우회 필요."></textarea>
+        <label class="form-label">상세 내용 <span style="color:var(--red);font-size:11px;">🎙️ 마이크 버튼으로 음성입력 가능</span></label>
+        <div class="voice-status" id="voiceStatus">
+          <div class="voice-status-dot"></div>
+          <span id="voiceStatusText">듣고 있어요... 말씀해 주세요</span>
+        </div>
+        <div class="input-row">
+          <textarea class="form-textarea" id="messageInput" placeholder="예) 반월당역 앞 차량 접촉사고로 1차선 막힘.&#10;🎙️ 마이크 버튼을 누르고 말해보세요!"></textarea>
+          <button class="mic-btn" id="micBtn" onclick="toggleSpeechInput()" title="음성으로 입력">🎙️</button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">사진 첨부 (선택)</label>
@@ -270,8 +339,15 @@
         <input class="form-input" id="freeTitleInput" type="text" placeholder="예) 오늘 날씨 너무 좋네요 😊">
       </div>
       <div class="form-group">
-        <label class="form-label">내용</label>
-        <textarea class="form-textarea free-focus" id="freeMessageInput" placeholder="자유롭게 이야기를 나눠보세요!"></textarea>
+        <label class="form-label">내용 <span style="color:var(--red);font-size:11px;">🎙️ 마이크 버튼으로 음성입력 가능</span></label>
+        <div class="voice-status" id="freeVoiceStatus">
+          <div class="voice-status-dot"></div>
+          <span>듣고 있어요... 말씀해 주세요</span>
+        </div>
+        <div class="input-row">
+          <textarea class="form-textarea free-focus" id="freeMessageInput" placeholder="자유롭게 이야기를 나눠보세요!"></textarea>
+          <button class="mic-btn" id="freeMicBtn" onclick="toggleFreeSpeechInput()" title="음성으로 입력">🎙️</button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">사진 첨부 (선택)</label>
@@ -327,6 +403,12 @@ var selectedRoute='',selectedType='',selectedTypeLabel='';
 var photoDataUrl=null,freePhotoDataUrl=null;
 var currentFilter='전체',isFirstLoad=true,knownIds={};
 var likedPosts={},myVotes={},voiceOn=false;
+// 퀵제보용
+var quickType='',quickTypeLabel='';
+// 음성인식
+var recognition=null,isListening=false;
+var freeRecognition=null,freeIsListening=false;
+
 try{likedPosts=JSON.parse(localStorage.getItem('likedPosts')||'{}');}catch(e){}
 try{myVotes=JSON.parse(localStorage.getItem('myVotes')||'{}');}catch(e){}
 try{voiceOn=localStorage.getItem('voiceOn')==='true';}catch(e){}
@@ -339,7 +421,7 @@ var STATUS_INFO={
 };
 var STATUS_ORDER=['clear','smooth','improving','still'];
 
-// 3일 자동 삭제
+// ── 3일 자동삭제 ──────────────────────────────
 function deleteOldPosts(){
   var cutoff=new Date(Date.now()-(3*24*60*60*1000));
   var ts=firebase.firestore.Timestamp.fromDate(cutoff);
@@ -357,7 +439,210 @@ function deleteOldPosts(){
   }).catch(function(){});
 }
 
-// TTS
+// ── GPS 현재 위치 자동입력 ────────────────────
+function getGpsLocation(){
+  var btn=document.getElementById('gpsBtn');
+  if(!navigator.geolocation){showToast('이 기기는 GPS를 지원하지 않아요');return;}
+  btn.classList.add('loading');
+  btn.textContent='⏳';
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      var lat=pos.coords.latitude, lon=pos.coords.longitude;
+      // 카카오 reverse geocoding (무료)
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var addr=data.address||{};
+          // 도로명 또는 지역명 조합
+          var parts=[];
+          if(addr.road) parts.push(addr.road);
+          else if(addr.neighbourhood) parts.push(addr.neighbourhood);
+          else if(addr.suburb) parts.push(addr.suburb);
+          if(addr.city_district) parts.push(addr.city_district);
+          var result=parts.length>0?parts.join(' '):(addr.county||addr.city||'현재위치');
+          document.getElementById('locationInput').value=result+' 부근';
+          showToast('📍 현재 위치가 입력됐어요!');
+        })
+        .catch(function(){
+          // API 실패 시 좌표만 입력
+          document.getElementById('locationInput').value='현재위치 ('+lat.toFixed(4)+', '+lon.toFixed(4)+')';
+          showToast('📍 위치 정보가 입력됐어요!');
+        })
+        .finally(function(){
+          btn.classList.remove('loading');
+          btn.textContent='📍';
+        });
+    },
+    function(err){
+      btn.classList.remove('loading');
+      btn.textContent='📍';
+      if(err.code===1) showToast('위치 권한을 허용해 주세요!');
+      else showToast('위치를 가져올 수 없어요');
+    },
+    {timeout:10000,enableHighAccuracy:true}
+  );
+}
+
+// ── 퀵제보용 GPS (백그라운드에서 위치 가져오기) ──
+function getGpsForQuick(callback){
+  if(!navigator.geolocation){callback('현재위치');return;}
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      var lat=pos.coords.latitude,lon=pos.coords.longitude;
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var addr=data.address||{};
+          var parts=[];
+          if(addr.road) parts.push(addr.road);
+          else if(addr.neighbourhood) parts.push(addr.neighbourhood);
+          else if(addr.suburb) parts.push(addr.suburb);
+          if(addr.city_district) parts.push(addr.city_district);
+          callback(parts.length>0?parts.join(' ')+' 부근':'현재위치');
+        })
+        .catch(function(){callback('현재위치');});
+    },
+    function(){callback('현재위치');},
+    {timeout:8000,enableHighAccuracy:true}
+  );
+}
+
+// ── 음성인식 (도로정보) ───────────────────────
+function initSpeechRecognition(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return null;
+  var r=new SR();
+  r.lang='ko-KR';
+  r.continuous=false;
+  r.interimResults=true;
+  r.maxAlternatives=1;
+  r.onstart=function(){
+    isListening=true;
+    document.getElementById('micBtn').classList.add('listening');
+    document.getElementById('micBtn').textContent='⏹️';
+    document.getElementById('voiceStatus').classList.add('show');
+    document.getElementById('voiceStatusText').textContent='듣고 있어요... 말씀해 주세요';
+  };
+  r.onresult=function(e){
+    var interim='',final='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    if(interim) document.getElementById('voiceStatusText').textContent='인식 중: '+interim;
+    if(final){
+      var cur=document.getElementById('messageInput').value;
+      document.getElementById('messageInput').value=(cur?cur+' ':'')+final;
+    }
+  };
+  r.onerror=function(e){
+    stopSpeech();
+    if(e.error==='not-allowed') showToast('마이크 권한을 허용해 주세요!');
+    else showToast('음성 인식 오류가 발생했어요');
+  };
+  r.onend=function(){ stopSpeech(); };
+  return r;
+}
+function toggleSpeechInput(){
+  if(!isListening){
+    recognition=initSpeechRecognition();
+    if(!recognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}
+    try{recognition.start();}catch(e){}
+  } else {
+    if(recognition) recognition.stop();
+    stopSpeech();
+  }
+}
+function stopSpeech(){
+  isListening=false;
+  var btn=document.getElementById('micBtn');
+  if(btn){btn.classList.remove('listening');btn.textContent='🎙️';}
+  var vs=document.getElementById('voiceStatus');
+  if(vs) vs.classList.remove('show');
+}
+
+// ── 음성인식 (자유게시판) ─────────────────────
+function initFreeSpeechRecognition(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return null;
+  var r=new SR();
+  r.lang='ko-KR'; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+  r.onstart=function(){
+    freeIsListening=true;
+    document.getElementById('freeMicBtn').classList.add('listening');
+    document.getElementById('freeMicBtn').textContent='⏹️';
+    document.getElementById('freeVoiceStatus').classList.add('show');
+  };
+  r.onresult=function(e){
+    var final='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+    }
+    if(final){
+      var cur=document.getElementById('freeMessageInput').value;
+      document.getElementById('freeMessageInput').value=(cur?cur+' ':'')+final;
+    }
+  };
+  r.onerror=function(e){
+    stopFreeSpeech();
+    if(e.error==='not-allowed') showToast('마이크 권한을 허용해 주세요!');
+  };
+  r.onend=function(){stopFreeSpeech();};
+  return r;
+}
+function toggleFreeSpeechInput(){
+  if(!freeIsListening){
+    freeRecognition=initFreeSpeechRecognition();
+    if(!freeRecognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}
+    try{freeRecognition.start();}catch(e){}
+  } else {
+    if(freeRecognition) freeRecognition.stop();
+    stopFreeSpeech();
+  }
+}
+function stopFreeSpeech(){
+  freeIsListening=false;
+  var btn=document.getElementById('freeMicBtn');
+  if(btn){btn.classList.remove('listening');btn.textContent='🎙️';}
+  var vs=document.getElementById('freeVoiceStatus');
+  if(vs) vs.classList.remove('show');
+}
+
+// ── 원터치 퀵제보 ────────────────────────────
+function openQuickModal(type,label){
+  quickType=type; quickTypeLabel=label;
+  document.getElementById('quickModalTitle').textContent=label+' — 노선을 선택해주세요';
+  document.getElementById('quickModalOverlay').classList.add('show');
+}
+function closeQuickModal(){
+  document.getElementById('quickModalOverlay').classList.remove('show');
+}
+function submitQuick(route){
+  closeQuickModal();
+  showToast('📍 위치 확인 중...');
+  getGpsForQuick(function(location){
+    var typeMessages={
+      accident:'현재 위치 사고 발생. 주의 바랍니다.',
+      slow:'현재 위치 정체 중입니다.',
+      clear:'현재 구간 소통 원활합니다.',
+      construction:'현재 위치 공사 중입니다.'
+    };
+    db.collection('posts').add({
+      route:route, type:quickType, typeLabel:quickTypeLabel,
+      location:location,
+      message:typeMessages[quickType]||'퀵제보',
+      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+      likes:0, photo:null,
+      statusVotes:{clear:0,smooth:0,improving:0,still:0},
+      lastVoteTs:null
+    }).then(function(){
+      playSuccessSound();
+      showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');
+    }).catch(function(e){showToast('오류: '+e.message);});
+  });
+}
+
+// ── TTS ──────────────────────────────────────
 function speak(text){
   if(!voiceOn||!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
@@ -416,7 +701,7 @@ function playSuccessSound(){
       o.connect(g);g.connect(ctx.destination);
       o.frequency.value=freqs[i];o.type='sine';
       var t=ctx.currentTime+i*0.15;
-      g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+      g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
       o.start(t);o.stop(t+0.3);
     }
   }catch(e){}
@@ -450,7 +735,7 @@ function timeAgo(ts){
   return Math.floor(h/24)+'일 전';
 }
 
-// ── Firebase: 도로정보 ──────────────────────────
+// ── Firebase ─────────────────────────────────
 db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
   var newPosts=[];
   snapshot.forEach(function(doc){
@@ -469,8 +754,8 @@ db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot)
     for(var i=0;i<newPosts.length;i++){
       if(!knownIds[newPosts[i].id]){
         var np=newPosts[i];
-        playAlertSound(); vibrate(); showToast('🚨 새 도로 정보가 올라왔어요!');
-        if(voiceOn){ (function(p){setTimeout(function(){announceNewPost(p);},1500);})(np); }
+        playAlertSound();vibrate();showToast('🚨 새 도로 정보가 올라왔어요!');
+        if(voiceOn){(function(p){setTimeout(function(){announceNewPost(p);},1500);})(np);}
         break;
       }
     }
@@ -478,28 +763,20 @@ db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot)
   knownIds={};
   for(var i=0;i<newPosts.length;i++) knownIds[newPosts[i].id]=true;
   isFirstLoad=false; posts=newPosts;
-  if(currentFilter!=='자유') { renderFeed(); updateStats(); }
+  if(currentFilter!=='자유'){renderFeed();updateStats();}
 },function(){});
 
-// ── Firebase: 자유게시판 ────────────────────────
-var freeKnownIds={}, freeFirstLoad=true;
+var freeKnownIds={},freeFirstLoad=true;
 db.collection('freePosts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
   var newFreePosts=[];
   snapshot.forEach(function(doc){
     var data=doc.data(),ts=0;
     try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
-    newFreePosts.push({
-      id:doc.id,title:data.title||'',message:data.message||'',
-      ts:ts,likes:data.likes||0,photo:data.photo||null,
-      liked:!!likedPosts['free_'+doc.id]
-    });
+    newFreePosts.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});
   });
   if(!freeFirstLoad){
     for(var i=0;i<newFreePosts.length;i++){
-      if(!freeKnownIds[newFreePosts[i].id]){
-        showToast('💬 새 게시글이 올라왔어요!');
-        break;
-      }
+      if(!freeKnownIds[newFreePosts[i].id]){showToast('💬 새 게시글이 올라왔어요!');break;}
     }
   }
   freeKnownIds={};
@@ -510,63 +787,38 @@ db.collection('freePosts').orderBy('timestamp','desc').onSnapshot(function(snaps
 
 deleteOldPosts();
 
-// ── 렌더링 ─────────────────────────────────────
+// ── 렌더링 ───────────────────────────────────
 function renderFeed(){
   var feed=document.getElementById('feed');
-
-  // 자유게시판
   if(currentFilter==='자유'){
-    if(freePosts.length===0){
-      feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.<br>첫 글을 올려주세요!</p></div>';
-      return;
-    }
+    if(freePosts.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.<br>첫 글을 올려주세요!</p></div>';return;}
     var html='',lastDate='';
     for(var i=0;i<freePosts.length;i++){
-      var p=freePosts[i];
-      var dl=fmtDate(p.ts);
+      var p=freePosts[i],dl=fmtDate(p.ts);
       if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
       html+='<div class="free-card">'+
-        '<div class="free-card-header">'+
-          '<div class="free-badge">💬 자유</div>'+
-          '<div class="free-card-title">'+p.title+'</div>'+
-          '<div class="free-card-time">'+fmtTime(p.ts)+'</div>'+
-        '</div>'+
-        '<div class="free-card-body">'+
-          '<div class="free-card-message">'+p.message+'</div>'+
-          (p.photo?'<img src="'+p.photo+'" class="post-image">':'')+
-        '</div>'+
-        '<div class="free-card-footer">'+
-          '<button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button>'+
-          '<div class="author-info">'+timeAgo(p.ts)+'</div>'+
-        '</div>'+
+        '<div class="free-card-header"><div class="free-badge">💬 자유</div><div class="free-card-title">'+p.title+'</div><div class="free-card-time">'+fmtTime(p.ts)+'</div></div>'+
+        '<div class="free-card-body"><div class="free-card-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div>'+
+        '<div class="free-card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button><div class="author-info">'+timeAgo(p.ts)+'</div></div>'+
       '</div>';
     }
-    feed.innerHTML=html;
-    return;
+    feed.innerHTML=html; return;
   }
-
-  // 도로정보
   var filtered=[];
   for(var i=0;i<posts.length;i++){
     if(currentFilter==='전체'||posts[i].route===currentFilter) filtered.push(posts[i]);
   }
-  if(filtered.length===0){
-    feed.innerHTML='<div class="empty-state"><div class="icon">🛣️</div><p>이 노선의 정보가 없습니다.<br>첫 정보를 올려주세요!</p></div>';
-    return;
-  }
+  if(filtered.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">🛣️</div><p>이 노선의 정보가 없습니다.<br>첫 정보를 올려주세요!</p></div>';return;}
   var html='',lastDate='';
   for(var i=0;i<filtered.length;i++){
-    var p=filtered[i];
-    var dl=fmtDate(p.ts);
+    var p=filtered[i],dl=fmtDate(p.ts);
     if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
     var v=p.statusVotes||{clear:0,smooth:0,improving:0,still:0};
     var tv=(v.clear||0)+(v.smooth||0)+(v.improving||0)+(v.still||0);
     var btns='';
     for(var b=0;b<STATUS_ORDER.length;b++){
       var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0,voted=p.myVote===key;
-      btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+
-        si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+
-      '</button>';
+      btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+' </button>';
     }
     var voteHtml='';
     if(tv>0){
@@ -575,84 +827,56 @@ function renderFeed(){
         var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0;
         if(cnt===0) continue;
         var pct=Math.round((cnt/tv)*100);
-        rows+='<div class="vote-row">'+
-          '<div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div>'+
-          '<div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div>'+
-          '<div class="vote-cnt">'+cnt+'명</div>'+
-        '</div>';
+        rows+='<div class="vote-row"><div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div><div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div><div class="vote-cnt">'+cnt+'명</div></div>';
       }
       var vts=p.lastVoteTs?'🕐 마지막 응답: '+fmtTime(p.lastVoteTs)+' ('+timeAgo(p.lastVoteTs)+')':'';
-      voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div>'+
-        '<div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+
-      '</div>';
+      voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div><div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+' </div>';
     }
     html+='<div class="post-card">'+
-      '<div class="card-header">'+
-        '<div class="route-badge">'+p.route+'번</div>'+
-        '<div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div>'+
-        '<div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div>'+
-      '</div>'+
-      '<div class="card-body">'+
-        '<div class="post-location">📍 '+p.location+'</div>'+
-        '<div class="post-message">'+p.message+'</div>'+
-        (p.photo?'<img src="'+p.photo+'" class="post-image">':'')+
-      '</div>'+
-      '<div class="status-update-area">'+
-        '<div class="status-update-label">🔄 현재 상황은 어떤가요?</div>'+
-        '<div class="status-btns">'+btns+'</div>'+
-      '</div>'+
-      '<div class="card-footer">'+
-        '<button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button>'+
-        '<div class="author-info">기사님 공유</div>'+
-      '</div>'+
+      '<div class="card-header"><div class="route-badge">'+p.route+'번</div><div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div><div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div></div>'+
+      '<div class="card-body"><div class="post-location">📍 '+p.location+'</div><div class="post-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div>'+
+      '<div class="status-update-area"><div class="status-update-label">🔄 현재 상황은 어떤가요?</div><div class="status-btns">'+btns+'</div></div>'+
+      '<div class="card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button><div class="author-info">기사님 공유</div></div>'+
       voteHtml+
     '</div>';
   }
   feed.innerHTML=html;
 }
-
 function updateStats(){
   var acc=0,slow=0;
-  for(var i=0;i<posts.length;i++){
-    if(posts[i].type==='accident') acc++;
-    if(posts[i].type==='slow') slow++;
-  }
+  for(var i=0;i<posts.length;i++){if(posts[i].type==='accident')acc++;if(posts[i].type==='slow')slow++;}
   document.getElementById('totalCount').textContent=posts.length;
   document.getElementById('accidentCount').textContent=acc;
   document.getElementById('slowCount').textContent=slow;
 }
-
-// ── 탭 필터 ────────────────────────────────────
 function filterRoute(route){
   currentFilter=route;
   var btns=document.querySelectorAll('.route-btn');
   for(var i=0;i<btns.length;i++) btns[i].classList.remove('active');
-  // 클릭한 버튼에 active 추가
   for(var i=0;i<btns.length;i++){
     var txt=btns[i].textContent.trim();
     if(route==='전체'&&txt==='전체'){btns[i].classList.add('active');break;}
     if(route==='자유'&&txt==='💬 자유게시판'){btns[i].classList.add('active');break;}
     if(txt===route+'번'){btns[i].classList.add('active');break;}
   }
-  // 자유게시판이면 FAB 보라색, 통계바 숨김
   var fab=document.getElementById('fab');
-  var statsBar=document.getElementById('statsBar');
+  var qa=document.getElementById('quickReportArea');
+  var sb=document.getElementById('statsBar');
   if(route==='자유'){
     fab.classList.add('free');
-    statsBar.style.display='none';
+    qa.style.display='none';
+    sb.style.display='none';
   } else {
     fab.classList.remove('free');
-    statsBar.style.display='';
+    qa.style.display='block';
+    sb.style.display='';
     updateStats();
   }
   renderFeed();
 }
-
-// ── 모달 ───────────────────────────────────────
 function openModal(){
   document.getElementById('modalOverlay').classList.add('show');
   if(currentFilter==='자유'){
-    // 자유게시판 폼
     document.getElementById('modalTitleText').textContent='💬 자유게시판 글쓰기';
     document.getElementById('modalBox').classList.add('free-modal');
     document.getElementById('roadForm').style.display='none';
@@ -663,7 +887,6 @@ function openModal(){
     document.getElementById('freePhotoPreview').style.display='none';
     freePhotoDataUrl=null;
   } else {
-    // 도로정보 폼
     document.getElementById('modalTitleText').textContent='🚨 도로 정보 올리기';
     document.getElementById('modalBox').classList.remove('free-modal');
     document.getElementById('roadForm').style.display='block';
@@ -677,9 +900,13 @@ function openModal(){
     for(var i=0;i<rb.length;i++) rb[i].classList.remove('selected');
     var tb=document.querySelectorAll('.type-select-btn');
     for(var i=0;i<tb.length;i++) tb[i].className='type-select-btn';
+    stopSpeech();
   }
 }
-function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+  stopSpeech(); stopFreeSpeech();
+}
 function closeOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
 function selectRoute(btn,route){
   var rb=document.querySelectorAll('.route-select-btn');
@@ -692,7 +919,7 @@ function selectType(btn,type,label){
   btn.classList.add('selected-'+type);selectedType=type;selectedTypeLabel=label;
 }
 function previewPhoto(e){
-  var file=e.target.files[0];if(!file) return;
+  var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(ev){
     photoDataUrl=ev.target.result;
@@ -703,7 +930,7 @@ function previewPhoto(e){
   reader.readAsDataURL(file);
 }
 function previewFreePhoto(e){
-  var file=e.target.files[0];if(!file) return;
+  var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(ev){
     freePhotoDataUrl=ev.target.result;
@@ -713,8 +940,6 @@ function previewFreePhoto(e){
   };
   reader.readAsDataURL(file);
 }
-
-// ── 도로정보 올리기 ────────────────────────────
 function submitPost(){
   var loc=document.getElementById('locationInput').value.trim();
   var msg=document.getElementById('messageInput').value.trim();
@@ -724,6 +949,7 @@ function submitPost(){
   if(!msg){alert('상세 내용을 입력해주세요!');return;}
   var btn=document.getElementById('submitBtn');
   btn.textContent='올리는 중...';btn.disabled=true;
+  stopSpeech();
   db.collection('posts').add({
     route:selectedRoute,type:selectedType,typeLabel:selectedTypeLabel,
     location:loc,message:msg,
@@ -731,13 +957,10 @@ function submitPost(){
     likes:0,photo:photoDataUrl,
     statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null
   }).then(function(){
-    playSuccessSound();closeModal();
-    showToast('✅ 도로 정보가 올라갔어요!');
+    playSuccessSound();closeModal();showToast('✅ 도로 정보가 올라갔어요!');
   }).catch(function(e){alert('저장 오류: '+e.message);})
   .finally(function(){btn.textContent='📤 지금 올리기';btn.disabled=false;});
 }
-
-// ── 자유게시판 올리기 ──────────────────────────
 function submitFreePost(){
   var title=document.getElementById('freeTitleInput').value.trim();
   var msg=document.getElementById('freeMessageInput').value.trim();
@@ -745,22 +968,20 @@ function submitFreePost(){
   if(!msg){alert('내용을 입력해주세요!');return;}
   var btn=document.getElementById('freeSubmitBtn');
   btn.textContent='올리는 중...';btn.disabled=true;
+  stopFreeSpeech();
   db.collection('freePosts').add({
     title:title,message:msg,
     timestamp:firebase.firestore.FieldValue.serverTimestamp(),
     likes:0,photo:freePhotoDataUrl
   }).then(function(){
-    playSuccessSound();closeModal();
-    showToast('💬 게시글이 올라갔어요!');
+    playSuccessSound();closeModal();showToast('💬 게시글이 올라갔어요!');
   }).catch(function(e){alert('저장 오류: '+e.message);})
   .finally(function(){btn.textContent='💬 게시글 올리기';btn.disabled=false;});
 }
-
-// ── 좋아요 ─────────────────────────────────────
 function toggleLike(id){
   var post=null;
   for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
-  if(!post) return;
+  if(!post)return;
   var likes=post.likes||0;
   if(likedPosts[id]){delete likedPosts[id];likes=Math.max(0,likes-1);}
   else{likedPosts[id]=true;likes++;}
@@ -770,19 +991,17 @@ function toggleLike(id){
 function toggleFreeLike(id){
   var post=null;
   for(var i=0;i<freePosts.length;i++){if(freePosts[i].id===id){post=freePosts[i];break;}}
-  if(!post) return;
+  if(!post)return;
   var likes=post.likes||0,key='free_'+id;
   if(likedPosts[key]){delete likedPosts[key];likes=Math.max(0,likes-1);}
   else{likedPosts[key]=true;likes++;}
   try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}
   db.collection('freePosts').doc(id).update({likes:likes});
 }
-
-// ── 현황 투표 ──────────────────────────────────
 function voteStatus(id,key){
   var post=null;
   for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}
-  if(!post) return;
+  if(!post)return;
   var v={clear:post.statusVotes.clear||0,smooth:post.statusVotes.smooth||0,improving:post.statusVotes.improving||0,still:post.statusVotes.still||0};
   var prev=myVotes[id]||null;
   if(prev===key){v[key]=Math.max(0,v[key]-1);delete myVotes[id];}
@@ -790,8 +1009,6 @@ function voteStatus(id,key){
   try{localStorage.setItem('myVotes',JSON.stringify(myVotes));}catch(e){}
   db.collection('posts').doc(id).update({statusVotes:v,lastVoteTs:Date.now()});
 }
-
-// ── PWA ────────────────────────────────────────
 var deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
 function showPwaModal(){
@@ -812,11 +1029,8 @@ function triggerPwaInstall(){
     });
   }else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}
 }
-
 updateVoiceBtn();
-if(window.speechSynthesis){
-  window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};
-}
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 </script>
 </body>
 </html>
