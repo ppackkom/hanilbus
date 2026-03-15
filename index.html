@@ -559,8 +559,8 @@ function checkRelayDateOnLoad(){
   db.collection('relayRooms').doc(relayRoomId).get().then(function(doc){
     if(!doc.exists) return;
     var data=doc.data();
-    // 방의 resetDate가 오늘이 아니면 → 어제 데이터 → 강제 퇴장
-    if(data.resetDate&&data.resetDate!==todayStr()){
+    // ★ resetDate 없거나 오늘이 아니면 강제 퇴장
+    if(!data.resetDate||data.resetDate!==todayStr()){
       showToast('🌙 자정이 지나 교대방이 초기화됐어요');
       document.getElementById('relayResetBanner').classList.remove('hidden');
       forceLeaveRelay();
@@ -609,7 +609,8 @@ function cleanStaleRelayRooms(){
     var batch=db.batch();var hasStale=false;
     snap.forEach(function(doc){
       var d=doc.data();
-      if(d.resetDate&&d.resetDate!==todayStr()){
+      // ★ resetDate가 없거나(기존 방) 오늘이 아니면 모두 초기화
+      if(!d.resetDate||d.resetDate!==todayStr()){
         hasStale=true;
         batch.update(doc.ref,{
           driverActive:firebase.firestore.FieldValue.delete(),
@@ -678,8 +679,8 @@ function renderRelayGrid(){
   db.collection('relayRooms').where('route','==',currentRelayRoute).get().then(function(snap){
     var roomMap={};
     snap.forEach(function(doc){var d=doc.data();
-      // ★ 날짜가 다른 방은 비어있는 것으로 처리
-      if(d.resetDate&&d.resetDate!==todayStr()){roomMap[d.num]={};}
+      // ★ resetDate 없거나 오늘이 아니면 빈 방으로 처리
+      if(!d.resetDate||d.resetDate!==todayStr()){roomMap[d.num]={};}
       else{roomMap[d.num]=d;}
     });
     grid.innerHTML='';
@@ -718,8 +719,8 @@ function openRelayRoom(num){
   db.collection('relayRooms').doc(relayRoomId).get().then(function(doc){
     var driverTaken=false,changerTaken=false;
     if(doc.exists){var d=doc.data();
-      // ★ 날짜 다르면 모두 비어있음으로 처리
-      if(!d.resetDate||d.resetDate===todayStr()){driverTaken=!!d.driverActive;changerTaken=!!d.changerActive;}
+      // ★ resetDate 없거나 오늘이 아니면 모두 비어있음
+      if(d.resetDate&&d.resetDate===todayStr()){driverTaken=!!d.driverActive;changerTaken=!!d.changerActive;}
     }
     var dBtn=document.getElementById('driverRoleBtn'),cBtn=document.getElementById('changerRoleBtn');
     var dBadge=document.getElementById('driverSlotBadge'),cBadge=document.getElementById('changerSlotBadge');
@@ -733,8 +734,8 @@ function joinRelayRoom(role){
   var roomRef=db.collection('relayRooms').doc(relayRoomId);
   roomRef.get().then(function(doc){
     var d=doc.exists?doc.data():{};
-    // ★ 날짜 다르면 방 초기화 후 입장 허용
-    var isStale=d.resetDate&&d.resetDate!==todayStr();
+    // ★ resetDate 없거나(기존 방) 오늘이 아니면 stale
+    var isStale=!d.resetDate||d.resetDate!==todayStr();
     if(!isStale){
       if(role==='driver'&&d.driverActive){showToast('❌ 운전기사 자리가 이미 찼어요!');return;}
       if(role==='changer'&&d.changerActive){showToast('❌ 교대기사 자리가 이미 찼어요!');return;}
@@ -763,8 +764,8 @@ function joinRelayRoom(role){
       if(role==='changer'){roomRef.set({changerJoinedAlert:true,_notifiedDriver:false},{merge:true});}
       relayListener=roomRef.onSnapshot(function(snap){
         if(!snap.exists)return;var data=snap.data();
-        // ★ 구독 중에 자정 초기화되면 강제 퇴장
-        if(data.resetDate&&data.resetDate!==todayStr()){
+        // ★ resetDate 없거나 오늘이 아니면 강제 퇴장
+        if(!data.resetDate||data.resetDate!==todayStr()){
           showToast('🌙 자정이 지나 교대방이 초기화됐어요');
           document.getElementById('relayResetBanner').classList.remove('hidden');
           forceLeaveRelay();return;
