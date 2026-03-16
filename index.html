@@ -339,6 +339,13 @@
           <div class="relay-active-title" id="relayActiveTitle"></div>
           <div class="relay-active-badge" id="relayActiveBadge"></div>
         </div>
+        <!-- ★ 위치 공유 시작 버튼 -->
+        <div id="locationStartArea" style="padding:14px 16px;">
+          <button id="locationStartBtn" onclick="startLocationShareManual()" style="width:100%;padding:15px;background:var(--teal);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span style="font-size:20px">📍</span> 내 위치 공유 시작하기
+          </button>
+          <div style="text-align:center;font-size:12px;color:var(--text2);margin-top:8px;">버튼을 누르면 위치 권한 요청 후 실시간 추적이 시작돼요</div>
+        </div>
         <div id="relayMap"></div>
         <div class="relay-info-bar">
           <div class="relay-distance-row">
@@ -761,6 +768,10 @@ function joinRelayRoom(role){
       if(role==='driver'){badge.className='relay-active-badge driver';badge.textContent='👨‍✈️ 운전기사';}
       else{badge.className='relay-active-badge changer';badge.textContent='🧍 교대기사';}
       initRelayMap();
+      // ★ 위치공유 시작 버튼 표시 (자동 시작 안 함)
+      document.getElementById('locationStartArea').style.display='block';
+      document.getElementById('locationStartBtn').textContent='';
+      document.getElementById('locationStartBtn').innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
       if(role==='changer'){roomRef.set({changerJoinedAlert:true,_notifiedDriver:false},{merge:true});}
       relayListener=roomRef.onSnapshot(function(snap){
         if(!snap.exists)return;var data=snap.data();
@@ -773,9 +784,38 @@ function joinRelayRoom(role){
         if(currentRelayRole==='driver'&&data.changerJoinedAlert&&!data._notifiedDriver){playAlertSound();vibrate();speak('교대기사님이 입장하셨습니다');showToast('🧍 교대기사님이 입장하셨어요!');roomRef.update({_notifiedDriver:true});}
         updateRelayMap(data);
       });
-      startLocationShare();
+      // ★ 자동 위치공유 제거 — 버튼 클릭으로 시작
     });
   }).catch(function(){showToast('오류가 발생했어요. 다시 시도해 주세요.');});
+}
+
+// ★ 📍 버튼 클릭 → 권한 팝업 → 실시간 추적 시작
+function startLocationShareManual(){
+  var btn=document.getElementById('locationStartBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span style="font-size:20px">⏳</span> 위치 권한 요청 중...';
+  if(!navigator.geolocation){
+    showToast('이 기기는 GPS를 지원하지 않아요');
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
+    return;
+  }
+  // getCurrentPosition 으로 권한 팝업 먼저 띄우기
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      // 권한 허용 → 버튼 숨기고 실시간 추적 시작
+      document.getElementById('locationStartArea').style.display='none';
+      showToast('📍 위치 공유가 시작됐어요! 이동하면 자동으로 업데이트돼요');
+      startLocationShare();
+    },
+    function(err){
+      btn.disabled=false;
+      btn.innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
+      if(err.code===1) showToast('위치 권한을 허용해 주세요!');
+      else showToast('위치를 가져올 수 없어요. 다시 눌러주세요.');
+    },
+    {timeout:10000,enableHighAccuracy:true}
+  );
 }
 
 function initRelayMap(){
