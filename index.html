@@ -296,6 +296,24 @@
   <div class="stat-item"><div class="stat-num" style="color:var(--yellow)" id="slowCount">0</div><div class="stat-label">정체 구간</div></div>
 </div>
 
+<!-- ★ 접속자 수 표시 바 -->
+<div id="onlineBar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(34,197,94,0.08);border-bottom:1px solid rgba(34,197,94,0.15);">
+  <div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.2s infinite;flex-shrink:0;"></div>
+  <span style="font-size:13px;color:var(--green);font-weight:700;">현재 <span id="onlineCount">0</span>명 접속 중</span>
+</div>
+
+<!-- ★ 앱 시작 터치 오버레이 — 오디오 활성화용 -->
+<div id="startOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;padding:32px 24px;background:var(--surface);border-radius:20px;border:2px solid var(--accent);max-width:320px;width:90%;">
+    <div style="font-size:52px;margin-bottom:12px;">🚌</div>
+    <div style="font-size:20px;font-weight:900;color:var(--accent);margin-bottom:8px;">한일운수 도로정보</div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.6;">화면을 터치하면 시작해요.<br>음성 알림이 정상 작동합니다.</div>
+    <button onclick="dismissStartOverlay()" style="width:100%;padding:16px;background:var(--accent);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;cursor:pointer;">
+      👆 터치해서 시작하기
+    </button>
+  </div>
+</div>
+
 <div class="feed" id="feed">
   <div class="empty-state"><div class="icon">🛣️</div><p>연결 중입니다...<br>잠시만 기다려 주세요.</p></div>
 </div>
@@ -1178,6 +1196,82 @@ function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferred
 updateVoiceBtn();
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
+// ── ★ 앱 시작 오버레이 (오디오 활성화) ──────────
+var overlayDismissed=false;
+try{overlayDismissed=localStorage.getItem('overlayDismissed')==='true';}catch(e){}
+
+function showStartOverlay(){
+  // 오늘 이미 터치했으면 표시 안 함
+  var lastDismiss=0;
+  try{lastDismiss=parseInt(localStorage.getItem('overlayDismissDate')||'0');}catch(e){}
+  var today=new Date(); today.setHours(0,0,0,0);
+  if(lastDismiss>=today.getTime()) return;
+  // 1초 후 오버레이 표시
+  setTimeout(function(){
+    document.getElementById('startOverlay').style.display='flex';
+  },1000);
+}
+
+function dismissStartOverlay(){
+  unlockAudio();
+  document.getElementById('startOverlay').style.display='none';
+  // 오늘 날짜 저장
+  var today=new Date(); today.setHours(0,0,0,0);
+  try{localStorage.setItem('overlayDismissDate',today.getTime());}catch(e){}
+  // 음성 ON 상태면 바로 테스트 음성
+  if(voiceOn){
+    setTimeout(function(){speak('음성 알림이 준비됐습니다');},300);
+  }
+}
+
+showStartOverlay();
+
+// ── ★ 접속자 수 실시간 표시 ────────────────────
+var onlineRef=null;
+var myOnlineId='user_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+
+function startOnlineTracking(){
+  // 내 접속 정보 등록
+  onlineRef=db.collection('onlineUsers').doc(myOnlineId);
+  onlineRef.set({
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // 30초마다 heartbeat (접속 유지)
+  setInterval(function(){
+    if(onlineRef) onlineRef.set({
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).catch(function(){});
+  },30000);
+
+  // 5분 이상 heartbeat 없는 유저 정리
+  setInterval(function(){
+    var cutoff=new Date(Date.now()-(5*60*1000));
+    db.collection('onlineUsers')
+      .where('updatedAt','<',firebase.firestore.Timestamp.fromDate(cutoff))
+      .get().then(function(snap){
+        if(snap.empty) return;
+        var batch=db.batch();
+        snap.forEach(function(doc){batch.delete(doc.ref);});
+        batch.commit().catch(function(){});
+      }).catch(function(){});
+  },60000);
+
+  // 접속자 수 실시간 구독
+  db.collection('onlineUsers').onSnapshot(function(snap){
+    var count=snap.size;
+    var el=document.getElementById('onlineCount');
+    if(el) el.textContent=count;
+  },function(){});
+
+  // 앱 닫힐 때 접속 정보 삭제
+  window.addEventListener('beforeunload',function(){
+    if(onlineRef) onlineRef.delete().catch(function(){});
+  });
+}
+
+startOnlineTracking();
 // ── ★ 관리자 모드 — 로고 아이콘 5번 탭하면 활성화 ──
 var adminTapCount=0,adminTapTimer=null;
 document.querySelector('.logo-icon').addEventListener('click',function(){
