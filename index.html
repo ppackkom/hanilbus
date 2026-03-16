@@ -760,13 +760,21 @@ function joinRelayRoom(role){
     currentRelayRole=role;relayRoomRef=roomRef;
     var updateData={route:currentRelayRoute,num:currentRelayNum,resetDate:todayStr(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if(isStale){
-      // 오래된 데이터 완전 초기화 후 입장
       updateData.driverActive=firebase.firestore.FieldValue.delete();
       updateData.changerActive=firebase.firestore.FieldValue.delete();
       updateData.driverLat=firebase.firestore.FieldValue.delete();
       updateData.driverLon=firebase.firestore.FieldValue.delete();
       updateData.changerLat=firebase.firestore.FieldValue.delete();
       updateData.changerLon=firebase.firestore.FieldValue.delete();
+    } else {
+      // ★ 내 역할 위치 데이터는 항상 초기화 (이전에 남은 데이터 제거)
+      if(role==='driver'){
+        updateData.driverLat=firebase.firestore.FieldValue.delete();
+        updateData.driverLon=firebase.firestore.FieldValue.delete();
+      } else {
+        updateData.changerLat=firebase.firestore.FieldValue.delete();
+        updateData.changerLon=firebase.firestore.FieldValue.delete();
+      }
     }
     if(role==='driver')updateData.driverActive=true;
     else updateData.changerActive=true;
@@ -993,21 +1001,67 @@ document.addEventListener('visibilitychange',function(){
 // 음성 ON 상태면 앱 시작 시 바로 Wake Lock 요청
 requestWakeLock();
 
-// ── TTS / 소리 ────────────────────────────────
-function speak(text){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=0.95;u.volume=1.0;var voices=window.speechSynthesis.getVoices();for(var i=0;i<voices.length;i++){if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}}window.speechSynthesis.speak(u);}
+// ── ★ 오디오 컨텍스트 미리 활성화 ──────────────
+var audioCtxUnlocked=false;
+var globalAudioCtx=null;
+
+function unlockAudio(){
+  if(audioCtxUnlocked) return;
+  try{
+    globalAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    // 무음 재생으로 오디오 컨텍스트 활성화
+    var buf=globalAudioCtx.createBuffer(1,1,22050);
+    var src=globalAudioCtx.createBufferSource();
+    src.buffer=buf;src.connect(globalAudioCtx.destination);src.start(0);
+    audioCtxUnlocked=true;
+  }catch(e){}
+
+  // speechSynthesis 미리 활성화
+  if(window.speechSynthesis){
+    var u=new SpeechSynthesisUtterance('');
+    u.volume=0;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+// 화면 첫 터치/클릭 시 오디오 잠금 해제
+document.addEventListener('touchstart',function(){unlockAudio();},{once:false,passive:true});
+document.addEventListener('click',function(){unlockAudio();},{once:false});
+
+function speak(text){
+  if(!window.speechSynthesis) return;
+  // ★ speechSynthesis가 멈춰있으면 재시작
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  window.speechSynthesis.cancel();
+  var trySpeak=function(){
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang='ko-KR';u.rate=0.95;u.volume=1.0;
+    var voices=window.speechSynthesis.getVoices();
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}
+    }
+    window.speechSynthesis.speak(u);
+  };
+  // 목소리 목록이 준비됐으면 바로, 아니면 잠깐 기다렸다가 실행
+  if(window.speechSynthesis.getVoices().length>0){
+    trySpeak();
+  } else {
+    setTimeout(trySpeak,300);
+  }
+}
 function announceNewPost(p){if(!voiceOn)return;var t={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};speak(p.route+'번 노선. '+p.location+'. '+(t[p.type]||'')+'. '+p.message);}
 function toggleVoice(){
+  unlockAudio(); // ★ 오디오 잠금 해제
   if(!voiceOn){
     var u=new SpeechSynthesisUtterance('음성 알림이 켜졌습니다');
     u.lang='ko-KR';u.volume=0.8;window.speechSynthesis.speak(u);
     voiceOn=true;
     document.getElementById('voiceBanner').classList.remove('hidden');
-    requestWakeLock(); // ★ 음성 ON 시 Wake Lock 즉시 요청
+    requestWakeLock();
   }else{
     window.speechSynthesis.cancel();
     voiceOn=false;
     document.getElementById('voiceBanner').classList.add('hidden');
-    // ★ 음성 OFF 시 Wake Lock 해제
     if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null;}
   }
   try{localStorage.setItem('voiceOn',voiceOn);}catch(e){}
@@ -1095,6 +1149,40 @@ function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferred
 updateVoiceBtn();
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
+// ── ★ 브라우저 닫히거나 새로고침될 때 자동 퇴장 ──
+window.addEventListener('beforeunload',function(){
+  if(!currentRelayRole||!relayRoomId) return;
+  // sendBeacon으로 백그라운드 전송 (앱 닫혀도 전송됨)
+  var projectId='hanilbus-760ae';
+  var docPath='relayRooms%2F'+relayRoomId;
+  var url='https://firestore.googleapis.com/v1/projects/'+projectId+'/databases/(default)/documents/'+docPath+'?currentDocument.exists=true';
+  // 내 역할에 따라 삭제할 필드 구성
+  var fields={};
+  if(currentRelayRole==='driver'){
+    fields['driverActive']={nullValue:null};
+    fields['driverLat']={nullValue:null};
+    fields['driverLon']={nullValue:null};
+  } else {
+    fields['changerActive']={nullValue:null};
+    fields['changerLat']={nullValue:null};
+    fields['changerLon']={nullValue:null};
+    fields['changerJoinedAlert']={nullValue:null};
+  }
+  // Firebase REST API로 직접 업데이트 (동기적으로 전송)
+  var updateUrl='https://firestore.googleapis.com/v1/projects/'+projectId+
+    '/databases/(default)/documents/relayRooms/'+relayRoomId+
+    '?updateMask.fieldPaths='+Object.keys(fields).join('&updateMask.fieldPaths=');
+  var body=JSON.stringify({fields:fields});
+  if(navigator.sendBeacon){
+    var blob=new Blob([body],{type:'application/json'});
+    navigator.sendBeacon(updateUrl,blob);
+  }
+  // GPS 추적도 중지
+  if(relayWatchId!==null){
+    navigator.geolocation.clearWatch(relayWatchId);
+    relayWatchId=null;
+  }
+});
 // ── ★ 30분마다 데이터 새로고침 (페이지 리로드 없음) ──
 // 교대방 안에 있어도 안전 — Firebase 데이터만 다시 읽어옴
 setInterval(function(){
