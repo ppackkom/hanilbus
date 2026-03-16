@@ -306,6 +306,12 @@
     <div class="relay-header-card" id="relayHeaderCard">
       <div class="relay-header-title">🔄 교대 위치공유</div>
       <div class="relay-header-sub">순번을 선택하면 운전기사·교대기사 각 1명씩만 입장할 수 있어요. 매일 자정에 모든 방이 자동으로 초기화됩니다.</div>
+      <!-- ★ 관리자 초기화 버튼 — 로고 아이콘 5번 탭하면 나타남 -->
+      <div id="adminResetArea" style="display:none;margin-top:12px;">
+        <button onclick="adminResetAllRooms()" style="width:100%;padding:11px;background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.3);border-radius:10px;color:var(--red);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+          🗑️ 교대방 전체 초기화 (관리자)
+        </button>
+      </div>
     </div>
     <!-- ★ 자정 초기화 안내 배너 -->
     <div class="relay-reset-banner hidden" id="relayResetBanner">
@@ -1149,6 +1155,54 @@ function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferred
 updateVoiceBtn();
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
+// ── ★ 관리자 모드 — 로고 아이콘 5번 탭하면 활성화 ──
+var adminTapCount=0,adminTapTimer=null;
+document.querySelector('.logo-icon').addEventListener('click',function(){
+  // PWA 팝업은 기존대로 작동
+  adminTapCount++;
+  if(adminTapTimer)clearTimeout(adminTapTimer);
+  adminTapTimer=setTimeout(function(){adminTapCount=0;},2000);
+  if(adminTapCount>=5){
+    adminTapCount=0;
+    if(currentFilter==='교대'){
+      var area=document.getElementById('adminResetArea');
+      var isVisible=area.style.display!=='none';
+      area.style.display=isVisible?'none':'block';
+      showToast(isVisible?'🔒 관리자 모드 종료':'🔓 관리자 모드 활성화');
+    } else {
+      showToast('🔄 교대 탭에서 5번 탭하면 관리자 버튼이 나타나요');
+    }
+  }
+});
+
+// ── ★ 교대방 전체 초기화 (관리자) ────────────
+function adminResetAllRooms(){
+  if(!confirm('교대방 전체를 초기화할까요?\n현재 접속 중인 모든 방이 삭제됩니다.')) return;
+  var btn=event.target;
+  btn.textContent='⏳ 초기화 중...';
+  btn.disabled=true;
+  db.collection('relayRooms').get().then(function(snap){
+    if(snap.empty){
+      showToast('✅ 초기화할 방이 없어요');
+      btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+      btn.disabled=false;
+      return;
+    }
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){
+    showToast('✅ 모든 교대방이 초기화됐어요!');
+    btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+    btn.disabled=false;
+    document.getElementById('adminResetArea').style.display='none';
+    renderRelayGrid();
+  }).catch(function(e){
+    showToast('오류: '+e.message);
+    btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+    btn.disabled=false;
+  });
+}
 // ── ★ 브라우저 닫히거나 새로고침될 때 자동 퇴장 ──
 window.addEventListener('beforeunload',function(){
   if(!currentRelayRole||!relayRoomId) return;
