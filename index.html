@@ -699,16 +699,140 @@ function deleteOldPosts(){
 }
 
 // ── GPS ───────────────────────────────────────
+// ── ★ 노선별 주요 정류장 좌표 데이터 ────────────
+var ROUTE_STOPS={
+  '204':[
+    {name:'금호지구종점',lat:35.9180,lon:128.5620},
+    {name:'사수초교',lat:35.9050,lon:128.5680},
+    {name:'팔달역',lat:35.8980,lon:128.5750},
+    {name:'만평역(서대구고속버스터미널)',lat:35.8870,lon:128.5720},
+    {name:'북부정류장',lat:35.8820,lon:128.5830},
+    {name:'비산네거리',lat:35.8720,lon:128.5790},
+    {name:'반고개역',lat:35.8660,lon:128.5810},
+    {name:'서문시장',lat:35.8690,lon:128.5870},
+    {name:'동산의료원',lat:35.8680,lon:128.5920},
+    {name:'반월당역',lat:35.8660,lon:128.5970},
+    {name:'봉산육거리',lat:35.8620,lon:128.6020},
+    {name:'건들바위네거리',lat:35.8560,lon:128.6080},
+    {name:'중동교',lat:35.8530,lon:128.6180},
+    {name:'상동네거리',lat:35.8520,lon:128.6280},
+    {name:'수성구보건소',lat:35.8510,lon:128.6370},
+    {name:'지산역',lat:35.8380,lon:128.6430},
+    {name:'범물1동행정복지센터',lat:35.8280,lon:128.6520}
+  ],
+  '609':[
+    {name:'대천동공영차고지',lat:35.8150,lon:128.5180},
+    {name:'월배역',lat:35.8230,lon:128.5320},
+    {name:'상인역',lat:35.8280,lon:128.5430},
+    {name:'월촌역',lat:35.8330,lon:128.5520},
+    {name:'송현역',lat:35.8430,lon:128.5620},
+    {name:'서부정류장역',lat:35.8560,lon:128.5720},
+    {name:'두류역',lat:35.8600,lon:128.5830},
+    {name:'내당역',lat:35.8620,lon:128.5900},
+    {name:'반고개역',lat:35.8660,lon:128.5810},
+    {name:'반월당역',lat:35.8660,lon:128.5970},
+    {name:'경대병원역',lat:35.8700,lon:128.6070},
+    {name:'범어역',lat:35.8720,lon:128.6220},
+    {name:'만촌역',lat:35.8680,lon:128.6330},
+    {name:'담티역',lat:35.8640,lon:128.6480},
+    {name:'대륜중고교',lat:35.8600,lon:128.6600},
+    {name:'연호역',lat:35.8570,lon:128.6750},
+    {name:'고산역',lat:35.8550,lon:128.6880},
+    {name:'신매역',lat:35.8520,lon:128.7020},
+    {name:'사월역',lat:35.8330,lon:128.7230},
+    {name:'영남대학교',lat:35.8330,lon:128.7530},
+    {name:'경산시청',lat:35.8250,lon:128.7400},
+    {name:'경산중앙병원',lat:35.8200,lon:128.7350},
+    {name:'금구리종점',lat:35.8080,lon:128.7600}
+  ],
+  '937':[
+    {name:'관음동종점',lat:35.9320,lon:128.5680},
+    {name:'칠곡우방타운',lat:35.9220,lon:128.5700},
+    {name:'대구보건대',lat:35.9130,lon:128.5720},
+    {name:'태전역',lat:35.9050,lon:128.5810},
+    {name:'팔달교',lat:35.8950,lon:128.5780},
+    {name:'노원종합시장',lat:35.8870,lon:128.5850},
+    {name:'침산네거리',lat:35.8820,lon:128.5920},
+    {name:'대구시청산격청사',lat:35.8780,lon:128.6080},
+    {name:'복현오거리',lat:35.8850,lon:128.6150},
+    {name:'경북대학교북문',lat:35.8880,lon:128.6080},
+    {name:'동대구역',lat:35.8790,lon:128.6280},
+    {name:'범어역',lat:35.8720,lon:128.6220},
+    {name:'수성구청역',lat:35.8580,lon:128.6300},
+    {name:'만촌네거리',lat:35.8650,lon:128.6380},
+    {name:'남부정류장',lat:35.8480,lon:128.6280},
+    {name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},
+    {name:'덕원중고등학교',lat:35.8350,lon:128.6850}
+  ],
+  '894':[
+    {name:'범물1동행정복지센터',lat:35.8280,lon:128.6520},
+    {name:'지산역',lat:35.8380,lon:128.6430},
+    {name:'수성소방서',lat:35.8450,lon:128.6350},
+    {name:'황금네거리',lat:35.8550,lon:128.6280},
+    {name:'어린이회관',lat:35.8580,lon:128.6200},
+    {name:'수성구민운동장역',lat:35.8600,lon:128.6130},
+    {name:'만촌역',lat:35.8680,lon:128.6330},
+    {name:'담티역',lat:35.8640,lon:128.6480},
+    {name:'연호역',lat:35.8570,lon:128.6750},
+    {name:'고산역',lat:35.8550,lon:128.6880},
+    {name:'신매역',lat:35.8520,lon:128.7020},
+    {name:'사월역',lat:35.8330,lon:128.7230},
+    {name:'영남대학교',lat:35.8330,lon:128.7530},
+    {name:'압량읍행정복지센터',lat:35.8120,lon:128.7550},
+    {name:'가톨릭대학교',lat:35.8020,lon:128.7700},
+    {name:'호산대학교',lat:35.7980,lon:128.7750},
+    {name:'경일대학교',lat:35.7950,lon:128.7800}
+  ],
+  '달서6':[
+    {name:'대천동공영차고지',lat:35.8150,lon:128.5180},
+    {name:'달서구청',lat:35.8300,lon:128.5330},
+    {name:'상인역',lat:35.8280,lon:128.5430},
+    {name:'상인남네거리',lat:35.8220,lon:128.5480},
+    {name:'월곡역사공원',lat:35.8350,lon:128.5520},
+    {name:'대구보훈병원',lat:35.8450,lon:128.5600},
+    {name:'송현역',lat:35.8430,lon:128.5620},
+    {name:'성당중학교',lat:35.8380,lon:128.5650},
+    {name:'앞산빨래터공원',lat:35.8180,lon:128.5820},
+    {name:'앞산공원',lat:35.8080,lon:128.5900}
+  ]
+};
+
+// ★ 가장 가까운 정류장 찾기 (500m 이내)
+function findNearestStop(route,lat,lon){
+  var stops=ROUTE_STOPS[route];
+  if(!stops||stops.length===0) return null;
+  var minDist=Infinity,nearest=null;
+  for(var i=0;i<stops.length;i++){
+    var d=calcStopDist(lat,lon,stops[i].lat,stops[i].lon);
+    if(d<minDist){minDist=d;nearest=stops[i];}
+  }
+  return minDist<=500?nearest.name+' 부근':null;
+}
+function calcStopDist(lat1,lon1,lat2,lon2){
+  var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
 function getGpsLocation(){
   var btn=document.getElementById('gpsBtn');
   if(!navigator.geolocation){showToast('GPS를 지원하지 않는 기기예요');return;}
   btn.classList.add('loading');btn.textContent='⏳';
   navigator.geolocation.getCurrentPosition(function(pos){
-    fetchAddress(pos.coords.latitude,pos.coords.longitude,function(addr){
-      document.getElementById('locationInput').value=addr;
-      showToast('📍 현재 위치가 입력됐어요!');
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    // ★ 선택된 노선이 있으면 정류장 먼저 확인
+    var stopName=selectedRoute?findNearestStop(selectedRoute,lat,lon):null;
+    if(stopName){
+      document.getElementById('locationInput').value=stopName;
+      showToast('🚏 '+stopName+' 자동 입력됐어요!');
       btn.classList.remove('loading');btn.textContent='📍';
-    });
+    } else {
+      fetchAddress(lat,lon,function(addr){
+        document.getElementById('locationInput').value=addr;
+        showToast('📍 현재 위치가 입력됐어요!');
+        btn.classList.remove('loading');btn.textContent='📍';
+      });
+    }
   },function(err){btn.classList.remove('loading');btn.textContent='📍';if(err.code===1)showToast('위치 권한을 허용해 주세요!');else showToast('위치를 가져올 수 없어요');},{timeout:10000,enableHighAccuracy:true});
 }
 function fetchAddress(lat,lon,cb){
@@ -717,7 +841,16 @@ function fetchAddress(lat,lon,cb){
     .then(function(data){var a=data.address||{},parts=[];if(a.road)parts.push(a.road);else if(a.neighbourhood)parts.push(a.neighbourhood);else if(a.suburb)parts.push(a.suburb);if(a.city_district)parts.push(a.city_district);cb(parts.length>0?parts.join(' ')+' 부근':'현재위치');})
     .catch(function(){cb('현재위치 ('+lat.toFixed(4)+', '+lon.toFixed(4)+')');});
 }
-function getGpsForQuick(cb){if(!navigator.geolocation){cb('현재위치');return;}navigator.geolocation.getCurrentPosition(function(pos){fetchAddress(pos.coords.latitude,pos.coords.longitude,cb);},function(){cb('현재위치');},{timeout:8000,enableHighAccuracy:true});}
+// ★ 퀵제보용 — 노선 정류장 먼저 확인
+function getGpsForQuick(route,cb){
+  if(!navigator.geolocation){cb('현재위치');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    var stopName=route?findNearestStop(route,lat,lon):null;
+    if(stopName){cb(stopName);}
+    else{fetchAddress(lat,lon,cb);}
+  },function(){cb('현재위치');},{timeout:8000,enableHighAccuracy:true});
+}
 
 // ── 음성인식 ──────────────────────────────────
 function initSR(onResult,onEnd){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;var r=new SR();r.lang='ko-KR';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;r.onresult=function(e){var interim='',final='';for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}onResult(interim,final);};r.onerror=function(e){onEnd();if(e.error==='not-allowed')showToast('마이크 권한을 허용해 주세요!');};r.onend=onEnd;return r;}
@@ -729,7 +862,15 @@ function stopFreeSpeech(){freeIsListening=false;var b=document.getElementById('f
 // ── 퀵제보 ────────────────────────────────────
 function openQuickModal(type,label){quickType=type;quickTypeLabel=label;document.getElementById('quickModalTitle').textContent=label+' — 노선 선택';document.getElementById('quickModalOverlay').classList.add('show');}
 function closeQuickModal(){document.getElementById('quickModalOverlay').classList.remove('show');}
-function submitQuick(route){closeQuickModal();showToast('📍 위치 확인 중...');getGpsForQuick(function(location){var msg={accident:'현재 위치 사고 발생. 주의 바랍니다.',slow:'현재 위치 정체 중입니다.',clear:'현재 구간 소통 원활합니다.',construction:'현재 위치 공사 중입니다.'};db.collection('posts').add({route:route,type:quickType,typeLabel:quickTypeLabel,location:location,message:msg[quickType]||'퀵제보',timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:null,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null}).then(function(){playSuccessSound();showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');}).catch(function(e){showToast('오류: '+e.message);});});}
+function submitQuick(route){
+  closeQuickModal();showToast('🚏 정류장 확인 중...');
+  getGpsForQuick(route,function(location){
+    var msg={accident:'현재 위치 사고 발생. 주의 바랍니다.',slow:'현재 위치 정체 중입니다.',clear:'현재 구간 소통 원활합니다.',construction:'현재 위치 공사 중입니다.'};
+    db.collection('posts').add({route:route,type:quickType,typeLabel:quickTypeLabel,location:location,message:msg[quickType]||'퀵제보',timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:null,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null})
+    .then(function(){playSuccessSound();showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');})
+    .catch(function(e){showToast('오류: '+e.message);});
+  });
+}
 
 // ── 교대 탭 ──────────────────────────────────
 function selectRelayRoute(route,btn){currentRelayRoute=route;var tabs=document.querySelectorAll('.relay-route-tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');btn.classList.add('active');renderRelayGrid();}
