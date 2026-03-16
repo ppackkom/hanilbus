@@ -1055,7 +1055,18 @@ function speak(text){
     setTimeout(trySpeak,300);
   }
 }
-function announceNewPost(p){if(!voiceOn)return;var t={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};speak(p.route+'번 노선. '+p.location+'. '+(t[p.type]||'')+'. '+p.message);}
+function announceNewPost(p){
+  if(!voiceOn) return;
+  var t={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};
+  var text=p.route+'번 노선. '+p.location+'. '+(t[p.type]||'')+'. '+p.message;
+  // ★ 첫 번째 읽기
+  speak(text);
+  // ★ 두 번째 읽기 (첫 번째 끝난 후 1초 뒤)
+  var avgDuration=(text.length*0.12+1)*1000; // 글자 수 기준 예상 시간
+  setTimeout(function(){
+    if(voiceOn) speak(text);
+  }, avgDuration+1000);
+}
 function toggleVoice(){
   unlockAudio(); // ★ 오디오 잠금 해제
   if(!voiceOn){
