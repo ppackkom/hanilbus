@@ -236,6 +236,17 @@
   .pwa-modal-btns{display:flex;gap:8px;margin-top:20px;}
   .pwa-confirm-btn{flex:1;padding:13px;background:var(--accent);border:none;border-radius:10px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
   .pwa-cancel-btn{padding:13px 18px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;}
+  /* ── 날씨 바 ── */
+  .weather-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--border);gap:8px;}
+  .weather-main{display:flex;align-items:center;gap:8px;}
+  .weather-icon{font-size:20px;}
+  .weather-temp{font-size:16px;font-weight:900;color:var(--text);}
+  .weather-desc{font-size:13px;color:var(--text2);}
+  .weather-alert{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .weather-alert.danger{background:rgba(239,68,68,0.15);color:var(--red);}
+  .weather-alert.warn{background:rgba(234,179,8,0.15);color:var(--yellow);}
+  .weather-alert.good{background:rgba(34,197,94,0.15);color:var(--green);}
+  .weather-alert.normal{background:rgba(139,148,158,0.15);color:var(--text2);}
 </style>
 </head>
 <body>
@@ -260,6 +271,16 @@
   <span style="font-size:24px">🔊</span>
   <div class="voice-banner-text"><strong>음성 알림이 켜져 있어요!</strong>새 도로 정보가 올라오면 자동으로 읽어드려요</div>
   <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- ★ 날씨 바 -->
+<div class="weather-bar" id="weatherBar">
+  <div class="weather-main">
+    <span class="weather-icon" id="weatherIcon">🌤️</span>
+    <span class="weather-temp" id="weatherTemp">--°C</span>
+    <span class="weather-desc" id="weatherDesc">날씨 불러오는 중...</span>
+  </div>
+  <span class="weather-alert normal" id="weatherAlert">대구</span>
 </div>
 
 <!-- ★ 연결 끊김 배너 -->
@@ -1270,6 +1291,64 @@ function startOnlineTracking(){
     if(onlineRef) onlineRef.delete().catch(function(){});
   });
 }
+
+// ── ★ 날씨 (Open-Meteo 무료 API — 대구 고정) ──
+function fetchWeather(){
+  // 대구 좌표: 위도 35.8714, 경도 128.6014
+  var url='https://api.open-meteo.com/v1/forecast?latitude=35.8714&longitude=128.6014&current=temperature_2m,weathercode,windspeed_10m,precipitation&timezone=Asia%2FSeoul';
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var c=data.current;
+      var temp=Math.round(c.temperature_2m);
+      var code=c.weathercode;
+      var wind=c.windspeed_10m;
+      var rain=c.precipitation;
+
+      // 날씨 코드 → 아이콘/설명
+      var icon='🌤️',desc='맑음';
+      if(code===0){icon='☀️';desc='맑음';}
+      else if(code<=2){icon='🌤️';desc='구름 조금';}
+      else if(code<=3){icon='☁️';desc='흐림';}
+      else if(code<=49){icon='🌫️';desc='안개';}
+      else if(code<=59){icon='🌦️';desc='이슬비';}
+      else if(code<=69){icon='🌧️';desc='비';}
+      else if(code<=79){icon='🌨️';desc='눈';}
+      else if(code<=82){icon='🌧️';desc='소나기';}
+      else if(code<=86){icon='🌨️';desc='눈보라';}
+      else{icon='⛈️';desc='뇌우';}
+
+      // 온도별 아이콘 보정
+      if(temp>=35){icon='🌡️';}
+      else if(temp<=0&&(code>=70&&code<=79)){icon='❄️';}
+
+      // 주의 메시지
+      var alertText='대구', alertClass='normal';
+      if(code>=70&&code<=79){alertText='❄️ 결빙 위험!';alertClass='danger';}
+      else if(code>=50&&code<=69){alertText='🌧️ 노면 미끄러움';alertClass='warn';}
+      else if(code>=80&&code<=82){alertText='⚠️ 소나기 주의';alertClass='warn';}
+      else if(code>=83){alertText='⛈️ 악천후 주의!';alertClass='danger';}
+      else if(wind>=50){alertText='💨 강풍 주의!';alertClass='danger';}
+      else if(wind>=30){alertText='💨 바람 강함';alertClass='warn';}
+      else if(temp>=35){alertText='🌡️ 폭염 주의!';alertClass='danger';}
+      else if(temp<=0){alertText='🧊 결빙 주의!';alertClass='danger';}
+      else if(temp>=28){alertText='☀️ 무더운 날씨';alertClass='warn';}
+      else{alertText='✅ 쾌청한 날씨';alertClass='good';}
+
+      document.getElementById('weatherIcon').textContent=icon;
+      document.getElementById('weatherTemp').textContent=temp+'°C';
+      document.getElementById('weatherDesc').textContent=desc;
+      document.getElementById('weatherAlert').textContent=alertText;
+      document.getElementById('weatherAlert').className='weather-alert '+alertClass;
+    })
+    .catch(function(){
+      document.getElementById('weatherDesc').textContent='날씨 정보 없음';
+    });
+}
+
+// 앱 시작 시 날씨 가져오기 + 1시간마다 갱신
+fetchWeather();
+setInterval(fetchWeather, 60*60*1000);
 
 startOnlineTracking();
 // ── ★ 관리자 모드 — 로고 아이콘 5번 탭하면 활성화 ──
