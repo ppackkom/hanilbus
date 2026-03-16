@@ -1036,24 +1036,18 @@ document.addEventListener('click',function(){unlockAudio();},{once:false});
 
 function speak(text){
   if(!window.speechSynthesis) return;
-  // ★ speechSynthesis가 멈춰있으면 재시작
   if(window.speechSynthesis.paused) window.speechSynthesis.resume();
   window.speechSynthesis.cancel();
-  var trySpeak=function(){
+  // ★ cancel() 후 잠깐 기다렸다가 실행 (cancel이 완전히 적용되도록)
+  setTimeout(function(){
     var u=new SpeechSynthesisUtterance(text);
-    u.lang='ko-KR';u.rate=0.95;u.volume=1.0;
+    u.lang='ko-KR'; u.rate=0.92; u.volume=1.0;
     var voices=window.speechSynthesis.getVoices();
     for(var i=0;i<voices.length;i++){
       if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}
     }
     window.speechSynthesis.speak(u);
-  };
-  // 목소리 목록이 준비됐으면 바로, 아니면 잠깐 기다렸다가 실행
-  if(window.speechSynthesis.getVoices().length>0){
-    trySpeak();
-  } else {
-    setTimeout(trySpeak,300);
-  }
+  }, 150);
 }
 function announceNewPost(p){
   if(!voiceOn) return;
@@ -1096,7 +1090,25 @@ function timeAgo(ts){if(!ts)return'방금 전';var diff=Math.floor((Date.now()-t
 // ── Firebase 실시간 ───────────────────────────
 db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
   var newPosts=[];snapshot.forEach(function(doc){var data=doc.data(),ts=0;try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}newPosts.push({id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},lastVoteTs:data.lastVoteTs||null,myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]});});
-  if(!isFirstLoad){for(var i=0;i<newPosts.length;i++){if(!knownIds[newPosts[i].id]){var np=newPosts[i];playAlertSound();vibrate();showToast('🚨 새 도로 정보가 올라왔어요!');if(voiceOn){(function(p){setTimeout(function(){announceNewPost(p);},1500);})(np);}break;}}}
+  if(!isFirstLoad){
+    for(var i=0;i<newPosts.length;i++){
+      if(!knownIds[newPosts[i].id]){
+        var np=newPosts[i];
+        playAlertSound();
+        vibrate();
+        showToast('🚨 새 도로 정보가 올라왔어요!');
+        if(voiceOn){
+          (function(p){
+            // ★ 알림음(0.5초) 완전히 끝난 후 음성 시작
+            setTimeout(function(){
+              announceNewPost(p);
+            }, 2000);
+          })(np);
+        }
+        break;
+      }
+    }
+  }
   knownIds={};for(var i=0;i<newPosts.length;i++)knownIds[newPosts[i].id]=true;
   isFirstLoad=false;posts=newPosts;if(currentFilter!=='자유'&&currentFilter!=='교대'){renderFeed();updateStats();}
 },function(){});
