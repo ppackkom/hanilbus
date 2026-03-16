@@ -521,10 +521,12 @@ try{voiceOn=localStorage.getItem('voiceOn')==='true';}catch(e){}
 var STATUS_INFO={clear:{emoji:'✅',label:'소통원활',cls:'clear'},smooth:{emoji:'🟢',label:'매우쾌적',cls:'smooth'},improving:{emoji:'📉',label:'점점풀림',cls:'improving'},still:{emoji:'🔴',label:'아직정체',cls:'still'}};
 var STATUS_ORDER=['clear','smooth','improving','still'];
 
-// ── ★ 오늘 날짜 문자열 (YYYY-MM-DD) ──────────
+// ── ★ 오늘 날짜 문자열 — 한국 시간(KST) 기준 ──
 function todayStr(){
-  var d=new Date();
-  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  var now=new Date();
+  // KST = UTC + 9시간
+  var kst=new Date(now.getTime()+(9*60*60*1000));
+  return kst.getUTCFullYear()+'-'+(kst.getUTCMonth()+1)+'-'+kst.getUTCDate();
 }
 
 // ── ★ 자정까지 남은 밀리초 계산 ──────────────
