@@ -364,7 +364,7 @@
             <div class="relay-member-loc" id="changerLocText">대기 중</div>
           </div>
         </div>
-        <button class="relay-leave-btn" onclick="leaveRelayRoom()">🚪 방 나가기</button>
+        <button class="relay-leave-btn" id="relayLeaveBtn" onclick="confirmLeaveRelay()">🚪 방 나가기</button>
       </div>
     </div>
   </div>
@@ -579,6 +579,7 @@ function checkRelayDateOnLoad(){
 function forceLeaveRelay(){
   if(relayWatchId!==null){navigator.geolocation.clearWatch(relayWatchId);relayWatchId=null;}
   if(relayListener){relayListener();relayListener=null;}
+  if(leafletMap){leafletMap.remove();leafletMap=null;driverMarker=null;changerMarker=null;}
   relayRoomRef=null;
   currentRelayRole='';currentRelayNum=0;relayRoomId='';
   // UI가 교대 탭이면 그리드로 복귀
@@ -818,57 +819,149 @@ function startLocationShareManual(){
   );
 }
 
+// ── 지도 변수 ─────────────────────────────────
+var leafletMap=null,driverMarker=null,changerMarker=null;
+
 function initRelayMap(){
-  var mapDiv=document.getElementById('relayMap');mapDiv.innerHTML='';
-  var iframe=document.createElement('iframe');iframe.id='relayMapIframe';iframe.style.cssText='width:100%;height:280px;border:none;';
-  iframe.src='https://www.openstreetmap.org/export/embed.html?bbox=128.5300%2C35.8200%2C128.6500%2C35.9200&layer=mapnik&marker=35.8714%2C128.6014';
-  mapDiv.appendChild(iframe);
-  document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 대기 중';document.getElementById('changerLocInfo').textContent='🧍 위치 대기 중';
+  var mapDiv=document.getElementById('relayMap');
+  mapDiv.innerHTML='';
+  mapDiv.style.height='280px';
+
+  // Leaflet CSS/JS 동적 로드
+  if(!document.getElementById('leafletCss')){
+    var css=document.createElement('link');
+    css.id='leafletCss';css.rel='stylesheet';
+    css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+  }
+  function initMap(){
+    if(leafletMap){leafletMap.remove();leafletMap=null;}
+    driverMarker=null;changerMarker=null;
+    leafletMap=L.map('relayMap').setView([35.8714,128.6014],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap',maxZoom:18
+    }).addTo(leafletMap);
+  }
+  if(window.L){
+    initMap();
+  } else {
+    var script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    script.onload=function(){initMap();};
+    document.head.appendChild(script);
+  }
+  document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 대기 중';
+  document.getElementById('changerLocInfo').textContent='🧍 위치 대기 중';
   document.getElementById('relayEta').textContent='📍 상대방 위치를 기다리는 중...';
-  document.getElementById('driverCard').classList.remove('online');document.getElementById('changerCard').classList.remove('online');
+  document.getElementById('driverCard').classList.remove('online');
+  document.getElementById('changerCard').classList.remove('online');
 }
+
 function startLocationShare(){
   if(!navigator.geolocation)return;
   relayWatchId=navigator.geolocation.watchPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
     var ud={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    if(currentRelayRole==='driver'){ud.driverLat=lat;ud.driverLon=lon;}else{ud.changerLat=lat;ud.changerLon=lon;}
+    if(currentRelayRole==='driver'){ud.driverLat=lat;ud.driverLon=lon;}
+    else{ud.changerLat=lat;ud.changerLon=lon;}
     if(relayRoomRef)relayRoomRef.set(ud,{merge:true});
-  },function(){},{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+  },function(){},{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
 }
+
 function updateRelayMap(data){
-  var dLat=data.driverLat,dLon=data.driverLon,cLat=data.changerLat,cLon=data.changerLon;
-  if(dLat){document.getElementById('driverCard').classList.add('online');document.getElementById('driverLocText').textContent='위치 공유 중 📍';document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 공유 중';}
-  if(cLat){document.getElementById('changerCard').classList.add('online');document.getElementById('changerLocText').textContent='위치 공유 중 📍';document.getElementById('changerLocInfo').textContent='🧍 위치 공유 중';}
+  var dLat=data.driverLat,dLon=data.driverLon;
+  var cLat=data.changerLat,cLon=data.changerLon;
+
+  if(dLat){
+    document.getElementById('driverCard').classList.add('online');
+    document.getElementById('driverLocText').textContent='위치 공유 중 📍';
+    document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 공유 중';
+    // ★ Leaflet 마커 실시간 이동
+    if(leafletMap){
+      var dIcon=L.divIcon({html:'<div style="background:#14b8a6;color:white;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">👨‍✈️ 운전기사</div>',className:'',iconAnchor:[40,20]});
+      if(driverMarker){driverMarker.setLatLng([dLat,dLon]);}
+      else{driverMarker=L.marker([dLat,dLon],{icon:dIcon}).addTo(leafletMap);}
+    }
+  }
+  if(cLat){
+    document.getElementById('changerCard').classList.add('online');
+    document.getElementById('changerLocText').textContent='위치 공유 중 📍';
+    document.getElementById('changerLocInfo').textContent='🧍 위치 공유 중';
+    if(leafletMap){
+      var cIcon=L.divIcon({html:'<div style="background:#22c55e;color:white;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">🧍 교대기사</div>',className:'',iconAnchor:[40,20]});
+      if(changerMarker){changerMarker.setLatLng([cLat,cLon]);}
+      else{changerMarker=L.marker([cLat,cLon],{icon:cIcon}).addTo(leafletMap);}
+    }
+  }
+  // 두 위치 모두 있으면 거리/ETA + 지도 범위 조정
   if(dLat&&cLat){
-    var dist=calcDist(dLat,dLon,cLat,cLon);var etaMin=Math.round(dist/400);var etaText='';
+    var dist=calcDist(dLat,dLon,cLat,cLon);
+    var etaMin=Math.round(dist/400);var etaText='';
     if(dist<50)etaText='🟢 거의 도착! ('+Math.round(dist)+'m)';
     else if(dist<200)etaText='🟡 약 '+Math.round(dist)+'m — 1분 이내 도착 예정';
     else etaText='🚶 약 '+Math.round(dist)+'m — '+etaMin+'분 후 도착 예정';
     document.getElementById('relayEta').textContent=etaText;
-    var midLat=(dLat+cLat)/2,midLon=(dLon+cLon)/2,span=Math.max(Math.abs(dLat-cLat),Math.abs(dLon-cLon))*1.5+0.005;
-    var bbox=(midLon-span)+'%2C'+(midLat-span)+'%2C'+(midLon+span)+'%2C'+(midLat+span);
-    var iframe=document.getElementById('relayMapIframe');
-    if(iframe)iframe.src='https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+dLat+'%2C'+dLon;
+    if(leafletMap&&driverMarker&&changerMarker){
+      var group=L.featureGroup([driverMarker,changerMarker]);
+      leafletMap.fitBounds(group.getBounds().pad(0.3));
+    }
+  } else if(dLat&&leafletMap){
+    leafletMap.setView([dLat,dLon],15);
+  } else if(cLat&&leafletMap){
+    leafletMap.setView([cLat,cLon],15);
   }
 }
 function calcDist(lat1,lon1,lat2,lon2){var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 
+function confirmLeaveRelay(){
+  var btn=document.getElementById('relayLeaveBtn');
+  if(btn){btn.textContent='⏳ 나가는 중...';btn.disabled=true;}
+  leaveRelayRoom();
+}
+
 function leaveRelayRoom(){
   if(relayWatchId!==null){navigator.geolocation.clearWatch(relayWatchId);relayWatchId=null;}
   if(relayListener){relayListener();relayListener=null;}
-  if(relayRoomRef){
-    var cd={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    if(currentRelayRole==='driver'){cd.driverActive=firebase.firestore.FieldValue.delete();cd.driverLat=firebase.firestore.FieldValue.delete();cd.driverLon=firebase.firestore.FieldValue.delete();}
-    else{cd.changerActive=firebase.firestore.FieldValue.delete();cd.changerLat=firebase.firestore.FieldValue.delete();cd.changerLon=firebase.firestore.FieldValue.delete();cd.changerJoinedAlert=firebase.firestore.FieldValue.delete();}
-    relayRoomRef.update(cd).catch(function(){});relayRoomRef=null;
+  // 지도 정리
+  if(leafletMap){leafletMap.remove();leafletMap=null;driverMarker=null;changerMarker=null;}
+
+  function resetUI(){
+    currentRelayRole='';currentRelayNum=0;relayRoomId='';
+    document.getElementById('relayRoom').classList.remove('show');
+    document.getElementById('relayNumGrid').style.display='grid';
+    document.getElementById('relayRouteTabs').style.display='flex';
+    document.getElementById('relayHeaderCard').style.display='block';
+    renderRelayGrid();
   }
-  currentRelayRole='';currentRelayNum=0;relayRoomId='';
-  document.getElementById('relayRoom').classList.remove('show');
-  document.getElementById('relayNumGrid').style.display='grid';
-  document.getElementById('relayRouteTabs').style.display='flex';
-  document.getElementById('relayHeaderCard').style.display='block';
-  renderRelayGrid();
+
+  if(relayRoomRef&&currentRelayRole){
+    var ref=relayRoomRef;
+    var role=currentRelayRole;
+    relayRoomRef=null;
+    // ★ 내 역할 데이터만 완전 삭제 (set으로 덮어쓰기)
+    var clearData={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(role==='driver'){
+      clearData.driverActive=firebase.firestore.FieldValue.delete();
+      clearData.driverLat=firebase.firestore.FieldValue.delete();
+      clearData.driverLon=firebase.firestore.FieldValue.delete();
+    } else {
+      clearData.changerActive=firebase.firestore.FieldValue.delete();
+      clearData.changerLat=firebase.firestore.FieldValue.delete();
+      clearData.changerLon=firebase.firestore.FieldValue.delete();
+      clearData.changerJoinedAlert=firebase.firestore.FieldValue.delete();
+      clearData._notifiedDriver=firebase.firestore.FieldValue.delete();
+    }
+    // update 실패 시 set으로 재시도, 둘 다 실패해도 UI는 전환
+    ref.update(clearData)
+      .then(function(){resetUI();})
+      .catch(function(){
+        ref.set(clearData,{merge:true})
+          .then(function(){resetUI();})
+          .catch(function(){resetUI();});
+      });
+  } else {
+    resetUI();
+  }
 }
 
 // ── ★ Wake Lock — 화면 꺼짐 방지 ────────────
