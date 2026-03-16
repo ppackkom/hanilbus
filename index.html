@@ -776,8 +776,11 @@ function joinRelayRoom(role){
       document.getElementById('locationStartBtn').textContent='';
       document.getElementById('locationStartBtn').innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
       if(role==='changer'){roomRef.set({changerJoinedAlert:true,_notifiedDriver:false},{merge:true});}
+      var isFirstSnapshot=true; // ★ 입장 직후 첫 스냅샷은 날짜 체크 건너뜀
       relayListener=roomRef.onSnapshot(function(snap){
         if(!snap.exists)return;var data=snap.data();
+        // ★ 첫 스냅샷은 건너뜀 (입장 직후 저장 전 상태일 수 있음)
+        if(isFirstSnapshot){isFirstSnapshot=false;updateRelayMap(data);return;}
         // ★ resetDate 없거나 오늘이 아니면 강제 퇴장
         if(!data.resetDate||data.resetDate!==todayStr()){
           showToast('🌙 자정이 지나 교대방이 초기화됐어요');
