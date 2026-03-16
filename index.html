@@ -262,6 +262,13 @@
   <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
 </div>
 
+<!-- ★ 연결 끊김 배너 -->
+<div id="offlineBanner" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:rgba(239,68,68,0.15);border-bottom:1px solid rgba(239,68,68,0.3);">
+  <span style="font-size:18px">⚠️</span>
+  <div style="flex:1;font-size:13px;color:var(--red);font-weight:700;">연결이 끊겼어요. 자동으로 재연결 중...</div>
+  <button onclick="location.reload()" style="background:var(--red);border:none;color:white;padding:5px 12px;border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">새로고침</button>
+</div>
+
 <div class="route-filter">
   <button class="route-btn active" onclick="filterRoute('전체')">전체</button>
   <button class="route-btn" onclick="filterRoute('204')">204번</button>
@@ -1087,6 +1094,37 @@ function closePwaModalOnOverlay(e){if(e.target===document.getElementById('pwaMod
 function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(result){if(result.outcome==='accepted')showToast('✅ 홈화면에 추가됐어요!');deferredPrompt=null;closePwaModal();});}else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}}
 updateVoiceBtn();
 if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
-</script>
+
+// ── ★ 30분마다 데이터 새로고침 (페이지 리로드 없음) ──
+// 교대방 안에 있어도 안전 — Firebase 데이터만 다시 읽어옴
+setInterval(function(){
+  // 글 작성 모달 열려있으면 건너뜀
+  if(document.getElementById('modalOverlay').classList.contains('show')) return;
+
+  // 도로정보 최신 데이터 다시 불러오기
+  db.collection('posts').orderBy('timestamp','desc').get().then(function(snapshot){
+    var newPosts=[];
+    snapshot.forEach(function(doc){
+      var data=doc.data(),ts=0;
+      try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+      newPosts.push({id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},lastVoteTs:data.lastVoteTs||null,myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]});
+    });
+    posts=newPosts;
+    if(currentFilter!=='자유'&&currentFilter!=='교대'){renderFeed();updateStats();}
+  }).catch(function(){});
+
+  // 자유게시판 최신 데이터 다시 불러오기
+  db.collection('freePosts').orderBy('timestamp','desc').get().then(function(snapshot){
+    var np=[];
+    snapshot.forEach(function(doc){
+      var data=doc.data(),ts=0;
+      try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+      np.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});
+    });
+    freePosts=np;
+    if(currentFilter==='자유')renderFeed();
+  }).catch(function(){});
+
+}, 30 * 60 * 1000); // 30분</script>
 </body>
 </html>
