@@ -884,12 +884,40 @@ var ROUTE_STOPS={
 function findNearestStop(route,lat,lon){
   var stops=ROUTE_STOPS[route];
   if(!stops||stops.length===0) return null;
-  var minDist=Infinity,nearest=null;
+
+  // 모든 정류장까지 거리 계산
+  var dists=[];
   for(var i=0;i<stops.length;i++){
-    var d=calcStopDist(lat,lon,stops[i].lat,stops[i].lon);
-    if(d<minDist){minDist=d;nearest=stops[i];}
+    dists.push({stop:stops[i], dist:calcStopDist(lat,lon,stops[i].lat,stops[i].lon), idx:i});
   }
-  return minDist<=500?nearest.name+' 부근':null;
+  // 거리순 정렬
+  dists.sort(function(a,b){return a.dist-b.dist;});
+
+  var closest=dists[0];
+
+  // ★ 150m 이내 — 정류장 바로 앞
+  if(closest.dist<=150){
+    return closest.stop.name+' 앞';
+  }
+  // ★ 500m 이내 — 정류장 부근
+  if(closest.dist<=500){
+    return closest.stop.name+' 부근';
+  }
+  // ★ 500m~1km — 두 정류장 사이 구간으로 표시
+  if(closest.dist<=1000){
+    var second=dists[1];
+    // 두 번째로 가까운 정류장이 같은 노선이면 구간으로 표시
+    if(second&&second.dist<=1200){
+      // 노선 순서상 앞뒤 관계 파악
+      var i1=closest.idx, i2=second.idx;
+      var first=i1<i2?closest.stop:second.stop;
+      var last=i1<i2?second.stop:closest.stop;
+      return first.name+' ~ '+last.name+' 구간';
+    }
+    return closest.stop.name+' 방향';
+  }
+  // 1km 초과 — null 반환 (도로명 주소 사용)
+  return null;
 }
 function calcStopDist(lat1,lon1,lat2,lon2){
   var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
@@ -903,8 +931,8 @@ function getGpsLocation(){
   btn.classList.add('loading');btn.textContent='⏳';
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
-    // ★ 선택된 노선이 있으면 정류장 먼저 확인
-    var stopName=selectedRoute?findNearestStop(selectedRoute,lat,lon):null;
+    // ★ 선택된 노선이 있으면 해당 노선, 없으면 전체 노선에서 검색
+    var stopName=findBestStop(selectedRoute||null,lat,lon);
     if(stopName){
       document.getElementById('locationInput').value=stopName;
       showToast('🚏 '+stopName+' 자동 입력됐어요!');
@@ -918,6 +946,28 @@ function getGpsLocation(){
     }
   },function(err){btn.classList.remove('loading');btn.textContent='📍';if(err.code===1)showToast('위치 권한을 허용해 주세요!');else showToast('위치를 가져올 수 없어요');},{timeout:10000,enableHighAccuracy:true});
 }
+
+// ★ 특정 노선 또는 전체 노선에서 가장 가까운 정류장 찾기
+function findBestStop(route,lat,lon){
+  if(route){
+    return findNearestStop(route,lat,lon);
+  }
+  // 노선 미선택 — 전체 노선에서 가장 가까운 정류장 찾기
+  var routes=Object.keys(ROUTE_STOPS);
+  var bestResult=null, bestDist=Infinity;
+  for(var r=0;r<routes.length;r++){
+    var stops=ROUTE_STOPS[routes[r]];
+    for(var i=0;i<stops.length;i++){
+      var d=calcStopDist(lat,lon,stops[i].lat,stops[i].lon);
+      if(d<bestDist){bestDist=d;bestResult={stop:stops[i],dist:d,route:routes[r]};}
+    }
+  }
+  if(!bestResult) return null;
+  if(bestResult.dist<=150) return bestResult.stop.name+' 앞';
+  if(bestResult.dist<=500) return bestResult.stop.name+' 부근';
+  if(bestResult.dist<=1000) return bestResult.stop.name+' 방향';
+  return null;
+}
 function fetchAddress(lat,lon,cb){
   fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
     .then(function(r){return r.json();})
@@ -929,7 +979,7 @@ function getGpsForQuick(route,cb){
   if(!navigator.geolocation){cb('현재위치');return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
-    var stopName=route?findNearestStop(route,lat,lon):null;
+    var stopName=findBestStop(route,lat,lon);
     if(stopName){cb(stopName);}
     else{fetchAddress(lat,lon,cb);}
   },function(){cb('현재위치');},{timeout:8000,enableHighAccuracy:true});
