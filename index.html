@@ -9,11 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="한일운수">
 <meta name="theme-color" content="#f97316">
-
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801&libraries=services"></script>
-
 <style>
-  /* [기사님의 클로드 최종본 스타일 100% 보존] */
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Bebas+Neue&display=swap');
   :root{
     --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
@@ -114,6 +110,7 @@
   .relay-header-card{background:linear-gradient(135deg,rgba(20,184,166,0.15),rgba(20,184,166,0.05));border:1.5px solid rgba(20,184,166,0.3);border-radius:14px;padding:16px;}
   .relay-header-title{font-size:18px;font-weight:900;color:var(--teal);margin-bottom:4px;}
   .relay-header-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+  /* ★ 자정 초기화 안내 배너 */
   .relay-reset-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:10px;font-size:13px;color:var(--yellow);}
   .relay-reset-banner.hidden{display:none;}
   .relay-route-tabs{display:flex;gap:8px;flex-wrap:wrap;}
@@ -239,6 +236,7 @@
   .pwa-modal-btns{display:flex;gap:8px;margin-top:20px;}
   .pwa-confirm-btn{flex:1;padding:13px;background:var(--accent);border:none;border-radius:10px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
   .pwa-cancel-btn{padding:13px 18px;background:var(--surface2);border:none;border-radius:10px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;font-size:15px;cursor:pointer;}
+  /* ── 날씨 바 ── */
   .weather-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--border);gap:8px;}
   .weather-main{display:flex;align-items:center;gap:8px;}
   .weather-icon{font-size:20px;}
@@ -275,6 +273,7 @@
   <button class="voice-banner-close" onclick="document.getElementById('voiceBanner').classList.add('hidden')">✕</button>
 </div>
 
+<!-- ★ 날씨 바 -->
 <div class="weather-bar" id="weatherBar">
   <div class="weather-main">
     <span class="weather-icon" id="weatherIcon">🌤️</span>
@@ -284,6 +283,7 @@
   <span class="weather-alert normal" id="weatherAlert">대구</span>
 </div>
 
+<!-- ★ 연결 끊김 배너 -->
 <div id="offlineBanner" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:rgba(239,68,68,0.15);border-bottom:1px solid rgba(239,68,68,0.3);">
   <span style="font-size:18px">⚠️</span>
   <div style="flex:1;font-size:13px;color:var(--red);font-weight:700;">연결이 끊겼어요. 자동으로 재연결 중...</div>
@@ -317,11 +317,13 @@
   <div class="stat-item"><div class="stat-num" style="color:var(--yellow)" id="slowCount">0</div><div class="stat-label">정체 구간</div></div>
 </div>
 
+<!-- ★ 접속자 수 표시 바 -->
 <div id="onlineBar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(34,197,94,0.08);border-bottom:1px solid rgba(34,197,94,0.15);">
   <div style="width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.2s infinite;flex-shrink:0;"></div>
   <span style="font-size:13px;color:var(--green);font-weight:700;">현재 <span id="onlineCount">0</span>명 접속 중</span>
 </div>
 
+<!-- ★ 앱 시작 터치 오버레이 — 오디오 활성화용 -->
 <div id="startOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
   <div style="text-align:center;padding:32px 24px;background:var(--surface);border-radius:20px;border:2px solid var(--accent);max-width:320px;width:90%;">
     <div style="font-size:52px;margin-bottom:12px;">🚌</div>
@@ -337,17 +339,20 @@
   <div class="empty-state"><div class="icon">🛣️</div><p>연결 중입니다...<br>잠시만 기다려 주세요.</p></div>
 </div>
 
+<!-- 교대 탭 -->
 <div id="relaySection" style="display:none;">
   <div class="relay-wrap">
     <div class="relay-header-card" id="relayHeaderCard">
       <div class="relay-header-title">🔄 교대 위치공유</div>
       <div class="relay-header-sub">순번을 선택하면 운전기사·교대기사 각 1명씩만 입장할 수 있어요. 매일 자정에 모든 방이 자동으로 초기화됩니다.</div>
+      <!-- ★ 관리자 초기화 버튼 — 로고 아이콘 5번 탭하면 나타남 -->
       <div id="adminResetArea" style="display:none;margin-top:12px;">
         <button onclick="adminResetAllRooms()" style="width:100%;padding:11px;background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.3);border-radius:10px;color:var(--red);font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
           🗑️ 교대방 전체 초기화 (관리자)
         </button>
       </div>
     </div>
+    <!-- ★ 자정 초기화 안내 배너 -->
     <div class="relay-reset-banner hidden" id="relayResetBanner">
       🌙 자정이 지나 모든 교대방이 초기화됐어요. 다시 입장해 주세요!
     </div>
@@ -361,12 +366,1377 @@
     <div class="relay-num-grid" id="relayNumGrid"></div>
     <div class="relay-room" id="relayRoom">
       <div class="relay-room-header">
-        <div><div class="relay-room-title" id="relayRoomTitle"></div><div class="relay-room-sub" id="relayRoomSub">역할을 선택해 주세요</div></div>
+        <div>
+          <div class="relay-room-title" id="relayRoomTitle"></div>
+          <div class="relay-room-sub" id="relayRoomSub">역할을 선택해 주세요 (각 1명만 입장 가능)</div>
+        </div>
         <button class="relay-back-btn" onclick="leaveRelayRoom()">← 뒤로</button>
       </div>
       <div class="relay-role-select" id="relayRoleSelect">
         <button class="relay-role-btn driver-btn" id="driverRoleBtn" onclick="joinRelayRoom('driver')">
-          <div class="relay-role-icon">👨‍✈️</div><div class="relay-role-label">운전기사</div><div id="driverSlotBadge" class="relay-role-empty-badge">자리 있음</div>
+          <div class="relay-role-icon">👨‍✈️</div>
+          <div class="relay-role-label">운전기사</div>
+          <div class="relay-role-desc">내 위치를 실시간으로 공유해요</div>
+          <div id="driverSlotBadge" class="relay-role-empty-badge">자리 있음</div>
         </button>
         <button class="relay-role-btn changer-btn" id="changerRoleBtn" onclick="joinRelayRoom('changer')">
-          <div class="relay-role-icon">🧍</div><div class="relay-role-label">교대기사</div><div id="changerSlotBadge" class="
+          <div class="relay-role-icon">🧍</div>
+          <div class="relay-role-label">교대기사</div>
+          <div class="relay-role-desc">운전기사님 위치를 확인해요</div>
+          <div id="changerSlotBadge" class="relay-role-empty-badge">자리 있음</div>
+        </button>
+      </div>
+      <div class="relay-active-room" id="relayActiveRoom" style="display:none;">
+        <div class="relay-active-header">
+          <div class="relay-active-title" id="relayActiveTitle"></div>
+          <div class="relay-active-badge" id="relayActiveBadge"></div>
+        </div>
+        <!-- ★ 위치 공유 시작 버튼 -->
+        <div id="locationStartArea" style="padding:14px 16px;">
+          <button id="locationStartBtn" onclick="startLocationShareManual()" style="width:100%;padding:15px;background:var(--teal);border:none;border-radius:12px;color:white;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span style="font-size:20px">📍</span> 내 위치 공유 시작하기
+          </button>
+          <div style="text-align:center;font-size:12px;color:var(--text2);margin-top:8px;">버튼을 누르면 위치 권한 요청 후 실시간 추적이 시작돼요</div>
+        </div>
+        <div id="relayMap"></div>
+        <div class="relay-info-bar">
+          <div class="relay-distance-row">
+            <div class="relay-dist-badge driver" id="driverLocInfo">👨‍✈️ 대기 중</div>
+            <div class="relay-dist-badge changer" id="changerLocInfo">🧍 대기 중</div>
+          </div>
+          <div class="relay-eta" id="relayEta">📍 상대방 위치를 기다리는 중...</div>
+        </div>
+        <div class="relay-member-status">
+          <div class="relay-member-card" id="driverCard">
+            <div class="relay-member-name">👨‍✈️ 운전기사</div>
+            <div class="relay-member-loc" id="driverLocText">대기 중</div>
+          </div>
+          <div class="relay-member-card" id="changerCard">
+            <div class="relay-member-name">🧍 교대기사</div>
+            <div class="relay-member-loc" id="changerLocText">대기 중</div>
+          </div>
+        </div>
+        <button class="relay-leave-btn" id="relayLeaveBtn" onclick="confirmLeaveRelay()">🚪 방 나가기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="fab" id="fab" onclick="openModal()">＋</button>
+
+<div class="quick-modal-overlay" id="quickModalOverlay">
+  <div class="quick-modal">
+    <div class="quick-modal-title" id="quickModalTitle"></div>
+    <div class="quick-modal-sub">노선을 선택하면 즉시 올라가요!</div>
+    <div class="quick-route-grid">
+      <button class="quick-route-btn" onclick="submitQuick('204')">204번</button>
+      <button class="quick-route-btn" onclick="submitQuick('609')">609번</button>
+      <button class="quick-route-btn" onclick="submitQuick('894')">894번</button>
+      <button class="quick-route-btn" onclick="submitQuick('937')">937번</button>
+      <button class="quick-route-btn" onclick="submitQuick('달서6')">달서6번</button>
+    </div>
+    <button class="quick-cancel-btn" onclick="closeQuickModal()">취소</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-title">
+      <span id="modalTitleText">🚨 도로 정보 올리기</span>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div id="roadForm">
+      <div class="form-group">
+        <label class="form-label">노선 번호</label>
+        <div class="route-select-grid">
+          <button class="route-select-btn" onclick="selectRouteForm(this,'204')">204번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'609')">609번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'894')">894번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'937')">937번</button>
+          <button class="route-select-btn" onclick="selectRouteForm(this,'달서6')">달서6번</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상황 유형</label>
+        <div class="type-grid">
+          <button class="type-select-btn" onclick="selectType(this,'accident','🚨 사고')">🚨 사고</button>
+          <button class="type-select-btn" onclick="selectType(this,'slow','🐢 정체')">🐢 정체</button>
+          <button class="type-select-btn" onclick="selectType(this,'clear','✅ 소통원활')">✅ 소통원활</button>
+          <button class="type-select-btn" onclick="selectType(this,'construction','🚧 공사')">🚧 공사</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">구간 / 정류장 <span style="color:var(--blue);font-size:11px;">📍GPS 자동입력 가능</span></label>
+        <div class="input-row">
+          <input class="form-input" id="locationInput" type="text" placeholder="예) 반월당역 ~ 동대구역">
+          <button class="gps-btn" id="gpsBtn" onclick="getGpsLocation()">📍</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상세 내용 <span style="color:var(--red);font-size:11px;">🎙️ 음성입력 가능</span></label>
+        <div class="voice-status" id="voiceStatus">
+          <div class="voice-status-dot"></div>
+          <span id="voiceStatusText">듣고 있어요... 말씀해 주세요</span>
+        </div>
+        <div class="input-row">
+          <textarea class="form-textarea" id="messageInput" placeholder="예) 반월당역 앞 차량 접촉사고로 1차선 막힘.&#10;🎙️ 마이크 버튼을 누르고 말해보세요!"></textarea>
+          <button class="mic-btn" id="micBtn" onclick="toggleSpeechInput()">🎙️</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">사진 첨부 (선택)</label>
+        <label class="photo-upload" for="photoInput">
+          <span style="font-size:24px">📷</span>
+          <span style="font-size:14px;color:var(--text2)" id="photoLabel">사진을 선택하세요</span>
+          <img id="photoPreview" class="photo-preview">
+          <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(event)">
+        </label>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitPost()">📤 지금 올리기</button>
+    </div>
+    <div id="freeForm" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">제목</label>
+        <input class="form-input" id="freeTitleInput" type="text" placeholder="예) 오늘 날씨 너무 좋네요 😊">
+      </div>
+      <div class="form-group">
+        <label class="form-label">내용 <span style="color:var(--red);font-size:11px;">🎙️ 음성입력 가능</span></label>
+        <div class="voice-status" id="freeVoiceStatus">
+          <div class="voice-status-dot"></div><span>듣고 있어요...</span>
+        </div>
+        <div class="input-row">
+          <textarea class="form-textarea free-focus" id="freeMessageInput" placeholder="자유롭게 이야기를 나눠보세요!"></textarea>
+          <button class="mic-btn" id="freeMicBtn" onclick="toggleFreeSpeechInput()">🎙️</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">사진 첨부 (선택)</label>
+        <label class="photo-upload" for="freePhotoInput">
+          <span style="font-size:24px">📷</span>
+          <span style="font-size:14px;color:var(--text2)" id="freePhotoLabel">사진을 선택하세요</span>
+          <img id="freePhotoPreview" class="photo-preview">
+          <input type="file" id="freePhotoInput" accept="image/*" onchange="previewFreePhoto(event)">
+        </label>
+      </div>
+      <button class="submit-btn free-btn" id="freeSubmitBtn" onclick="submitFreePost()">💬 게시글 올리기</button>
+    </div>
+  </div>
+</div>
+
+<div class="pwa-modal-overlay" id="pwaModalOverlay" onclick="closePwaModalOnOverlay(event)">
+  <div class="pwa-modal">
+    <div class="pwa-modal-title">📲 홈화면에 저장하기</div>
+    <div class="pwa-modal-sub">앱처럼 홈화면에서 바로 실행할 수 있어요!</div>
+    <div id="pwaAndroid">
+      <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">브라우저 오른쪽 상단 <strong>점 세 개 (⋮) 메뉴</strong>를 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text"><strong>"홈 화면에 추가"</strong> 또는 <strong>"앱 설치"</strong>를 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text"><strong>"추가"</strong> 버튼을 누르면 완료! 🎉</div></div>
+    </div>
+    <div id="pwaIos" style="display:none">
+      <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-text">Safari 하단 가운데 <strong>공유 버튼 (□↑)</strong>을 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-text"><strong>"홈 화면에 추가"</strong>를 찾아서 눌러요</div></div>
+      <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-text">오른쪽 상단 <strong>"추가"</strong>를 누르면 완료! 🎉</div></div>
+    </div>
+    <div class="pwa-modal-btns">
+      <button class="pwa-confirm-btn" id="pwaInstallBtn" onclick="triggerPwaInstall()">✅ 바로 설치하기</button>
+      <button class="pwa-cancel-btn" onclick="closePwaModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+var firebaseConfig={apiKey:"AIzaSyCKXI4AYBIrotyF3VHv6Gr0GP-p1ii4Bww",authDomain:"hanilbus-760ae.firebaseapp.com",projectId:"hanilbus-760ae",storageBucket:"hanilbus-760ae.firebasestorage.app",messagingSenderId:"454505545954",appId:"1:454505545954:web:a1951147f2b4b34d019ebb"};
+var app;try{app=firebase.app();}catch(e){app=firebase.initializeApp(firebaseConfig);}
+var db=firebase.firestore();
+
+var RELAY_ROUTES={'609':{min:1,max:21},'204':{min:1,max:14},'937':{min:10,max:27},'894':{min:1,max:25},'달서6':{min:1,max:6}};
+
+var posts=[],freePosts=[];
+var selectedRoute='',selectedType='',selectedTypeLabel='';
+var photoDataUrl=null,freePhotoDataUrl=null;
+var currentFilter='전체',isFirstLoad=true,knownIds={};
+var likedPosts={},myVotes={},voiceOn=false;
+var quickType='',quickTypeLabel='';
+var recognition=null,isListening=false;
+var freeRecognition=null,freeIsListening=false;
+var currentRelayRoute='609',currentRelayNum=0,currentRelayRole='';
+var relayWatchId=null,relayListener=null,relayRoomRef=null,relayRoomId='';
+var midnightTimer=null;
+
+try{likedPosts=JSON.parse(localStorage.getItem('likedPosts')||'{}');}catch(e){}
+try{myVotes=JSON.parse(localStorage.getItem('myVotes')||'{}');}catch(e){}
+try{voiceOn=localStorage.getItem('voiceOn')==='true';}catch(e){}
+
+var STATUS_INFO={clear:{emoji:'✅',label:'소통원활',cls:'clear'},smooth:{emoji:'🟢',label:'매우쾌적',cls:'smooth'},improving:{emoji:'📉',label:'점점풀림',cls:'improving'},still:{emoji:'🔴',label:'아직정체',cls:'still'}};
+var STATUS_ORDER=['clear','smooth','improving','still'];
+
+// ── ★ 오늘 날짜 문자열 — 한국 시간(KST) 기준 ──
+function todayStr(){
+  var now=new Date();
+  // KST = UTC + 9시간
+  var kst=new Date(now.getTime()+(9*60*60*1000));
+  return kst.getUTCFullYear()+'-'+(kst.getUTCMonth()+1)+'-'+kst.getUTCDate();
+}
+
+// ── ★ 자정까지 남은 밀리초 계산 ──────────────
+function msUntilMidnight(){
+  var now=new Date();
+  var midnight=new Date(now);
+  midnight.setHours(24,0,0,0);
+  return midnight.getTime()-now.getTime();
+}
+
+// ── ★ 모든 교대방 자정 초기화 (Firebase) ─────
+function resetAllRelayRooms(){
+  db.collection('relayRooms').get().then(function(snap){
+    if(snap.empty)return;
+    var batch=db.batch();
+    snap.forEach(function(doc){
+      // 모든 방의 접속 정보와 위치 데이터 삭제
+      batch.update(doc.ref,{
+        driverActive:firebase.firestore.FieldValue.delete(),
+        changerActive:firebase.firestore.FieldValue.delete(),
+        driverLat:firebase.firestore.FieldValue.delete(),
+        driverLon:firebase.firestore.FieldValue.delete(),
+        changerLat:firebase.firestore.FieldValue.delete(),
+        changerLon:firebase.firestore.FieldValue.delete(),
+        changerJoinedAlert:firebase.firestore.FieldValue.delete(),
+        _notifiedDriver:firebase.firestore.FieldValue.delete(),
+        resetDate:todayStr()
+      });
+    });
+    batch.commit().then(function(){
+      console.log('자정 교대방 초기화 완료');
+    }).catch(function(){});
+  }).catch(function(){});
+}
+
+// ── ★ 앱 열릴 때 날짜 체크 → 어제 방이면 강제 퇴장 ──
+function checkRelayDateOnLoad(){
+  if(!relayRoomId||!currentRelayRole) return;
+  db.collection('relayRooms').doc(relayRoomId).get().then(function(doc){
+    if(!doc.exists) return;
+    var data=doc.data();
+    // ★ resetDate 없거나 오늘이 아니면 강제 퇴장
+    if(!data.resetDate||data.resetDate!==todayStr()){
+      showToast('🌙 자정이 지나 교대방이 초기화됐어요');
+      document.getElementById('relayResetBanner').classList.remove('hidden');
+      forceLeaveRelay();
+    }
+  }).catch(function(){});
+}
+
+// ── ★ 강제 퇴장 (알림 없이) ──────────────────
+function forceLeaveRelay(){
+  if(relayWatchId!==null){navigator.geolocation.clearWatch(relayWatchId);relayWatchId=null;}
+  if(relayListener){relayListener();relayListener=null;}
+  if(leafletMap){leafletMap.remove();leafletMap=null;driverMarker=null;changerMarker=null;}
+  relayRoomRef=null;
+  currentRelayRole='';currentRelayNum=0;relayRoomId='';
+  // UI가 교대 탭이면 그리드로 복귀
+  if(currentFilter==='교대'){
+    document.getElementById('relayRoom').classList.remove('show');
+    document.getElementById('relayNumGrid').style.display='grid';
+    document.getElementById('relayRouteTabs').style.display='flex';
+    document.getElementById('relayHeaderCard').style.display='block';
+    renderRelayGrid();
+  }
+}
+
+// ── ★ 자정 타이머 설정 ───────────────────────
+function scheduleMidnightReset(){
+  var ms=msUntilMidnight();
+  if(midnightTimer)clearTimeout(midnightTimer);
+  midnightTimer=setTimeout(function(){
+    // 자정 도달!
+    resetAllRelayRooms();
+    // 현재 방에 있으면 강제 퇴장
+    if(currentRelayRole){
+      showToast('🌙 자정이 지나 교대방이 초기화됐어요');
+      document.getElementById('relayResetBanner').classList.remove('hidden');
+      forceLeaveRelay();
+    }
+    // 다음 날 자정도 예약
+    scheduleMidnightReset();
+  },ms);
+}
+
+// ── 앱 열릴 때 날짜 달라진 방 일괄 정리 ──────
+function cleanStaleRelayRooms(){
+  db.collection('relayRooms').get().then(function(snap){
+    if(snap.empty)return;
+    var batch=db.batch();var hasStale=false;
+    snap.forEach(function(doc){
+      var d=doc.data();
+      // ★ resetDate가 없거나(기존 방) 오늘이 아니면 모두 초기화
+      if(!d.resetDate||d.resetDate!==todayStr()){
+        hasStale=true;
+        batch.update(doc.ref,{
+          driverActive:firebase.firestore.FieldValue.delete(),
+          changerActive:firebase.firestore.FieldValue.delete(),
+          driverLat:firebase.firestore.FieldValue.delete(),
+          driverLon:firebase.firestore.FieldValue.delete(),
+          changerLat:firebase.firestore.FieldValue.delete(),
+          changerLon:firebase.firestore.FieldValue.delete(),
+          changerJoinedAlert:firebase.firestore.FieldValue.delete(),
+          _notifiedDriver:firebase.firestore.FieldValue.delete(),
+          resetDate:todayStr()
+        });
+      }
+    });
+    if(hasStale)batch.commit().catch(function(){});
+  }).catch(function(){});
+}
+
+// ── 3일 자동삭제 ──────────────────────────────
+function deleteOldPosts(){
+  var cutoff=new Date(Date.now()-(3*24*60*60*1000));
+  var ts=firebase.firestore.Timestamp.fromDate(cutoff);
+  ['posts','freePosts'].forEach(function(col){db.collection(col).where('timestamp','<',ts).get().then(function(snap){if(snap.empty)return;var b=db.batch();snap.forEach(function(d){b.delete(d.ref);});b.commit();}).catch(function(){});});
+}
+
+// ── GPS ───────────────────────────────────────
+// ── ★ 노선별 주요 정류장 좌표 데이터 ────────────
+var ROUTE_STOPS={
+  '204':[
+    {name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},
+    {name:'범물청구타운',lat:35.8258,lon:128.6460},
+    {name:'지산우방아파트',lat:35.8310,lon:128.6420},
+    {name:'지산동서맨션',lat:35.8340,lon:128.6390},
+    {name:'대구경찰청',lat:35.8380,lon:128.6350},
+    {name:'황금네거리',lat:35.8450,lon:128.6280},
+    {name:'황금시장',lat:35.8470,lon:128.6230},
+    {name:'중동행정복지센터',lat:35.8500,lon:128.6180},
+    {name:'희망교',lat:35.8530,lon:128.6120},
+    {name:'봉명네거리',lat:35.8560,lon:128.6050},
+    {name:'명덕역',lat:35.8600,lon:128.5980},
+    {name:'남문시장',lat:35.8630,lon:128.5960},
+    {name:'반월당역',lat:35.8659,lon:128.5966},
+    {name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},
+    {name:'경상감영공원',lat:35.8700,lon:128.5920},
+    {name:'대구콘서트하우스',lat:35.8730,lon:128.5900},
+    {name:'중구보건소',lat:35.8750,lon:128.5880},
+    {name:'북비산네거리',lat:35.8800,lon:128.5820},
+    {name:'비산초등학교',lat:35.8820,lon:128.5790},
+    {name:'대평중학교',lat:35.8840,lon:128.5760},
+    {name:'서대구중학교',lat:35.8860,lon:128.5730},
+    {name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},
+    {name:'서구문화회관',lat:35.8880,lon:128.5640},
+    {name:'서대구공단네거리',lat:35.8900,lon:128.5600},
+    {name:'서대구역',lat:35.8840,lon:128.5560},
+    {name:'사수초등학교',lat:35.9060,lon:128.5670},
+    {name:'e편한세상대구금호',lat:35.9100,lon:128.5680},
+    {name:'금호지구종점',lat:35.9140,lon:128.5700}
+  ],
+  '609':[
+    {name:'대천동공영차고지',lat:35.8092,lon:128.5148},
+    {name:'진천역',lat:35.8180,lon:128.5260},
+    {name:'이마트월배점',lat:35.8200,lon:128.5300},
+    {name:'조암초등학교',lat:35.8250,lon:128.5350},
+    {name:'월성2동행정복지센터',lat:35.8280,lon:128.5380},
+    {name:'올림픽기념관',lat:35.8320,lon:128.5420},
+    {name:'남부교육지원청',lat:35.8360,lon:128.5480},
+    {name:'서부정류장(관문시장앞)',lat:35.8550,lon:128.5700},
+    {name:'두류공원네거리',lat:35.8590,lon:128.5780},
+    {name:'문화예술회관',lat:35.8600,lon:128.5820},
+    {name:'성당시장',lat:35.8620,lon:128.5870},
+    {name:'대명사회복지관',lat:35.8630,lon:128.5900},
+    {name:'경북공고',lat:35.8640,lon:128.5930},
+    {name:'남산초등학교',lat:35.8650,lon:128.5940},
+    {name:'청라언덕(신남)역',lat:35.8660,lon:128.5950},
+    {name:'반월당역',lat:35.8659,lon:128.5966},
+    {name:'수성교',lat:35.8660,lon:128.6050},
+    {name:'대구은행역',lat:35.8670,lon:128.6100},
+    {name:'수성네거리',lat:35.8680,lon:128.6150},
+    {name:'범어역',lat:35.8710,lon:128.6220},
+    {name:'수성구청',lat:35.8680,lon:128.6270},
+    {name:'경신고등학교',lat:35.8660,lon:128.6300},
+    {name:'만촌역',lat:35.8650,lon:128.6340},
+    {name:'수성대학교',lat:35.8580,lon:128.6420},
+    {name:'담티역',lat:35.8550,lon:128.6480},
+    {name:'대륜중고등학교',lat:35.8520,lon:128.6560},
+    {name:'방공포병학교',lat:35.8490,lon:128.6640},
+    {name:'연호동화훼단지',lat:35.8470,lon:128.6720},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'수성알파시티',lat:35.8450,lon:128.6870},
+    {name:'경기장네거리',lat:35.8440,lon:128.6950},
+    {name:'대구스타디움',lat:35.8430,lon:128.7020},
+    {name:'덕원고등학교',lat:35.8350,lon:128.6850},
+    {name:'시지중학교',lat:35.8320,lon:128.6780},
+    {name:'신매시장',lat:35.8290,lon:128.7020},
+    {name:'사월역',lat:35.8240,lon:128.7100},
+    {name:'영남대앞',lat:35.8280,lon:128.7460},
+    {name:'임당역',lat:35.8240,lon:128.7340},
+    {name:'경산시장',lat:35.8210,lon:128.7400},
+    {name:'경산시외버스정류장',lat:35.8200,lon:128.7420},
+    {name:'중방네거리',lat:35.8180,lon:128.7450},
+    {name:'금구동종점',lat:35.8050,lon:128.7580}
+  ],
+  '937':[
+    {name:'덕원고등학교',lat:35.8350,lon:128.6850},
+    {name:'시지중학교',lat:35.8320,lon:128.6780},
+    {name:'신매역',lat:35.8290,lon:128.7020},
+    {name:'고산역화성파크드림',lat:35.8430,lon:128.6950},
+    {name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'연호동화훼단지',lat:35.8470,lon:128.6720},
+    {name:'방공포병학교',lat:35.8490,lon:128.6640},
+    {name:'담티고개',lat:35.8530,lon:128.6510},
+    {name:'담티역',lat:35.8550,lon:128.6480},
+    {name:'수성대학교',lat:35.8580,lon:128.6420},
+    {name:'구남부정류장',lat:35.8600,lon:128.6360},
+    {name:'만촌2동행정복지센터',lat:35.8630,lon:128.6320},
+    {name:'만촌태왕리더스',lat:35.8640,lon:128.6280},
+    {name:'범어역',lat:35.8710,lon:128.6220},
+    {name:'동대구역',lat:35.8790,lon:128.6280},
+    {name:'평화시장(닭똥집골목)',lat:35.8800,lon:128.6200},
+    {name:'공고네거리',lat:35.8820,lon:128.6150},
+    {name:'경북대학교정문',lat:35.8880,lon:128.6060},
+    {name:'대구광역시립동부도서관',lat:35.8900,lon:128.6020},
+    {name:'영진전문대학교후문',lat:35.8920,lon:128.5980},
+    {name:'복현오거리',lat:35.8930,lon:128.5950},
+    {name:'엑스코',lat:35.9000,lon:128.6080},
+    {name:'전자상가',lat:35.9020,lon:128.6020},
+    {name:'무태네거리',lat:35.9080,lon:128.5780},
+    {name:'유니버시아드선수촌',lat:35.9130,lon:128.5720},
+    {name:'북구구민운동장',lat:35.9180,lon:128.5720},
+    {name:'칠곡그린빌',lat:35.9220,lon:128.5710},
+    {name:'강북경찰서',lat:35.9250,lon:128.5690},
+    {name:'칠곡운암역',lat:35.9280,lon:128.5680},
+    {name:'칠곡IC',lat:35.9320,lon:128.5650},
+    {name:'칠곡한라타운',lat:35.9350,lon:128.5630},
+    {name:'칠곡우방타운(종점)',lat:35.9390,lon:128.5600}
+  ],
+  '894':[
+    {name:'경일대학교',lat:35.7950,lon:128.7980},
+    {name:'경일대정문',lat:35.7970,lon:128.7950},
+    {name:'부호역',lat:35.8000,lon:128.7900},
+    {name:'대구가톨릭대학교',lat:35.8020,lon:128.7820},
+    {name:'하양역',lat:35.8080,lon:128.7750},
+    {name:'하양시외버스터미널',lat:35.8060,lon:128.7780},
+    {name:'하양초등학교',lat:35.8100,lon:128.7700},
+    {name:'대구대삼거리',lat:35.8150,lon:128.7580},
+    {name:'대구대정문',lat:35.8180,lon:128.7520},
+    {name:'압량읍사무소',lat:35.8120,lon:128.7550},
+    {name:'영남대앞',lat:35.8280,lon:128.7460},
+    {name:'임당역',lat:35.8240,lon:128.7340},
+    {name:'경산시장',lat:35.8210,lon:128.7400},
+    {name:'국민건강보험공단(경산역)',lat:35.8200,lon:128.7380},
+    {name:'옥산네거리',lat:35.8180,lon:128.7300},
+    {name:'힐스테이트아파트',lat:35.8350,lon:128.7180},
+    {name:'대구시지노인전문병원',lat:35.8380,lon:128.7050},
+    {name:'덕원고등학교',lat:35.8350,lon:128.6850},
+    {name:'고산정수사업소',lat:35.8400,lon:128.6950},
+    {name:'대구스타디움',lat:35.8430,lon:128.7020},
+    {name:'경기장네거리',lat:35.8440,lon:128.6950},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'연호동화훼단지',lat:35.8470,lon:128.6720},
+    {name:'방공포병학교',lat:35.8490,lon:128.6640},
+    {name:'담티고개',lat:35.8530,lon:128.6510},
+    {name:'만촌우방1차',lat:35.8620,lon:128.6360},
+    {name:'한도아파트',lat:35.8640,lon:128.6320},
+    {name:'만촌자이르네',lat:35.8650,lon:128.6290},
+    {name:'수성소방서',lat:35.8460,lon:128.6350},
+    {name:'지산타운',lat:35.8380,lon:128.6440},
+    {name:'동아백화점수성점',lat:35.8350,lon:128.6480},
+    {name:'범물청구타운',lat:35.8260,lon:128.6480},
+    {name:'범물1동행정복지센터',lat:35.8234,lon:128.6487}
+  ],
+  '달서6':[
+    {name:'남도버스',lat:35.8280,lon:128.5180},
+    {name:'진월초등학교',lat:35.8270,lon:128.5200},
+    {name:'진천청구타운',lat:35.8260,lon:128.5230},
+    {name:'월배시장',lat:35.8240,lon:128.5270},
+    {name:'월배역',lat:35.8220,lon:128.5330},
+    {name:'성모여성의원',lat:35.8250,lon:128.5370},
+    {name:'상인초등학교',lat:35.8260,lon:128.5420},
+    {name:'월촌고가교',lat:35.8300,lon:128.5480},
+    {name:'청소년수련원',lat:35.8230,lon:128.5120},
+    {name:'대덕승마장',lat:35.8180,lon:128.5080},
+    {name:'월촌역',lat:35.8330,lon:128.5520},
+    {name:'앞산청구제네스',lat:35.8370,lon:128.5560},
+    {name:'송현역',lat:35.8430,lon:128.5620},
+    {name:'중소기업지원센터',lat:35.8450,lon:128.5640},
+    {name:'장관빌라',lat:35.8400,lon:128.5700},
+    {name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},
+    {name:'앞산양궁장',lat:35.8250,lon:128.5800},
+    {name:'골안골',lat:35.8200,lon:128.5820},
+    {name:'앞산자락카페마실',lat:35.8180,lon:128.5840},
+    {name:'안지랑골입구',lat:35.8320,lon:128.5930},
+    {name:'대덕문화전당',lat:35.8380,lon:128.5980},
+    {name:'대명중학교',lat:35.8420,lon:128.6000},
+    {name:'남부도서관',lat:35.8460,lon:128.6020},
+    {name:'충혼탑',lat:35.8490,lon:128.6040},
+    {name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},
+    {name:'미리내맨션',lat:35.8530,lon:128.6060},
+    {name:'경일여자고등학교',lat:35.8550,lon:128.6070},
+    {name:'팔레스호텔',lat:35.8570,lon:128.6040},
+    {name:'봉덕2동새마을금고',lat:35.8590,lon:128.6010},
+    {name:'봉덕2차화성파크드림',lat:35.8600,lon:128.5990},
+    {name:'앞산빨래터공원',lat:35.8190,lon:128.5860}
+  ]
+};
+
+// ★ 가장 가까운 정류장 찾기 (500m 이내)
+function findNearestStop(route,lat,lon){
+  var stops=ROUTE_STOPS[route];
+  if(!stops||stops.length===0) return null;
+
+  // 모든 정류장까지 거리 계산
+  var dists=[];
+  for(var i=0;i<stops.length;i++){
+    dists.push({stop:stops[i], dist:calcStopDist(lat,lon,stops[i].lat,stops[i].lon), idx:i});
+  }
+  // 거리순 정렬
+  dists.sort(function(a,b){return a.dist-b.dist;});
+
+  var closest=dists[0];
+
+  // ★ 150m 이내 — 정류장 바로 앞
+  if(closest.dist<=150){
+    return closest.stop.name+' 앞';
+  }
+  // ★ 500m 이내 — 정류장 부근
+  if(closest.dist<=500){
+    return closest.stop.name+' 부근';
+  }
+  // ★ 500m~1km — 두 정류장 사이 구간으로 표시
+  if(closest.dist<=1000){
+    var second=dists[1];
+    // 두 번째로 가까운 정류장이 같은 노선이면 구간으로 표시
+    if(second&&second.dist<=1200){
+      // 노선 순서상 앞뒤 관계 파악
+      var i1=closest.idx, i2=second.idx;
+      var first=i1<i2?closest.stop:second.stop;
+      var last=i1<i2?second.stop:closest.stop;
+      return first.name+' ~ '+last.name+' 구간';
+    }
+    return closest.stop.name+' 방향';
+  }
+  // 1km 초과 — null 반환 (도로명 주소 사용)
+  return null;
+}
+function calcStopDist(lat1,lon1,lat2,lon2){
+  var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function getGpsLocation(){
+  var btn=document.getElementById('gpsBtn');
+  if(!navigator.geolocation){showToast('GPS를 지원하지 않는 기기예요');return;}
+  btn.classList.add('loading');btn.textContent='⏳';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    // ★ 선택된 노선이 있으면 해당 노선, 없으면 전체 노선에서 검색
+    var stopName=findBestStop(selectedRoute||null,lat,lon);
+    if(stopName){
+      document.getElementById('locationInput').value=stopName;
+      showToast('🚏 '+stopName+' 자동 입력됐어요!');
+      btn.classList.remove('loading');btn.textContent='📍';
+    } else {
+      fetchAddress(lat,lon,function(addr){
+        document.getElementById('locationInput').value=addr;
+        showToast('📍 현재 위치가 입력됐어요!');
+        btn.classList.remove('loading');btn.textContent='📍';
+      });
+    }
+  },function(err){btn.classList.remove('loading');btn.textContent='📍';if(err.code===1)showToast('위치 권한을 허용해 주세요!');else showToast('위치를 가져올 수 없어요');},{timeout:10000,enableHighAccuracy:true});
+}
+
+// ★ 특정 노선 또는 전체 노선에서 가장 가까운 정류장 찾기
+function findBestStop(route,lat,lon){
+  if(route){
+    return findNearestStop(route,lat,lon);
+  }
+  // 노선 미선택 — 전체 노선에서 가장 가까운 정류장 찾기
+  var routes=Object.keys(ROUTE_STOPS);
+  var bestResult=null, bestDist=Infinity;
+  for(var r=0;r<routes.length;r++){
+    var stops=ROUTE_STOPS[routes[r]];
+    for(var i=0;i<stops.length;i++){
+      var d=calcStopDist(lat,lon,stops[i].lat,stops[i].lon);
+      if(d<bestDist){bestDist=d;bestResult={stop:stops[i],dist:d,route:routes[r]};}
+    }
+  }
+  if(!bestResult) return null;
+  if(bestResult.dist<=150) return bestResult.stop.name+' 앞';
+  if(bestResult.dist<=500) return bestResult.stop.name+' 부근';
+  if(bestResult.dist<=1000) return bestResult.stop.name+' 방향';
+  return null;
+}
+function fetchAddress(lat,lon,cb){
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&accept-language=ko')
+    .then(function(r){return r.json();})
+    .then(function(data){var a=data.address||{},parts=[];if(a.road)parts.push(a.road);else if(a.neighbourhood)parts.push(a.neighbourhood);else if(a.suburb)parts.push(a.suburb);if(a.city_district)parts.push(a.city_district);cb(parts.length>0?parts.join(' ')+' 부근':'현재위치');})
+    .catch(function(){cb('현재위치 ('+lat.toFixed(4)+', '+lon.toFixed(4)+')');});
+}
+// ★ 퀵제보용 — 노선 정류장 먼저 확인
+function getGpsForQuick(route,cb){
+  if(!navigator.geolocation){cb('현재위치');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    var stopName=findBestStop(route,lat,lon);
+    if(stopName){cb(stopName);}
+    else{fetchAddress(lat,lon,cb);}
+  },function(){cb('현재위치');},{timeout:8000,enableHighAccuracy:true});
+}
+
+// ── 음성인식 ──────────────────────────────────
+function initSR(onResult,onEnd){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;var r=new SR();r.lang='ko-KR';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;r.onresult=function(e){var interim='',final='';for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}onResult(interim,final);};r.onerror=function(e){onEnd();if(e.error==='not-allowed')showToast('마이크 권한을 허용해 주세요!');};r.onend=onEnd;return r;}
+function toggleSpeechInput(){if(!isListening){recognition=initSR(function(interim,final){if(interim)document.getElementById('voiceStatusText').textContent='인식 중: '+interim;if(final){var cur=document.getElementById('messageInput').value;document.getElementById('messageInput').value=(cur?cur+' ':'')+final;}},stopSpeech);if(!recognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}isListening=true;document.getElementById('micBtn').classList.add('listening');document.getElementById('micBtn').textContent='⏹️';document.getElementById('voiceStatus').classList.add('show');try{recognition.start();}catch(e){}}else{if(recognition)recognition.stop();stopSpeech();}}
+function stopSpeech(){isListening=false;var b=document.getElementById('micBtn');if(b){b.classList.remove('listening');b.textContent='🎙️';}var v=document.getElementById('voiceStatus');if(v)v.classList.remove('show');}
+function toggleFreeSpeechInput(){if(!freeIsListening){freeRecognition=initSR(function(interim,final){if(final){var cur=document.getElementById('freeMessageInput').value;document.getElementById('freeMessageInput').value=(cur?cur+' ':'')+final;}},stopFreeSpeech);if(!freeRecognition){showToast('이 브라우저는 음성 입력을 지원하지 않아요');return;}freeIsListening=true;document.getElementById('freeMicBtn').classList.add('listening');document.getElementById('freeMicBtn').textContent='⏹️';document.getElementById('freeVoiceStatus').classList.add('show');try{freeRecognition.start();}catch(e){}}else{if(freeRecognition)freeRecognition.stop();stopFreeSpeech();}}
+function stopFreeSpeech(){freeIsListening=false;var b=document.getElementById('freeMicBtn');if(b){b.classList.remove('listening');b.textContent='🎙️';}var v=document.getElementById('freeVoiceStatus');if(v)v.classList.remove('show');}
+
+// ── 퀵제보 ────────────────────────────────────
+function openQuickModal(type,label){quickType=type;quickTypeLabel=label;document.getElementById('quickModalTitle').textContent=label+' — 노선 선택';document.getElementById('quickModalOverlay').classList.add('show');}
+function closeQuickModal(){document.getElementById('quickModalOverlay').classList.remove('show');}
+function submitQuick(route){
+  closeQuickModal();showToast('🚏 정류장 확인 중...');
+  getGpsForQuick(route,function(location){
+    var msg={accident:'현재 위치 사고 발생. 주의 바랍니다.',slow:'현재 위치 정체 중입니다.',clear:'현재 구간 소통 원활합니다.',construction:'현재 위치 공사 중입니다.'};
+    db.collection('posts').add({route:route,type:quickType,typeLabel:quickTypeLabel,location:location,message:msg[quickType]||'퀵제보',timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:null,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null})
+    .then(function(){playSuccessSound();showToast('⚡ '+route+'번 '+quickTypeLabel+' 제보 완료!');})
+    .catch(function(e){showToast('오류: '+e.message);});
+  });
+}
+
+// ── 교대 탭 ──────────────────────────────────
+function selectRelayRoute(route,btn){currentRelayRoute=route;var tabs=document.querySelectorAll('.relay-route-tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');btn.classList.add('active');renderRelayGrid();}
+
+function renderRelayGrid(){
+  var r=RELAY_ROUTES[currentRelayRoute];if(!r)return;
+  var grid=document.getElementById('relayNumGrid');
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text2);font-size:13px;">불러오는 중...</div>';
+  db.collection('relayRooms').where('route','==',currentRelayRoute).get().then(function(snap){
+    var roomMap={};
+    snap.forEach(function(doc){var d=doc.data();
+      // ★ resetDate 없거나 오늘이 아니면 빈 방으로 처리
+      if(!d.resetDate||d.resetDate!==todayStr()){roomMap[d.num]={};}
+      else{roomMap[d.num]=d;}
+    });
+    grid.innerHTML='';
+    for(var n=r.min;n<=r.max;n++){
+      var room=roomMap[n]||null;
+      var hasDriver=room&&room.driverActive;
+      var hasChanger=room&&room.changerActive;
+      var hasBoth=hasDriver&&hasChanger;
+      var card=document.createElement('div');
+      var sc=hasBoth?'has-both':(hasDriver?'has-driver':(hasChanger?'has-changer':''));
+      card.className='relay-num-card'+(sc?' '+sc:'');
+      var statusHtml='',dotHtml='';
+      if(hasBoth){statusHtml='<div class="relay-num-status both">🟡 교대 진행 중</div>';dotHtml='<div class="relay-online-dot yellow"></div>';}
+      else if(hasDriver){statusHtml='<div class="relay-num-status driver">👨‍✈️ 운전기사</div>';dotHtml='<div class="relay-online-dot teal"></div>';}
+      else if(hasChanger){statusHtml='<div class="relay-num-status changer">🧍 교대기사</div>';dotHtml='<div class="relay-online-dot teal"></div>';}
+      card.innerHTML=dotHtml+'<div class="relay-num-num">'+n+'번</div><div class="relay-num-label">순번</div>'+statusHtml;
+      (function(num){card.onclick=function(){openRelayRoom(num);};})(n);
+      grid.appendChild(card);
+    }
+  }).catch(function(){
+    grid.innerHTML='';var r2=RELAY_ROUTES[currentRelayRoute];
+    for(var n=r2.min;n<=r2.max;n++){var card=document.createElement('div');card.className='relay-num-card';card.innerHTML='<div class="relay-num-num">'+n+'번</div><div class="relay-num-label">순번</div>';(function(num){card.onclick=function(){openRelayRoom(num);};})(n);grid.appendChild(card);}
+  });
+}
+
+function openRelayRoom(num){
+  currentRelayNum=num;relayRoomId='relay_'+currentRelayRoute+'_'+num;
+  document.getElementById('relayRoomTitle').textContent='🔄 '+currentRelayRoute+'번 · '+num+'번 순번';
+  document.getElementById('relayRoomSub').textContent='역할을 선택해 주세요 (각 1명만 입장 가능)';
+  document.getElementById('relayRoleSelect').style.display='grid';
+  document.getElementById('relayActiveRoom').style.display='none';
+  document.getElementById('relayRoom').classList.add('show');
+  document.getElementById('relayNumGrid').style.display='none';
+  document.getElementById('relayRouteTabs').style.display='none';
+  document.getElementById('relayHeaderCard').style.display='none';
+  db.collection('relayRooms').doc(relayRoomId).get().then(function(doc){
+    var driverTaken=false,changerTaken=false;
+    if(doc.exists){var d=doc.data();
+      // ★ resetDate 없거나 오늘이 아니면 모두 비어있음
+      if(d.resetDate&&d.resetDate===todayStr()){driverTaken=!!d.driverActive;changerTaken=!!d.changerActive;}
+    }
+    var dBtn=document.getElementById('driverRoleBtn'),cBtn=document.getElementById('changerRoleBtn');
+    var dBadge=document.getElementById('driverSlotBadge'),cBadge=document.getElementById('changerSlotBadge');
+    dBtn.disabled=driverTaken;dBadge.className=driverTaken?'relay-role-full-badge':'relay-role-empty-badge';dBadge.textContent=driverTaken?'이미 입장함':'자리 있음';
+    cBtn.disabled=changerTaken;cBadge.className=changerTaken?'relay-role-full-badge':'relay-role-empty-badge';cBadge.textContent=changerTaken?'이미 입장함':'자리 있음';
+    if(driverTaken&&changerTaken)document.getElementById('relayRoomSub').textContent='⚠️ 현재 교대 진행 중이에요 (2명 모두 입장)';
+  }).catch(function(){});
+}
+
+function joinRelayRoom(role){
+  var roomRef=db.collection('relayRooms').doc(relayRoomId);
+  roomRef.get().then(function(doc){
+    var d=doc.exists?doc.data():{};
+    // ★ resetDate 없거나(기존 방) 오늘이 아니면 stale
+    var isStale=!d.resetDate||d.resetDate!==todayStr();
+    if(!isStale){
+      if(role==='driver'&&d.driverActive){showToast('❌ 운전기사 자리가 이미 찼어요!');return;}
+      if(role==='changer'&&d.changerActive){showToast('❌ 교대기사 자리가 이미 찼어요!');return;}
+    }
+    currentRelayRole=role;relayRoomRef=roomRef;
+    var updateData={route:currentRelayRoute,num:currentRelayNum,resetDate:todayStr(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(isStale){
+      updateData.driverActive=firebase.firestore.FieldValue.delete();
+      updateData.changerActive=firebase.firestore.FieldValue.delete();
+      updateData.driverLat=firebase.firestore.FieldValue.delete();
+      updateData.driverLon=firebase.firestore.FieldValue.delete();
+      updateData.changerLat=firebase.firestore.FieldValue.delete();
+      updateData.changerLon=firebase.firestore.FieldValue.delete();
+    } else {
+      // ★ 내 역할 위치 데이터는 항상 초기화 (이전에 남은 데이터 제거)
+      if(role==='driver'){
+        updateData.driverLat=firebase.firestore.FieldValue.delete();
+        updateData.driverLon=firebase.firestore.FieldValue.delete();
+      } else {
+        updateData.changerLat=firebase.firestore.FieldValue.delete();
+        updateData.changerLon=firebase.firestore.FieldValue.delete();
+      }
+    }
+    if(role==='driver')updateData.driverActive=true;
+    else updateData.changerActive=true;
+    roomRef.set(updateData,{merge:true}).then(function(){
+      document.getElementById('relayRoleSelect').style.display='none';
+      document.getElementById('relayActiveRoom').style.display='block';
+      var badge=document.getElementById('relayActiveBadge'),title=document.getElementById('relayActiveTitle');
+      title.textContent=currentRelayRoute+'번 '+currentRelayNum+'번 순번';
+      if(role==='driver'){badge.className='relay-active-badge driver';badge.textContent='👨‍✈️ 운전기사';}
+      else{badge.className='relay-active-badge changer';badge.textContent='🧍 교대기사';}
+      initRelayMap();
+      // ★ 위치공유 시작 버튼 표시 (자동 시작 안 함)
+      document.getElementById('locationStartArea').style.display='block';
+      document.getElementById('locationStartBtn').textContent='';
+      document.getElementById('locationStartBtn').innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
+      if(role==='changer'){roomRef.set({changerJoinedAlert:true,_notifiedDriver:false},{merge:true});}
+      var isFirstSnapshot=true; // ★ 입장 직후 첫 스냅샷은 날짜 체크 건너뜀
+      relayListener=roomRef.onSnapshot(function(snap){
+        if(!snap.exists)return;var data=snap.data();
+        // ★ 첫 스냅샷은 건너뜀 (입장 직후 저장 전 상태일 수 있음)
+        if(isFirstSnapshot){isFirstSnapshot=false;updateRelayMap(data);return;}
+        // ★ resetDate 없거나 오늘이 아니면 강제 퇴장
+        if(!data.resetDate||data.resetDate!==todayStr()){
+          showToast('🌙 자정이 지나 교대방이 초기화됐어요');
+          document.getElementById('relayResetBanner').classList.remove('hidden');
+          forceLeaveRelay();return;
+        }
+        if(currentRelayRole==='driver'&&data.changerJoinedAlert&&!data._notifiedDriver){playAlertSound();vibrate();speak('교대기사님이 입장하셨습니다');showToast('🧍 교대기사님이 입장하셨어요!');roomRef.update({_notifiedDriver:true});}
+        updateRelayMap(data);
+      });
+      // ★ 자동 위치공유 제거 — 버튼 클릭으로 시작
+    });
+  }).catch(function(){showToast('오류가 발생했어요. 다시 시도해 주세요.');});
+}
+
+// ★ 📍 버튼 클릭 → 권한 팝업 → 실시간 추적 시작
+function startLocationShareManual(){
+  var btn=document.getElementById('locationStartBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span style="font-size:20px">⏳</span> 위치 권한 요청 중...';
+  if(!navigator.geolocation){
+    showToast('이 기기는 GPS를 지원하지 않아요');
+    btn.disabled=false;
+    btn.innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
+    return;
+  }
+  // getCurrentPosition 으로 권한 팝업 먼저 띄우기
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      // 권한 허용 → 버튼 숨기고 실시간 추적 시작
+      document.getElementById('locationStartArea').style.display='none';
+      showToast('📍 위치 공유가 시작됐어요! 이동하면 자동으로 업데이트돼요');
+      startLocationShare();
+    },
+    function(err){
+      btn.disabled=false;
+      btn.innerHTML='<span style="font-size:20px">📍</span> 내 위치 공유 시작하기';
+      if(err.code===1) showToast('위치 권한을 허용해 주세요!');
+      else showToast('위치를 가져올 수 없어요. 다시 눌러주세요.');
+    },
+    {timeout:10000,enableHighAccuracy:true}
+  );
+}
+
+// ── 지도 변수 ─────────────────────────────────
+var leafletMap=null,driverMarker=null,changerMarker=null;
+
+function initRelayMap(){
+  var mapDiv=document.getElementById('relayMap');
+  mapDiv.innerHTML='';
+  mapDiv.style.height='280px';
+
+  // Leaflet CSS/JS 동적 로드
+  if(!document.getElementById('leafletCss')){
+    var css=document.createElement('link');
+    css.id='leafletCss';css.rel='stylesheet';
+    css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+  }
+  function initMap(){
+    if(leafletMap){leafletMap.remove();leafletMap=null;}
+    driverMarker=null;changerMarker=null;
+    leafletMap=L.map('relayMap').setView([35.8714,128.6014],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap',maxZoom:18
+    }).addTo(leafletMap);
+  }
+  if(window.L){
+    initMap();
+  } else {
+    var script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    script.onload=function(){initMap();};
+    document.head.appendChild(script);
+  }
+  document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 대기 중';
+  document.getElementById('changerLocInfo').textContent='🧍 위치 대기 중';
+  document.getElementById('relayEta').textContent='📍 상대방 위치를 기다리는 중...';
+  document.getElementById('driverCard').classList.remove('online');
+  document.getElementById('changerCard').classList.remove('online');
+}
+
+function startLocationShare(){
+  if(!navigator.geolocation)return;
+  relayWatchId=navigator.geolocation.watchPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    var ud={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(currentRelayRole==='driver'){ud.driverLat=lat;ud.driverLon=lon;}
+    else{ud.changerLat=lat;ud.changerLon=lon;}
+    if(relayRoomRef)relayRoomRef.set(ud,{merge:true});
+  },function(){},{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
+}
+
+function updateRelayMap(data){
+  var dLat=data.driverLat,dLon=data.driverLon;
+  var cLat=data.changerLat,cLon=data.changerLon;
+
+  if(dLat){
+    document.getElementById('driverCard').classList.add('online');
+    document.getElementById('driverLocText').textContent='위치 공유 중 📍';
+    document.getElementById('driverLocInfo').textContent='👨‍✈️ 위치 공유 중';
+    // ★ Leaflet 마커 실시간 이동
+    if(leafletMap){
+      var dIcon=L.divIcon({html:'<div style="background:#14b8a6;color:white;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">👨‍✈️ 운전기사</div>',className:'',iconAnchor:[40,20]});
+      if(driverMarker){driverMarker.setLatLng([dLat,dLon]);}
+      else{driverMarker=L.marker([dLat,dLon],{icon:dIcon}).addTo(leafletMap);}
+    }
+  }
+  if(cLat){
+    document.getElementById('changerCard').classList.add('online');
+    document.getElementById('changerLocText').textContent='위치 공유 중 📍';
+    document.getElementById('changerLocInfo').textContent='🧍 위치 공유 중';
+    if(leafletMap){
+      var cIcon=L.divIcon({html:'<div style="background:#22c55e;color:white;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">🧍 교대기사</div>',className:'',iconAnchor:[40,20]});
+      if(changerMarker){changerMarker.setLatLng([cLat,cLon]);}
+      else{changerMarker=L.marker([cLat,cLon],{icon:cIcon}).addTo(leafletMap);}
+    }
+  }
+  // 두 위치 모두 있으면 거리/ETA + 지도 범위 조정
+  if(dLat&&cLat){
+    var dist=calcDist(dLat,dLon,cLat,cLon);
+    var etaMin=Math.round(dist/400);var etaText='';
+    if(dist<50)etaText='🟢 거의 도착! ('+Math.round(dist)+'m)';
+    else if(dist<200)etaText='🟡 약 '+Math.round(dist)+'m — 1분 이내 도착 예정';
+    else etaText='🚶 약 '+Math.round(dist)+'m — '+etaMin+'분 후 도착 예정';
+    document.getElementById('relayEta').textContent=etaText;
+    if(leafletMap&&driverMarker&&changerMarker){
+      var group=L.featureGroup([driverMarker,changerMarker]);
+      leafletMap.fitBounds(group.getBounds().pad(0.3));
+    }
+  } else if(dLat&&leafletMap){
+    leafletMap.setView([dLat,dLon],15);
+  } else if(cLat&&leafletMap){
+    leafletMap.setView([cLat,cLon],15);
+  }
+}
+function calcDist(lat1,lon1,lat2,lon2){var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+
+function confirmLeaveRelay(){
+  var btn=document.getElementById('relayLeaveBtn');
+  if(btn){btn.textContent='⏳ 나가는 중...';btn.disabled=true;}
+  leaveRelayRoom();
+}
+
+function leaveRelayRoom(){
+  if(relayWatchId!==null){navigator.geolocation.clearWatch(relayWatchId);relayWatchId=null;}
+  if(relayListener){relayListener();relayListener=null;}
+  // 지도 정리
+  if(leafletMap){leafletMap.remove();leafletMap=null;driverMarker=null;changerMarker=null;}
+
+  function resetUI(){
+    currentRelayRole='';currentRelayNum=0;relayRoomId='';
+    document.getElementById('relayRoom').classList.remove('show');
+    document.getElementById('relayNumGrid').style.display='grid';
+    document.getElementById('relayRouteTabs').style.display='flex';
+    document.getElementById('relayHeaderCard').style.display='block';
+    renderRelayGrid();
+  }
+
+  if(relayRoomRef&&currentRelayRole){
+    var ref=relayRoomRef;
+    var role=currentRelayRole;
+    relayRoomRef=null;
+    // ★ 내 역할 데이터만 완전 삭제 (set으로 덮어쓰기)
+    var clearData={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(role==='driver'){
+      clearData.driverActive=firebase.firestore.FieldValue.delete();
+      clearData.driverLat=firebase.firestore.FieldValue.delete();
+      clearData.driverLon=firebase.firestore.FieldValue.delete();
+    } else {
+      clearData.changerActive=firebase.firestore.FieldValue.delete();
+      clearData.changerLat=firebase.firestore.FieldValue.delete();
+      clearData.changerLon=firebase.firestore.FieldValue.delete();
+      clearData.changerJoinedAlert=firebase.firestore.FieldValue.delete();
+      clearData._notifiedDriver=firebase.firestore.FieldValue.delete();
+    }
+    // update 실패 시 set으로 재시도, 둘 다 실패해도 UI는 전환
+    ref.update(clearData)
+      .then(function(){resetUI();})
+      .catch(function(){
+        ref.set(clearData,{merge:true})
+          .then(function(){resetUI();})
+          .catch(function(){resetUI();});
+      });
+  } else {
+    resetUI();
+  }
+}
+
+// ── ★ Wake Lock — 화면 꺼짐 방지 ────────────
+var wakeLock=null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock=await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release',function(){wakeLock=null;});
+    }
+  }catch(e){}
+}
+// 화면이 다시 보이면 Wake Lock 재요청
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&voiceOn){requestWakeLock();}
+});
+// 음성 ON 상태면 앱 시작 시 바로 Wake Lock 요청
+requestWakeLock();
+
+// ── ★ 오디오 컨텍스트 미리 활성화 ──────────────
+var audioCtxUnlocked=false;
+var globalAudioCtx=null;
+
+function unlockAudio(){
+  if(audioCtxUnlocked) return;
+  try{
+    globalAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    // 무음 재생으로 오디오 컨텍스트 활성화
+    var buf=globalAudioCtx.createBuffer(1,1,22050);
+    var src=globalAudioCtx.createBufferSource();
+    src.buffer=buf;src.connect(globalAudioCtx.destination);src.start(0);
+    audioCtxUnlocked=true;
+  }catch(e){}
+
+  // speechSynthesis 미리 활성화
+  if(window.speechSynthesis){
+    var u=new SpeechSynthesisUtterance('');
+    u.volume=0;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+// 화면 첫 터치/클릭 시 오디오 잠금 해제
+document.addEventListener('touchstart',function(){unlockAudio();},{once:false,passive:true});
+document.addEventListener('click',function(){unlockAudio();},{once:false});
+
+function speak(text){
+  if(!window.speechSynthesis) return;
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  window.speechSynthesis.cancel();
+  // ★ cancel() 후 잠깐 기다렸다가 실행 (cancel이 완전히 적용되도록)
+  setTimeout(function(){
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang='ko-KR'; u.rate=0.92; u.volume=1.0;
+    var voices=window.speechSynthesis.getVoices();
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}
+    }
+    window.speechSynthesis.speak(u);
+  }, 150);
+}
+function announceNewPost(p){
+  if(!voiceOn) return;
+  var t={accident:'사고 발생',slow:'정체 구간',clear:'소통 원활',construction:'공사 중'};
+  var text=p.route+'번 노선. '+p.location+'. '+(t[p.type]||'')+'. '+p.message;
+  // ★ 첫 번째 읽기
+  speak(text);
+  // ★ 두 번째 읽기 (첫 번째 끝난 후 1초 뒤)
+  var avgDuration=(text.length*0.12+1)*1000; // 글자 수 기준 예상 시간
+  setTimeout(function(){
+    if(voiceOn) speak(text);
+  }, avgDuration+1000);
+}
+function toggleVoice(){
+  unlockAudio(); // ★ 오디오 잠금 해제
+  if(!voiceOn){
+    var u=new SpeechSynthesisUtterance('음성 알림이 켜졌습니다');
+    u.lang='ko-KR';u.volume=0.8;window.speechSynthesis.speak(u);
+    voiceOn=true;
+    document.getElementById('voiceBanner').classList.remove('hidden');
+    requestWakeLock();
+  }else{
+    window.speechSynthesis.cancel();
+    voiceOn=false;
+    document.getElementById('voiceBanner').classList.add('hidden');
+    if(wakeLock){wakeLock.release().catch(function(){});wakeLock=null;}
+  }
+  try{localStorage.setItem('voiceOn',voiceOn);}catch(e){}
+  updateVoiceBtn();
+}
+function updateVoiceBtn(){var b=document.getElementById('voiceToggle'),l=document.getElementById('voiceLabel');if(voiceOn){b.classList.add('on');l.textContent='음성 ON';document.getElementById('voiceBanner').classList.remove('hidden');}else{b.classList.remove('on');l.textContent='음성 OFF';}}
+function playAlertSound(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var o1=ctx.createOscillator(),g1=ctx.createGain();o1.connect(g1);g1.connect(ctx.destination);o1.frequency.value=880;o1.type='sine';g1.gain.setValueAtTime(0.4,ctx.currentTime);g1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);o1.start(ctx.currentTime);o1.stop(ctx.currentTime+0.3);var o2=ctx.createOscillator(),g2=ctx.createGain();o2.connect(g2);g2.connect(ctx.destination);o2.frequency.value=1100;o2.type='sine';g2.gain.setValueAtTime(0.4,ctx.currentTime+0.2);g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);o2.start(ctx.currentTime+0.2);o2.stop(ctx.currentTime+0.5);}catch(e){}}
+function playSuccessSound(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var freqs=[523,659,784];for(var i=0;i<freqs.length;i++){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freqs[i];o.type='sine';var t=ctx.currentTime+i*0.15;g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.start(t);o.stop(t+0.3);}}catch(e){}}
+function vibrate(){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
+function fmtTime(ts){if(!ts)return'--:--';var d=new Date(ts);return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function fmtDate(ts){if(!ts)return'';var d=new Date(ts),today=new Date(),yest=new Date();yest.setDate(today.getDate()-1);if(d.toDateString()===today.toDateString())return'오늘';if(d.toDateString()===yest.toDateString())return'어제';return(d.getMonth()+1)+'월 '+d.getDate()+'일';}
+function timeAgo(ts){if(!ts)return'방금 전';var diff=Math.floor((Date.now()-ts)/1000);if(diff<10)return'방금 전';if(diff<60)return diff+'초 전';var m=Math.floor(diff/60);if(m<60)return m+'분 전';var h=Math.floor(m/60);if(h<24)return h+'시간 전';return Math.floor(h/24)+'일 전';}
+
+// ── Firebase 실시간 ───────────────────────────
+db.collection('posts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
+  var newPosts=[];snapshot.forEach(function(doc){var data=doc.data(),ts=0;try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}newPosts.push({id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},lastVoteTs:data.lastVoteTs||null,myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]});});
+  if(!isFirstLoad){
+    for(var i=0;i<newPosts.length;i++){
+      if(!knownIds[newPosts[i].id]){
+        var np=newPosts[i];
+        playAlertSound();
+        vibrate();
+        showToast('🚨 새 도로 정보가 올라왔어요!');
+        if(voiceOn){
+          (function(p){
+            // ★ 알림음(0.5초) 완전히 끝난 후 음성 시작
+            setTimeout(function(){
+              announceNewPost(p);
+            }, 2000);
+          })(np);
+        }
+        break;
+      }
+    }
+  }
+  knownIds={};for(var i=0;i<newPosts.length;i++)knownIds[newPosts[i].id]=true;
+  isFirstLoad=false;posts=newPosts;if(currentFilter!=='자유'&&currentFilter!=='교대'){renderFeed();updateStats();}
+},function(){});
+var freeKnownIds={},freeFirstLoad=true;
+db.collection('freePosts').orderBy('timestamp','desc').onSnapshot(function(snapshot){
+  var np=[];snapshot.forEach(function(doc){var data=doc.data(),ts=0;try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}np.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});});
+  if(!freeFirstLoad){for(var i=0;i<np.length;i++){if(!freeKnownIds[np[i].id]){showToast('💬 새 게시글이 올라왔어요!');break;}}}
+  freeKnownIds={};for(var i=0;i<np.length;i++)freeKnownIds[np[i].id]=true;
+  freeFirstLoad=false;freePosts=np;if(currentFilter==='자유')renderFeed();
+},function(){});
+
+deleteOldPosts();
+cleanStaleRelayRooms();   // ★ 앱 열릴 때 오래된 방 정리
+scheduleMidnightReset();  // ★ 자정 타이머 시작
+
+// ── 렌더링 ───────────────────────────────────
+function renderFeed(){
+  var feed=document.getElementById('feed');
+  if(currentFilter==='자유'){
+    if(freePosts.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>아직 게시글이 없어요.</p></div>';return;}
+    var html='',lastDate='';for(var i=0;i<freePosts.length;i++){var p=freePosts[i],dl=fmtDate(p.ts);if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}html+='<div class="free-card"><div class="free-card-header"><div class="free-badge">💬 자유</div><div class="free-card-title">'+p.title+'</div><div class="free-card-time">'+fmtTime(p.ts)+'</div></div><div class="free-card-body"><div class="free-card-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div><div class="free-card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleFreeLike(\''+p.id+'\')">👍 좋아요 <span id="freelike-'+p.id+'">'+p.likes+'</span></button><div class="author-info">'+timeAgo(p.ts)+'</div></div></div>';}
+    feed.innerHTML=html;return;
+  }
+  var filtered=[];for(var i=0;i<posts.length;i++){if(currentFilter==='전체'||posts[i].route===currentFilter)filtered.push(posts[i]);}
+  if(filtered.length===0){feed.innerHTML='<div class="empty-state"><div class="icon">🛣️</div><p>이 노선의 정보가 없습니다.<br>첫 정보를 올려주세요!</p></div>';return;}
+  var html='',lastDate='';
+  for(var i=0;i<filtered.length;i++){
+    var p=filtered[i],dl=fmtDate(p.ts);if(dl!==lastDate){html+='<div class="date-divider"><span>📅 '+dl+'</span></div>';lastDate=dl;}
+    var v=p.statusVotes||{clear:0,smooth:0,improving:0,still:0};var tv=(v.clear||0)+(v.smooth||0)+(v.improving||0)+(v.still||0);
+    var btns='';for(var b=0;b<STATUS_ORDER.length;b++){var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0,voted=p.myVote===key;btns+='<button class="status-btn'+(voted?' voted':'')+'" onclick="voteStatus(\''+p.id+'\',\''+key+'\')">'+si.emoji+' '+si.label+(cnt>0?' <span class="status-count">'+cnt+'</span>':'')+' </button>';}
+    var voteHtml='';if(tv>0){var rows='';for(var b=0;b<STATUS_ORDER.length;b++){var key=STATUS_ORDER[b],si=STATUS_INFO[key],cnt=v[key]||0;if(cnt===0)continue;var pct=Math.round((cnt/tv)*100);rows+='<div class="vote-row"><div class="vote-row-badge '+si.cls+'">'+si.emoji+' '+si.label+'</div><div class="vote-bar-wrap"><div class="vote-bar '+si.cls+'" style="width:'+pct+'%"></div></div><div class="vote-cnt">'+cnt+'명</div></div>';}var vts=p.lastVoteTs?'🕐 마지막 응답: '+fmtTime(p.lastVoteTs)+' ('+timeAgo(p.lastVoteTs)+')':'';voteHtml='<div class="vote-result-area"><div class="vote-result-title">📊 현황 응답 (총 '+tv+'명)</div><div class="vote-result-rows">'+rows+'</div>'+(vts?'<div class="vote-time">'+vts+'</div>':'')+'</div>';}
+    html+='<div class="post-card"><div class="card-header"><div class="route-badge">'+p.route+'번</div><div class="type-badge type-'+p.type+'">'+p.typeLabel+'</div><div class="post-time">⏱ '+fmtTime(p.ts)+' · <span class="time-ago" data-ts="'+p.ts+'">'+timeAgo(p.ts)+'</span></div></div><div class="card-body"><div class="post-location">📍 '+p.location+'</div><div class="post-message">'+p.message+'</div>'+(p.photo?'<img src="'+p.photo+'" class="post-image">':'')+'</div><div class="status-update-area"><div class="status-update-label">🔄 현재 상황은 어떤가요?</div><div class="status-btns">'+btns+'</div></div><div class="card-footer"><button class="like-btn'+(p.liked?' liked':'')+'" onclick="toggleLike(\''+p.id+'\')">👍 도움됐어요 <span id="like-'+p.id+'">'+p.likes+'</span></button><div class="author-info">기사님 공유</div></div>'+voteHtml+'</div>';
+  }
+  feed.innerHTML=html;
+}
+function updateStats(){var acc=0,slow=0;for(var i=0;i<posts.length;i++){if(posts[i].type==='accident')acc++;if(posts[i].type==='slow')slow++;}document.getElementById('totalCount').textContent=posts.length;document.getElementById('accidentCount').textContent=acc;document.getElementById('slowCount').textContent=slow;}
+function filterRoute(route){
+  currentFilter=route;
+  var btns=document.querySelectorAll('.route-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');
+  for(var i=0;i<btns.length;i++){var txt=btns[i].textContent.trim();if(route==='전체'&&txt==='전체'){btns[i].classList.add('active');break;}if(route==='자유'&&txt==='💬 자유'){btns[i].classList.add('active');break;}if(route==='교대'&&txt==='🔄 교대'){btns[i].classList.add('active');break;}if(txt===route+'번'){btns[i].classList.add('active');break;}}
+  var fab=document.getElementById('fab'),qa=document.getElementById('quickReportArea'),sb=document.getElementById('statsBar'),feed=document.getElementById('feed'),rs=document.getElementById('relaySection');
+  if(route==='교대'){feed.style.display='none';rs.style.display='block';qa.style.display='none';sb.style.display='none';fab.classList.add('relay-hide');currentRelayRoute='609';var tabs=document.querySelectorAll('.relay-route-tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');if(tabs[0])tabs[0].classList.add('active');renderRelayGrid();}
+  else{feed.style.display='flex';rs.style.display='none';fab.classList.remove('relay-hide');if(route==='자유'){fab.style.background='var(--purple)';qa.style.display='none';sb.style.display='none';}else{fab.style.background='';qa.style.display='block';sb.style.display='';updateStats();}renderFeed();}
+}
+function openModal(){
+  document.getElementById('modalOverlay').classList.add('show');
+  if(currentFilter==='자유'){document.getElementById('modalTitleText').textContent='💬 자유게시판 글쓰기';document.getElementById('modalBox').classList.add('free-modal');document.getElementById('roadForm').style.display='none';document.getElementById('freeForm').style.display='block';document.getElementById('freeTitleInput').value='';document.getElementById('freeMessageInput').value='';document.getElementById('freePhotoLabel').textContent='사진을 선택하세요';document.getElementById('freePhotoPreview').style.display='none';freePhotoDataUrl=null;}
+  else{document.getElementById('modalTitleText').textContent='🚨 도로 정보 올리기';document.getElementById('modalBox').classList.remove('free-modal');document.getElementById('roadForm').style.display='block';document.getElementById('freeForm').style.display='none';selectedRoute='';selectedType='';selectedTypeLabel='';photoDataUrl=null;document.getElementById('locationInput').value='';document.getElementById('messageInput').value='';document.getElementById('photoLabel').textContent='사진을 선택하세요';document.getElementById('photoPreview').style.display='none';var rb=document.querySelectorAll('.route-select-btn');for(var i=0;i<rb.length;i++)rb[i].classList.remove('selected');var tb=document.querySelectorAll('.type-select-btn');for(var i=0;i<tb.length;i++)tb[i].className='type-select-btn';stopSpeech();}
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');stopSpeech();stopFreeSpeech();}
+function closeOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+function selectRouteForm(btn,route){var rb=document.querySelectorAll('.route-select-btn');for(var i=0;i<rb.length;i++)rb[i].classList.remove('selected');btn.classList.add('selected');selectedRoute=route;}
+function selectType(btn,type,label){var tb=document.querySelectorAll('.type-select-btn');for(var i=0;i<tb.length;i++)tb[i].className='type-select-btn';btn.classList.add('selected-'+type);selectedType=type;selectedTypeLabel=label;}
+function previewPhoto(e){var file=e.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){photoDataUrl=ev.target.result;document.getElementById('photoPreview').src=photoDataUrl;document.getElementById('photoPreview').style.display='block';document.getElementById('photoLabel').textContent=file.name;};reader.readAsDataURL(file);}
+function previewFreePhoto(e){var file=e.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){freePhotoDataUrl=ev.target.result;document.getElementById('freePhotoPreview').src=freePhotoDataUrl;document.getElementById('freePhotoPreview').style.display='block';document.getElementById('freePhotoLabel').textContent=file.name;};reader.readAsDataURL(file);}
+function submitPost(){var loc=document.getElementById('locationInput').value.trim(),msg=document.getElementById('messageInput').value.trim();if(!selectedRoute){alert('노선 번호를 선택해주세요!');return;}if(!selectedType){alert('상황 유형을 선택해주세요!');return;}if(!loc){alert('구간/정류장을 입력해주세요!');return;}if(!msg){alert('상세 내용을 입력해주세요!');return;}var btn=document.getElementById('submitBtn');btn.textContent='올리는 중...';btn.disabled=true;stopSpeech();db.collection('posts').add({route:selectedRoute,type:selectedType,typeLabel:selectedTypeLabel,location:loc,message:msg,timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:photoDataUrl,statusVotes:{clear:0,smooth:0,improving:0,still:0},lastVoteTs:null}).then(function(){playSuccessSound();closeModal();showToast('✅ 도로 정보가 올라갔어요!');}).catch(function(e){alert('저장 오류: '+e.message);}).finally(function(){btn.textContent='📤 지금 올리기';btn.disabled=false;});}
+function submitFreePost(){var title=document.getElementById('freeTitleInput').value.trim(),msg=document.getElementById('freeMessageInput').value.trim();if(!title){alert('제목을 입력해주세요!');return;}if(!msg){alert('내용을 입력해주세요!');return;}var btn=document.getElementById('freeSubmitBtn');btn.textContent='올리는 중...';btn.disabled=true;stopFreeSpeech();db.collection('freePosts').add({title:title,message:msg,timestamp:firebase.firestore.FieldValue.serverTimestamp(),likes:0,photo:freePhotoDataUrl}).then(function(){playSuccessSound();closeModal();showToast('💬 게시글이 올라갔어요!');}).catch(function(e){alert('저장 오류: '+e.message);}).finally(function(){btn.textContent='💬 게시글 올리기';btn.disabled=false;});}
+function toggleLike(id){var post=null;for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}if(!post)return;var likes=post.likes||0;if(likedPosts[id]){delete likedPosts[id];likes=Math.max(0,likes-1);}else{likedPosts[id]=true;likes++;}try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}db.collection('posts').doc(id).update({likes:likes});}
+function toggleFreeLike(id){var post=null;for(var i=0;i<freePosts.length;i++){if(freePosts[i].id===id){post=freePosts[i];break;}}if(!post)return;var likes=post.likes||0,key='free_'+id;if(likedPosts[key]){delete likedPosts[key];likes=Math.max(0,likes-1);}else{likedPosts[key]=true;likes++;}try{localStorage.setItem('likedPosts',JSON.stringify(likedPosts));}catch(e){}db.collection('freePosts').doc(id).update({likes:likes});}
+function voteStatus(id,key){var post=null;for(var i=0;i<posts.length;i++){if(posts[i].id===id){post=posts[i];break;}}if(!post)return;var v={clear:post.statusVotes.clear||0,smooth:post.statusVotes.smooth||0,improving:post.statusVotes.improving||0,still:post.statusVotes.still||0};var prev=myVotes[id]||null;if(prev===key){v[key]=Math.max(0,v[key]-1);delete myVotes[id];}else{if(prev&&v[prev]!==undefined)v[prev]=Math.max(0,v[prev]-1);v[key]++;myVotes[id]=key;}try{localStorage.setItem('myVotes',JSON.stringify(myVotes));}catch(e){}db.collection('posts').doc(id).update({statusVotes:v,lastVoteTs:Date.now()});}
+var deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
+function showPwaModal(){var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);document.getElementById('pwaAndroid').style.display=isIos?'none':'block';document.getElementById('pwaIos').style.display=isIos?'block':'none';document.getElementById('pwaInstallBtn').style.display=isIos?'none':'block';document.getElementById('pwaModalOverlay').classList.add('show');}
+function closePwaModal(){document.getElementById('pwaModalOverlay').classList.remove('show');}
+function closePwaModalOnOverlay(e){if(e.target===document.getElementById('pwaModalOverlay'))closePwaModal();}
+function triggerPwaInstall(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(result){if(result.outcome==='accepted')showToast('✅ 홈화면에 추가됐어요!');deferredPrompt=null;closePwaModal();});}else{showToast('브라우저 메뉴 → 홈 화면에 추가를 눌러주세요');closePwaModal();}}
+updateVoiceBtn();
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
+
+// ── ★ 앱 시작 오버레이 (오디오 활성화) ──────────
+var overlayDismissed=false;
+try{overlayDismissed=localStorage.getItem('overlayDismissed')==='true';}catch(e){}
+
+function showStartOverlay(){
+  // 오늘 이미 터치했으면 표시 안 함
+  var lastDismiss=0;
+  try{lastDismiss=parseInt(localStorage.getItem('overlayDismissDate')||'0');}catch(e){}
+  var today=new Date(); today.setHours(0,0,0,0);
+  if(lastDismiss>=today.getTime()) return;
+  // 1초 후 오버레이 표시
+  setTimeout(function(){
+    document.getElementById('startOverlay').style.display='flex';
+  },1000);
+}
+
+function dismissStartOverlay(){
+  unlockAudio();
+  document.getElementById('startOverlay').style.display='none';
+  // 오늘 날짜 저장
+  var today=new Date(); today.setHours(0,0,0,0);
+  try{localStorage.setItem('overlayDismissDate',today.getTime());}catch(e){}
+  // 음성 ON 상태면 바로 테스트 음성
+  if(voiceOn){
+    setTimeout(function(){speak('음성 알림이 준비됐습니다');},300);
+  }
+}
+
+showStartOverlay();
+
+// ── ★ 접속자 수 실시간 표시 ────────────────────
+var onlineRef=null;
+var myOnlineId='user_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+
+function startOnlineTracking(){
+  // 내 접속 정보 등록
+  onlineRef=db.collection('onlineUsers').doc(myOnlineId);
+  onlineRef.set({
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // 30초마다 heartbeat (접속 유지)
+  setInterval(function(){
+    if(onlineRef) onlineRef.set({
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).catch(function(){});
+  },30000);
+
+  // 5분 이상 heartbeat 없는 유저 정리
+  setInterval(function(){
+    var cutoff=new Date(Date.now()-(5*60*1000));
+    db.collection('onlineUsers')
+      .where('updatedAt','<',firebase.firestore.Timestamp.fromDate(cutoff))
+      .get().then(function(snap){
+        if(snap.empty) return;
+        var batch=db.batch();
+        snap.forEach(function(doc){batch.delete(doc.ref);});
+        batch.commit().catch(function(){});
+      }).catch(function(){});
+  },60000);
+
+  // 접속자 수 실시간 구독
+  db.collection('onlineUsers').onSnapshot(function(snap){
+    var count=snap.size;
+    var el=document.getElementById('onlineCount');
+    if(el) el.textContent=count;
+  },function(){});
+
+  // 앱 닫힐 때 접속 정보 삭제
+  window.addEventListener('beforeunload',function(){
+    if(onlineRef) onlineRef.delete().catch(function(){});
+  });
+}
+
+// ── ★ 날씨 (Open-Meteo 무료 API — 대구 고정) ──
+function fetchWeather(){
+  // 대구 좌표: 위도 35.8714, 경도 128.6014
+  var url='https://api.open-meteo.com/v1/forecast?latitude=35.8714&longitude=128.6014&current=temperature_2m,weathercode,windspeed_10m,precipitation&timezone=Asia%2FSeoul';
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var c=data.current;
+      var temp=Math.round(c.temperature_2m);
+      var code=c.weathercode;
+      var wind=c.windspeed_10m;
+      var rain=c.precipitation;
+
+      // 날씨 코드 → 아이콘/설명
+      var icon='🌤️',desc='맑음';
+      if(code===0){icon='☀️';desc='맑음';}
+      else if(code<=2){icon='🌤️';desc='구름 조금';}
+      else if(code<=3){icon='☁️';desc='흐림';}
+      else if(code<=49){icon='🌫️';desc='안개';}
+      else if(code<=59){icon='🌦️';desc='이슬비';}
+      else if(code<=69){icon='🌧️';desc='비';}
+      else if(code<=79){icon='🌨️';desc='눈';}
+      else if(code<=82){icon='🌧️';desc='소나기';}
+      else if(code<=86){icon='🌨️';desc='눈보라';}
+      else{icon='⛈️';desc='뇌우';}
+
+      // 온도별 아이콘 보정
+      if(temp>=35){icon='🌡️';}
+      else if(temp<=0&&(code>=70&&code<=79)){icon='❄️';}
+
+      // 주의 메시지
+      var alertText='대구', alertClass='normal';
+      if(code>=70&&code<=79){alertText='❄️ 결빙 위험!';alertClass='danger';}
+      else if(code>=50&&code<=69){alertText='🌧️ 노면 미끄러움';alertClass='warn';}
+      else if(code>=80&&code<=82){alertText='⚠️ 소나기 주의';alertClass='warn';}
+      else if(code>=83){alertText='⛈️ 악천후 주의!';alertClass='danger';}
+      else if(wind>=50){alertText='💨 강풍 주의!';alertClass='danger';}
+      else if(wind>=30){alertText='💨 바람 강함';alertClass='warn';}
+      else if(temp>=35){alertText='🌡️ 폭염 주의!';alertClass='danger';}
+      else if(temp<=0){alertText='🧊 결빙 주의!';alertClass='danger';}
+      else if(temp>=28){alertText='☀️ 무더운 날씨';alertClass='warn';}
+      else{alertText='✅ 쾌청한 날씨';alertClass='good';}
+
+      document.getElementById('weatherIcon').textContent=icon;
+      document.getElementById('weatherTemp').textContent=temp+'°C';
+      document.getElementById('weatherDesc').textContent=desc;
+      document.getElementById('weatherAlert').textContent=alertText;
+      document.getElementById('weatherAlert').className='weather-alert '+alertClass;
+    })
+    .catch(function(){
+      document.getElementById('weatherDesc').textContent='날씨 정보 없음';
+    });
+}
+
+// 앱 시작 시 날씨 가져오기 + 1시간마다 갱신
+fetchWeather();
+setInterval(fetchWeather, 60*60*1000);
+
+startOnlineTracking();
+// ── ★ 관리자 모드 — 로고 아이콘 5번 탭하면 활성화 ──
+var adminTapCount=0,adminTapTimer=null;
+document.querySelector('.logo-icon').addEventListener('click',function(){
+  // PWA 팝업은 기존대로 작동
+  adminTapCount++;
+  if(adminTapTimer)clearTimeout(adminTapTimer);
+  adminTapTimer=setTimeout(function(){adminTapCount=0;},2000);
+  if(adminTapCount>=5){
+    adminTapCount=0;
+    if(currentFilter==='교대'){
+      var area=document.getElementById('adminResetArea');
+      var isVisible=area.style.display!=='none';
+      area.style.display=isVisible?'none':'block';
+      showToast(isVisible?'🔒 관리자 모드 종료':'🔓 관리자 모드 활성화');
+    } else {
+      showToast('🔄 교대 탭에서 5번 탭하면 관리자 버튼이 나타나요');
+    }
+  }
+});
+
+// ── ★ 교대방 전체 초기화 (관리자) ────────────
+function adminResetAllRooms(){
+  if(!confirm('교대방 전체를 초기화할까요?\n현재 접속 중인 모든 방이 삭제됩니다.')) return;
+  var btn=event.target;
+  btn.textContent='⏳ 초기화 중...';
+  btn.disabled=true;
+  db.collection('relayRooms').get().then(function(snap){
+    if(snap.empty){
+      showToast('✅ 초기화할 방이 없어요');
+      btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+      btn.disabled=false;
+      return;
+    }
+    var batch=db.batch();
+    snap.forEach(function(doc){batch.delete(doc.ref);});
+    return batch.commit();
+  }).then(function(){
+    showToast('✅ 모든 교대방이 초기화됐어요!');
+    btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+    btn.disabled=false;
+    document.getElementById('adminResetArea').style.display='none';
+    renderRelayGrid();
+  }).catch(function(e){
+    showToast('오류: '+e.message);
+    btn.textContent='🗑️ 교대방 전체 초기화 (관리자)';
+    btn.disabled=false;
+  });
+}
+// ── ★ 브라우저 닫히거나 새로고침될 때 자동 퇴장 ──
+window.addEventListener('beforeunload',function(){
+  if(!currentRelayRole||!relayRoomId) return;
+  // sendBeacon으로 백그라운드 전송 (앱 닫혀도 전송됨)
+  var projectId='hanilbus-760ae';
+  var docPath='relayRooms%2F'+relayRoomId;
+  var url='https://firestore.googleapis.com/v1/projects/'+projectId+'/databases/(default)/documents/'+docPath+'?currentDocument.exists=true';
+  // 내 역할에 따라 삭제할 필드 구성
+  var fields={};
+  if(currentRelayRole==='driver'){
+    fields['driverActive']={nullValue:null};
+    fields['driverLat']={nullValue:null};
+    fields['driverLon']={nullValue:null};
+  } else {
+    fields['changerActive']={nullValue:null};
+    fields['changerLat']={nullValue:null};
+    fields['changerLon']={nullValue:null};
+    fields['changerJoinedAlert']={nullValue:null};
+  }
+  // Firebase REST API로 직접 업데이트 (동기적으로 전송)
+  var updateUrl='https://firestore.googleapis.com/v1/projects/'+projectId+
+    '/databases/(default)/documents/relayRooms/'+relayRoomId+
+    '?updateMask.fieldPaths='+Object.keys(fields).join('&updateMask.fieldPaths=');
+  var body=JSON.stringify({fields:fields});
+  if(navigator.sendBeacon){
+    var blob=new Blob([body],{type:'application/json'});
+    navigator.sendBeacon(updateUrl,blob);
+  }
+  // GPS 추적도 중지
+  if(relayWatchId!==null){
+    navigator.geolocation.clearWatch(relayWatchId);
+    relayWatchId=null;
+  }
+});
+// ── ★ 30분마다 데이터 새로고침 (페이지 리로드 없음) ──
+// 교대방 안에 있어도 안전 — Firebase 데이터만 다시 읽어옴
+setInterval(function(){
+  // 글 작성 모달 열려있으면 건너뜀
+  if(document.getElementById('modalOverlay').classList.contains('show')) return;
+
+  // 도로정보 최신 데이터 다시 불러오기
+  db.collection('posts').orderBy('timestamp','desc').get().then(function(snapshot){
+    var newPosts=[];
+    snapshot.forEach(function(doc){
+      var data=doc.data(),ts=0;
+      try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+      newPosts.push({id:doc.id,route:data.route||'',type:data.type||'',typeLabel:data.typeLabel||'',location:data.location||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,statusVotes:data.statusVotes||{clear:0,smooth:0,improving:0,still:0},lastVoteTs:data.lastVoteTs||null,myVote:myVotes[doc.id]||null,liked:!!likedPosts[doc.id]});
+    });
+    posts=newPosts;
+    if(currentFilter!=='자유'&&currentFilter!=='교대'){renderFeed();updateStats();}
+  }).catch(function(){});
+
+  // 자유게시판 최신 데이터 다시 불러오기
+  db.collection('freePosts').orderBy('timestamp','desc').get().then(function(snapshot){
+    var np=[];
+    snapshot.forEach(function(doc){
+      var data=doc.data(),ts=0;
+      try{ts=data.timestamp?data.timestamp.toMillis():Date.now();}catch(e){ts=Date.now();}
+      np.push({id:doc.id,title:data.title||'',message:data.message||'',ts:ts,likes:data.likes||0,photo:data.photo||null,liked:!!likedPosts['free_'+doc.id]});
+    });
+    freePosts=np;
+    if(currentFilter==='자유')renderFeed();
+  }).catch(function(){});
+
+}, 30 * 60 * 1000); // 30분</script>
+</body>
+</html>
