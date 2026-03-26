@@ -3,185 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>버스 실시간 주행 테스트 v3</title>
+    <title>버스 정체구간 분석 테스트 v5 (서버전송)</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        body {
-            font-family: 'Malgun Gothic', sans-serif;
-            background-color: #1a1a1c;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .header {
-            border-bottom: 2px solid #ff7f50;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        /* 현재 판별 상태를 보여주는 전광판 */
-        #statusBoard {
-            background-color: #333;
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 2px solid #555;
-            transition: 0.5s; /* 색상이 부드럽게 변함 */
-        }
-        .status-box {
-            background-color: #2c2c2e;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        .speed-text {
-            font-size: 60px;
-            font-weight: bold;
-            color: #ccc;
-            margin: 10px 0;
-        }
-        .timer-text {
-            font-size: 16px;
-            color: #ffcc00;
-            margin-bottom: 10px;
-            height: 20px;
-        }
-        .btn {
-            background-color: #ff7f50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 10px;
-            width: 100%;
-            margin-top: 10px;
-        }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: #ffffff; margin: 0; padding: 20px; text-align: center; }
+        .header { border-bottom: 2px solid #ff7f50; padding-bottom: 10px; margin-bottom: 15px; }
+        #statusBoard { background-color: #333; color: white; font-size: 24px; font-weight: bold; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #555; transition: 0.5s; }
+        .status-box { background-color: #2c2c2e; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+        .speed-text { font-size: 60px; font-weight: bold; color: #ccc; margin: 10px 0; }
+        #jamInfoBox { background-color: #4a2323; border: 2px dashed #ff4d4d; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none; text-align: left; }
+        #jamInfoBox h3 { margin: 0 0 10px 0; color: #ff4d4d; font-size: 18px; text-align: center; }
+        #jamInfoBox p { margin: 5px 0; font-size: 15px; color: #fcc; }
+        .highlight { font-size: 20px; font-weight: bold; color: white; }
+        .btn { background-color: #ff7f50; color: white; border: none; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 10px; width: 100%; margin-top: 10px;}
         .btn-stop { background-color: #ff4d4d; display: none; }
+        #serverLog { margin-top: 20px; font-size: 13px; color: #00cc44; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>🤖 자동 정체 판별 AI 테스트</h2>
-        <p style="font-size: 13px; color: #ff7f50;">(30초 유지 시 자동 변경됩니다)</p>
+        <h2>📡 데이터 수집기 (서버 송신용)</h2>
+        <p style="font-size: 13px; color: #ff7f50;">(파이어베이스 서버로 실시간 전송 중)</p>
     </div>
 
     <div id="statusBoard">상태 분석 대기 중...</div>
 
+    <div id="jamInfoBox">
+        <h3>🚨 현재 정체 구간 기록 중</h3>
+        <p>⏱️ 갇혀있는 시간: <span class="highlight" id="jamTime">0</span> 초</p>
+        <p>📏 엉금엉금 이동거리: <span class="highlight" id="jamDist">0</span> m</p>
+    </div>
+
     <div class="status-box">
         <div style="font-size: 18px;">현재 주행 속도</div>
         <div class="speed-text" id="speedDisplay">0 <span style="font-size: 24px;">km/h</span></div>
-        
-        <div class="timer-text" id="timerDisplay"></div>
     </div>
 
-    <button class="btn" id="startBtn" onclick="startTracking()">🚀 주행 기록 시작</button>
-    <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()">🛑 기록 중지</button>
+    <button class="btn" id="startBtn" onclick="startTracking()">🚀 수집 시작 (서버 연결)</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()">🛑 수집 중지</button>
 
-    <div id="logArea" style="font-size: 12px; color: #888; margin-top: 20px;">
-        데이터 수집 준비 완료
-    </div>
+    <div id="serverLog">서버 연결 대기 중...</div>
 
     <script>
-        let watchId = null;
-        let wakeLock = null;
-        let logicTimer = null;
-        
-        // AI 로직을 위한 변수들
-        let lastSpeed = 0;
-        let slowSeconds = 0;
-        let fastSeconds = 0;
-        let currentStatus = "대기중";
+        // ========================================================
+        // ★★★ 파이어베이스 설정 복사해 넣는 곳 ★★★
+        // 아래 const firebaseConfig = { ... }; 부분을 재민님의 것으로 덮어쓰세요!
+        // ========================================================
+        const firebaseConfig = {// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCKXI4AYBIrotyF3VHv6Gr0GP-p1ii4Bww",
+  authDomain: "hanilbus-760ae.firebaseapp.com",
+  projectId: "hanilbus-760ae",
+  storageBucket: "hanilbus-760ae.firebasestorage.app",
+  messagingSenderId: "454505545954",
+  appId: "1:454505545954:web:a1951147f2b4b34d019ebb",
+  measurementId: "G-160EWPVGM5"
+};
+            apiKey: "여기에_재민님의_apiKey를_넣으세요",
+            authDomain: "여기에_넣으세요.firebaseapp.com",
+            databaseURL: "https://여기에_넣으세요.firebaseio.com", // (있는 경우만)
+            projectId: "여기에_넣으세요",
+            storageBucket: "여기에_넣으세요.appspot.com",
+            messagingSenderId: "여기에_넣으세요",
+            appId: "여기에_넣으세요"
+        };
+        // ========================================================
 
-        async function requestWakeLock() {
-            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+        // 파이어베이스 시작!
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let watchId = null, wakeLock = null, logicTimer = null;
+        let currentLat = 0, currentLon = 0, currentSpeed = 0;
+        let crawlSeconds = 0;
+        let isJam = false;
+        let startJamLat = 0, startJamLon = 0;
+        let currentStatusText = "대기중"; // 서버로 보낼 상태 글자
+
+        // 파이어베이스로 데이터 쏘는 함수 (게시판에 글쓰기)
+        function sendDataToServer() {
+            // "busStatus/609" 라는 방에 현재 내 상태를 덮어씁니다.
+            database.ref('busStatus/609').set({
+                status: currentStatusText,
+                speed: currentSpeed,
+                lat: currentLat,
+                lon: currentLon,
+                jamTime: crawlSeconds,
+                timestamp: new Date().toLocaleTimeString()
+            }).then(() => {
+                document.getElementById('serverLog').innerText = `📡 마지막 전송 성공: ${new Date().toLocaleTimeString()}`;
+            }).catch((error) => {
+                document.getElementById('serverLog').innerText = "❌ 서버 전송 실패! (규칙 설정을 확인하세요)";
+                document.getElementById('serverLog').style.color = "#ff4d4d";
+            });
         }
+
+        // 거리 계산 공식
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        async function requestWakeLock() { try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
 
         function startTracking() {
             if (!("geolocation" in navigator)) return;
-
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
-            document.getElementById('statusBoard').innerHTML = "🔍 속도 분석 중...";
-            
             requestWakeLock();
 
-            // 1초마다 속도를 확인해서 조건을 따지는 '뇌' (AI 로직)
+            // 1. AI 두뇌 (1초마다 판단)
             logicTimer = setInterval(function() {
-                const timerDisplay = document.getElementById('timerDisplay');
                 const statusBoard = document.getElementById('statusBoard');
-                const logArea = document.getElementById('logArea');
+                const jamInfoBox = document.getElementById('jamInfoBox');
 
-                if (lastSpeed <= 15) {
-                    // 시속 15km 이하일 때
-                    slowSeconds++;
-                    fastSeconds = 0; // 빠른 카운트는 초기화
-                    timerDisplay.innerHTML = `⚠️ 저속 주행 ${slowSeconds}초 유지 중...`;
+                if (currentSpeed === 0) {
+                    currentStatusText = "신호 대기 및 승하차";
+                    statusBoard.innerHTML = "🛑 " + currentStatusText;
+                    statusBoard.style.backgroundColor = "#e67e22";
+                } 
+                else if (currentSpeed >= 1 && currentSpeed <= 20) {
+                    crawlSeconds++;
+                    currentStatusText = "저속 주행 감지 중";
+                    statusBoard.innerHTML = `🐢 ${currentStatusText} (${crawlSeconds}초)`;
+                    statusBoard.style.backgroundColor = "#333";
                     
-                    if (slowSeconds === 30 && currentStatus !== "정체") {
-                        currentStatus = "정체";
-                        statusBoard.innerHTML = "🐢 차량 정체 감지!";
-                        statusBoard.style.backgroundColor = "#4a2323"; // 빨간 배경
-                        statusBoard.style.borderColor = "#ff4d4d";
-                        logArea.innerHTML = "📡 파이어베이스로 [정체] 데이터 전송 시뮬레이션 완료!";
+                    if (crawlSeconds >= 30) {
+                        if (!isJam) { isJam = true; startJamLat = currentLat; startJamLon = currentLon; jamInfoBox.style.display = "block"; }
+                        currentStatusText = "차량 정체";
+                        statusBoard.innerHTML = "🚨 " + currentStatusText;
+                        statusBoard.style.backgroundColor = "#4a2323";
+                        document.getElementById('jamTime').innerText = crawlSeconds;
+                        document.getElementById('jamDist').innerText = getDistanceInMeters(startJamLat, startJamLon, currentLat, currentLon);
                     }
-                } else if (lastSpeed >= 30) {
-                    // 시속 30km 이상일 때
-                    fastSeconds++;
-                    slowSeconds = 0; // 느린 카운트는 초기화
-                    timerDisplay.innerHTML = `💨 원활 주행 ${fastSeconds}초 유지 중...`;
-
-                    if (fastSeconds === 30 && currentStatus !== "원활") {
-                        currentStatus = "원활";
-                        statusBoard.innerHTML = "✅ 소통 원활 감지!";
-                        statusBoard.style.backgroundColor = "#234a23"; // 초록 배경
-                        statusBoard.style.borderColor = "#00cc44";
-                        logArea.innerHTML = "📡 파이어베이스로 [원활] 데이터 전송 시뮬레이션 완료!";
-                    }
-                } else {
-                    // 16~29km/h 사이의 애매한 속도일 때
-                    slowSeconds = 0;
-                    fastSeconds = 0;
-                    timerDisplay.innerHTML = "안정적인 속도로 주행 중";
+                } 
+                else if (currentSpeed > 20) {
+                    crawlSeconds = 0; isJam = false; jamInfoBox.style.display = "none";
+                    currentStatusText = "소통 원활";
+                    statusBoard.innerHTML = "🚌 " + currentStatusText;
+                    statusBoard.style.backgroundColor = "#234a23";
                 }
-            }, 1000); // 1초(1000ms)마다 실행
+            }, 1000);
 
-            // GPS 위성에서 속도 받아오기 (기존과 동일)
+            // 2. 서버 전송 타이머 (5초마다 파이어베이스로 쏘기)
+            setInterval(function() {
+                if (currentLat !== 0) { // 위치를 잡았을 때만 보냄
+                    sendDataToServer();
+                }
+            }, 5000);
+
+            // 3. GPS 수신
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
-                    let speedMps = position.coords.speed;
-                    if (speedMps === null) speedMps = 0;
-                    
-                    lastSpeed = Math.round(speedMps * 3.6); // 로직을 위해 현재 속도 저장
-                    
-                    // 화면에 속도 표시
-                    document.getElementById('speedDisplay').innerHTML = `${lastSpeed} <span style="font-size: 24px;">km/h</span>`;
-                    
-                    // 속도에 따라 글자 색상 변경
-                    if(lastSpeed <= 15) document.getElementById('speedDisplay').style.color = "#ff4d4d"; // 빨강
-                    else if(lastSpeed >= 30) document.getElementById('speedDisplay').style.color = "#00cc44"; // 초록
-                    else document.getElementById('speedDisplay').style.color = "#ccc"; // 회색
+                    currentLat = position.coords.latitude;
+                    currentLon = position.coords.longitude;
+                    currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
+                    document.getElementById('speedDisplay').innerHTML = `${currentSpeed} <span style="font-size: 24px;">km/h</span>`;
                 }, 
-                function(error) { /* 에러 처리 생략 */ }, 
+                function(error) {}, 
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
 
         function stopTracking() {
-            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-            if (wakeLock !== null) { wakeLock.release(); wakeLock = null; }
-            if (logicTimer !== null) { clearInterval(logicTimer); logicTimer = null; }
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            if (wakeLock !== null) wakeLock.release();
+            if (logicTimer !== null) clearInterval(logicTimer);
             
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
-            document.getElementById('statusBoard').innerHTML = "상태 분석 대기 중...";
-            document.getElementById('statusBoard').style.backgroundColor = "#333";
-            document.getElementById('statusBoard').style.borderColor = "#555";
-            document.getElementById('timerDisplay').innerHTML = "";
-            document.getElementById('speedDisplay').innerHTML = '0 <span style="font-size: 24px;">km/h</span>';
+            document.getElementById('statusBoard').innerHTML = "수집 중지됨";
+            document.getElementById('serverLog').innerText = "서버 연결 대기 중...";
         }
     </script>
 </body>
