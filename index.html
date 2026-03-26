@@ -926,66 +926,95 @@ function calcStopDist(lat1,lon1,lat2,lon2){
 }
 
 // ── ★ 카카오 API 키 ───────────────────────────
-var KAKAO_API_KEY = 'ebd0806246b5a31d27d9f53ac6cf7801'; // ← 여기에 REST API 키 입력
+var KAKAO_API_KEY = 'fb25604d9b588b0ae4e401953ffa420b'; // ← 여기에 REST API 키 입력
 
-// ★ 카카오 API로 주변 버스정류장 검색 (가장 정확!)
-function kakaoFindNearestStop(lat, lon, cb){
-  // 카테고리 SW8 = 버스정류장, 반경 400m, 거리순 정렬
+// ★ 카카오 API로 주변 버스정류장 검색
+// 반대방향 방지: 여러 개 가져와서 노선 정류장과 교차 검증
+function kakaoFindNearestStop(lat, lon, route, cb){
   var url='https://dapi.kakao.com/v2/local/search/category.json' +
     '?category_group_code=SW8' +
     '&x='+lon+'&y='+lat +
-    '&radius=400&sort=distance&size=3';
+    '&radius=300&sort=distance&size=10'; // ★ 여러 개 가져옴
   fetch(url,{
     headers:{'Authorization':'KakaoAK '+KAKAO_API_KEY}
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    if(!r.ok) throw new Error('API 오류: '+r.status);
+    return r.json();
+  })
   .then(function(data){
     var docs=data.documents;
-    if(docs&&docs.length>0){
-      var stop=docs[0];
-      var dist=parseInt(stop.distance||0);
-      var name=stop.place_name
-        .replace('버스정류장','').replace('정류장','')
-        .replace('버스승강장','').replace('승강장','').trim();
-      var label='';
-      if(dist<=80) label=name+' 앞';
-      else if(dist<=200) label=name+' 부근';
-      else label=name+' 방향';
-      cb(label);
-    } else {
-      cb(null);
+    if(!docs||docs.length===0){cb(null);return;}
+
+    // ★ 노선이 있으면 내장 데이터와 교차 검증해서 반대방향 걸러냄
+    if(route&&ROUTE_STOPS[route]){
+      var stops=ROUTE_STOPS[route];
+      for(var i=0;i<docs.length;i++){
+        var kakaoName=docs[i].place_name
+          .replace('버스정류장','').replace('정류장','')
+          .replace('버스승강장','').replace('승강장','').trim();
+        // 내장 정류장 목록에 있는 이름이면 신뢰
+        for(var j=0;j<stops.length;j++){
+          if(stops[j].name.indexOf(kakaoName)>=0||kakaoName.indexOf(stops[j].name)>=0){
+            var dist=parseInt(docs[i].distance||0);
+            var label='';
+            if(dist<=80) label=stops[j].name+' 앞';
+            else if(dist<=200) label=stops[j].name+' 부근';
+            else label=stops[j].name+' 방향';
+            cb(label);return;
+          }
+        }
+      }
     }
+
+    // 교차 검증 실패하면 가장 가까운 것 사용
+    var stop=docs[0];
+    var dist=parseInt(stop.distance||0);
+    var name=stop.place_name
+      .replace('버스정류장','').replace('정류장','')
+      .replace('버스승강장','').replace('승강장','').trim();
+    var label='';
+    if(dist<=80) label=name+' 앞';
+    else if(dist<=200) label=name+' 부근';
+    else label=name+' 방향';
+    cb(label);
   })
-  .catch(function(){cb(null);});
+  .catch(function(e){
+    console.log('카카오 정류장 검색 실패:',e);
+    cb(null);
+  });
 }
 
-// ★ 카카오 API로 주소 변환
+// ★ 카카오 API로 주소 변환 — 실패 시 Nominatim 대체
 function kakaoFetchAddress(lat, lon, cb){
   var url='https://dapi.kakao.com/v2/local/geo/coord2address.json?x='+lon+'&y='+lat;
   fetch(url,{
     headers:{'Authorization':'KakaoAK '+KAKAO_API_KEY}
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    if(!r.ok) throw new Error('API 오류: '+r.status);
+    return r.json();
+  })
   .then(function(data){
     var docs=data.documents;
     if(docs&&docs.length>0){
       var addr=docs[0];
-      // 도로명 주소 우선, 없으면 지번 주소
       if(addr.road_address&&addr.road_address.road_name){
         var road=addr.road_address;
-        cb(road.road_name+' '+road.main_building_no+' 부근');
+        // 건물 번호 없이 도로명만 표시 (더 자연스럽게)
+        cb(road.road_name+' 부근');
       } else if(addr.address){
         var a=addr.address;
-        cb(a.region_3depth_name+' '+a.main_address_no+' 부근');
+        // 동 이름 + 번지 표시
+        cb(a.region_3depth_name+' 부근');
       } else {
-        cb('현재위치');
+        fetchAddressFallback(lat,lon,cb);
       }
     } else {
-      cb('현재위치');
+      fetchAddressFallback(lat,lon,cb);
     }
   })
   .catch(function(){
-    // 카카오 실패 시 Nominatim 대체
     fetchAddressFallback(lat,lon,cb);
   });
 }
@@ -1011,8 +1040,8 @@ function getGpsLocation(){
   btn.classList.add('loading');btn.textContent='⏳';
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
-    // ★ 1순위: 카카오 버스정류장 검색
-    kakaoFindNearestStop(lat,lon,function(kakaoStop){
+    // ★ 1순위: 카카오 버스정류장 검색 (노선 정보 함께 전달해서 반대방향 방지)
+    kakaoFindNearestStop(lat,lon,selectedRoute||null,function(kakaoStop){
       if(kakaoStop){
         document.getElementById('locationInput').value=kakaoStop;
         showToast('🚏 '+kakaoStop+' 자동 입력됐어요!');
@@ -1067,7 +1096,7 @@ function getGpsForQuick(route,cb){
   if(!navigator.geolocation){cb('현재위치');return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
-    kakaoFindNearestStop(lat,lon,function(kakaoStop){
+    kakaoFindNearestStop(lat,lon,route,function(kakaoStop){
       if(kakaoStop){cb(kakaoStop);}
       else{
         var stopName=findBestStop(route,lat,lon);
