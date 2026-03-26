@@ -86,7 +86,7 @@ const firebaseConfig = {
         // 파이어베이스로 데이터 쏘는 함수 (게시판에 글쓰기)
         function sendDataToServer() {
             // "busStatus/609" 라는 방에 현재 내 상태를 덮어씁니다.
-            database.ref('busStatus/609').set({
+            database.ref('test_busStatus/609').set({
                 status: currentStatusText,
                 speed: currentSpeed,
                 lat: currentLat,
