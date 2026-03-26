@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>버스 실시간 주행 테스트</title>
+    <title>버스 실시간 주행 테스트 v3</title>
     <style>
         body {
             font-family: 'Malgun Gothic', sans-serif;
@@ -16,7 +16,19 @@
         .header {
             border-bottom: 2px solid #ff7f50;
             padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        /* 현재 판별 상태를 보여주는 전광판 */
+        #statusBoard {
+            background-color: #333;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            border: 2px solid #555;
+            transition: 0.5s; /* 색상이 부드럽게 변함 */
         }
         .status-box {
             background-color: #2c2c2e;
@@ -27,13 +39,14 @@
         .speed-text {
             font-size: 60px;
             font-weight: bold;
-            color: #00cc44;
+            color: #ccc;
             margin: 10px 0;
         }
-        .info-text {
+        .timer-text {
             font-size: 16px;
-            color: #aaa;
-            line-height: 1.5;
+            color: #ffcc00;
+            margin-bottom: 10px;
+            height: 20px;
         }
         .btn {
             background-color: #ff7f50;
@@ -46,111 +59,129 @@
             width: 100%;
             margin-top: 10px;
         }
-        .btn:active { background-color: #e0663a; }
         .btn-stop { background-color: #ff4d4d; display: none; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>🛠️ 609번 자동 정체 판별 테스트</h2>
-        <p style="font-size: 13px; color: #ff7f50;">(기존 앱에 영향 없는 테스트 페이지입니다)</p>
+        <h2>🤖 자동 정체 판별 AI 테스트</h2>
+        <p style="font-size: 13px; color: #ff7f50;">(30초 유지 시 자동 변경됩니다)</p>
     </div>
+
+    <div id="statusBoard">상태 분석 대기 중...</div>
 
     <div class="status-box">
         <div style="font-size: 18px;">현재 주행 속도</div>
         <div class="speed-text" id="speedDisplay">0 <span style="font-size: 24px;">km/h</span></div>
-        <div class="info-text" id="locationDisplay">
-            위도: 대기 중<br>
-            경도: 대기 중<br>
-            정확도: 대기 중
-        </div>
-    </div>
-
-    <div id="logArea" style="font-size: 12px; color: #888; margin-bottom: 20px; height: 50px;">
-        시스템 대기 중...
+        
+        <div class="timer-text" id="timerDisplay"></div>
     </div>
 
     <button class="btn" id="startBtn" onclick="startTracking()">🚀 주행 기록 시작</button>
     <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()">🛑 기록 중지</button>
 
+    <div id="logArea" style="font-size: 12px; color: #888; margin-top: 20px;">
+        데이터 수집 준비 완료
+    </div>
+
     <script>
         let watchId = null;
         let wakeLock = null;
+        let logicTimer = null;
+        
+        // AI 로직을 위한 변수들
+        let lastSpeed = 0;
+        let slowSeconds = 0;
+        let fastSeconds = 0;
+        let currentStatus = "대기중";
 
-        // 화면 안 꺼지게 막아주는 기능
         async function requestWakeLock() {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                document.getElementById('logArea').innerHTML = "💡 화면 꺼짐 방지 작동 중";
-            } catch (err) {
-                document.getElementById('logArea').innerHTML = "⚠️ 화면 꺼짐 방지 미지원 기기 (화면이 꺼지지 않게 주의하세요)";
-            }
+            try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
         }
 
-        // 주행 기록 시작
         function startTracking() {
-            if (!("geolocation" in navigator)) {
-                alert("이 브라우저에서는 GPS를 지원하지 않습니다.");
-                return;
-            }
+            if (!("geolocation" in navigator)) return;
 
-            // [정상 작동 확인용] 버튼이 빨간색으로 바로 바뀝니다!
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
+            document.getElementById('statusBoard').innerHTML = "🔍 속도 분석 중...";
             
             requestWakeLock();
 
-            document.getElementById('speedDisplay').innerHTML = "측정 중...";
+            // 1초마다 속도를 확인해서 조건을 따지는 '뇌' (AI 로직)
+            logicTimer = setInterval(function() {
+                const timerDisplay = document.getElementById('timerDisplay');
+                const statusBoard = document.getElementById('statusBoard');
+                const logArea = document.getElementById('logArea');
 
-            const options = {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            };
+                if (lastSpeed <= 15) {
+                    // 시속 15km 이하일 때
+                    slowSeconds++;
+                    fastSeconds = 0; // 빠른 카운트는 초기화
+                    timerDisplay.innerHTML = `⚠️ 저속 주행 ${slowSeconds}초 유지 중...`;
+                    
+                    if (slowSeconds === 30 && currentStatus !== "정체") {
+                        currentStatus = "정체";
+                        statusBoard.innerHTML = "🐢 차량 정체 감지!";
+                        statusBoard.style.backgroundColor = "#4a2323"; // 빨간 배경
+                        statusBoard.style.borderColor = "#ff4d4d";
+                        logArea.innerHTML = "📡 파이어베이스로 [정체] 데이터 전송 시뮬레이션 완료!";
+                    }
+                } else if (lastSpeed >= 30) {
+                    // 시속 30km 이상일 때
+                    fastSeconds++;
+                    slowSeconds = 0; // 느린 카운트는 초기화
+                    timerDisplay.innerHTML = `💨 원활 주행 ${fastSeconds}초 유지 중...`;
 
+                    if (fastSeconds === 30 && currentStatus !== "원활") {
+                        currentStatus = "원활";
+                        statusBoard.innerHTML = "✅ 소통 원활 감지!";
+                        statusBoard.style.backgroundColor = "#234a23"; // 초록 배경
+                        statusBoard.style.borderColor = "#00cc44";
+                        logArea.innerHTML = "📡 파이어베이스로 [원활] 데이터 전송 시뮬레이션 완료!";
+                    }
+                } else {
+                    // 16~29km/h 사이의 애매한 속도일 때
+                    slowSeconds = 0;
+                    fastSeconds = 0;
+                    timerDisplay.innerHTML = "안정적인 속도로 주행 중";
+                }
+            }, 1000); // 1초(1000ms)마다 실행
+
+            // GPS 위성에서 속도 받아오기 (기존과 동일)
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    let speedMetersPerSecond = position.coords.speed;
-
-                    if (speedMetersPerSecond === null) {
-                        speedMetersPerSecond = 0;
-                    }
-
-                    const speedKmh = Math.round(speedMetersPerSecond * 3.6);
-
-                    // 백틱(`)을 사용하여 오류를 수정했습니다.
-                    document.getElementById('speedDisplay').innerHTML = `${speedKmh} <span style="font-size: 24px;">km/h</span>`;
-                    document.getElementById('locationDisplay').innerHTML = 
-                        `위도: ${lat.toFixed(5)} <br>경도: ${lon.toFixed(5)} <br>(오차범위: ${Math.round(accuracy)}m)`;
+                    let speedMps = position.coords.speed;
+                    if (speedMps === null) speedMps = 0;
+                    
+                    lastSpeed = Math.round(speedMps * 3.6); // 로직을 위해 현재 속도 저장
+                    
+                    // 화면에 속도 표시
+                    document.getElementById('speedDisplay').innerHTML = `${lastSpeed} <span style="font-size: 24px;">km/h</span>`;
+                    
+                    // 속도에 따라 글자 색상 변경
+                    if(lastSpeed <= 15) document.getElementById('speedDisplay').style.color = "#ff4d4d"; // 빨강
+                    else if(lastSpeed >= 30) document.getElementById('speedDisplay').style.color = "#00cc44"; // 초록
+                    else document.getElementById('speedDisplay').style.color = "#ccc"; // 회색
                 }, 
-                function(error) {
-                    document.getElementById('logArea').innerHTML = "❌ GPS 수신 에러 (권한을 확인해주세요)";
-                }, 
-                options
+                function(error) { /* 에러 처리 생략 */ }, 
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
 
-        // 주행 기록 중지
         function stopTracking() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-            if (wakeLock !== null) {
-                wakeLock.release();
-                wakeLock = null;
-            }
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            if (wakeLock !== null) { wakeLock.release(); wakeLock = null; }
+            if (logicTimer !== null) { clearInterval(logicTimer); logicTimer = null; }
             
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
-            
-            // 오류가 발생했던 부분을 수정했습니다!
+            document.getElementById('statusBoard').innerHTML = "상태 분석 대기 중...";
+            document.getElementById('statusBoard').style.backgroundColor = "#333";
+            document.getElementById('statusBoard').style.borderColor = "#555";
+            document.getElementById('timerDisplay').innerHTML = "";
             document.getElementById('speedDisplay').innerHTML = '0 <span style="font-size: 24px;">km/h</span>';
-            document.getElementById('logArea').innerHTML = "주행 기록이 중지되었습니다.";
         }
     </script>
 </body>
