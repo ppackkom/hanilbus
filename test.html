@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>버스 실시간 주행 테스트</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #1a1a1c;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .header {
+            border-bottom: 2px solid #ff7f50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            background-color: #2c2c2e;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        /* 운전석에서 잘 보이도록 글씨를 아주 크게 설정했습니다 */
+        .speed-text {
+            font-size: 60px;
+            font-weight: bold;
+            color: #00cc44;
+            margin: 10px 0;
+        }
+        .info-text {
+            font-size: 16px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .btn {
+            background-color: #ff7f50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn:active { background-color: #e0663a; }
+        .btn-stop { background-color: #ff4d4d; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🛠️ 609번 자동 정체 판별 테스트</h2>
+        <p style="font-size: 13px; color: #ff7f50;">(기존 앱에 영향 없는 테스트 페이지입니다)</p>
+    </div>
+
+    <div class="status-box">
+        <div style="font-size: 18px;">현재 주행 속도</div>
+        <div class="speed-text" id="speedDisplay">0 <span style="font-size: 24px;">km/h</span></div>
+        <div class="info-text" id="locationDisplay">
+            위도: 대기 중<br>
+            경도: 대기 중<br>
+            정확도: 대기 중
+        </div>
+    </div>
+
+    <div id="logArea" style="font-size: 12px; color: #888; margin-bottom: 20px; height: 50px;">
+        시스템 대기 중...
+    </div>
+
+    <button class="btn" id="startBtn" onclick="startTracking()">🚀 주행 기록 시작</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()">🛑 기록 중지</button>
+
+    <script>
+        let watchId = null;
+        let wakeLock = null;
+
+        // 화면 안 꺼지게 막아주는 마법의 기능 (Wake Lock API)
+        async function requestWakeLock() {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                document.getElementById('logArea').innerHTML = "💡 화면 꺼짐 방지 작동 중";
+            } catch (err) {
+                document.getElementById('logArea').innerHTML = "⚠️ 이 기기는 화면 꺼짐 방지를 지원하지 않습니다.";
+            }
+        }
+
+        // 주행 기록 시작
+        function startTracking() {
+            if (!("geolocation" in navigator)) {
+                alert("이 브라우저에서는 GPS를 지원하지 않습니다.");
+                return;
+            }
+
+            // 버튼 모양 바꾸기
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'inline-block';
+            
+            // 화면 켜짐 유지 요청
+            requestWakeLock();
+
+            document.getElementById('speedDisplay').innerHTML = "측정 중...";
+
+            // 내비게이션처럼 계속 위치와 속도를 추적 (watchPosition)
+            const options = {
+                enableHighAccuracy: true, // 배터리를 조금 쓰더라도 가장 정확한 GPS 사용
+                maximumAge: 0,
+                timeout: 5000
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    let speedMetersPerSecond = position.coords.speed;
+
+                    // 스마트폰이 속도를 못 잡으면 0으로 표시
+                    if (speedMetersPerSecond === null) {
+                        speedMetersPerSecond = 0;
+                    }
+
+                    // 초속(m/s)을 시속(km/h)으로 변환
+                    const speedKmh = Math.round(speedMetersPerSecond * 3.6);
+
+                    // 화면에 업데이트
+                    document.getElementById('speedDisplay').innerHTML = speedKmh + ' <span style="font-size: 24px;">km/h</span>';
+                    document.getElementById('locationDisplay').innerHTML = 
+                        `위도: ${lat.toFixed(5)} <br>경도: ${lon.toFixed(5)} <br>(오차범위: ${Math.round(accuracy)}m)`;
+                }, 
+                function(error) {
+                    document.getElementById('logArea').innerHTML = "❌ GPS 수신 에러 (권한을 확인해주세요)";
+                }, 
+                options
+            );
+        }
+
+        // 주행 기록 중지
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (wakeLock !== null) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('speedDisplay').innerHTML = "0 <span style="font-size: 24px;">km/h</span>";
+            document.getElementById('logArea').innerHTML = "주행 기록이 중지되었습니다.";
+        }
+    </script>
+</body>
+</html>
