@@ -24,7 +24,6 @@
             border-radius: 15px;
             margin-bottom: 20px;
         }
-        /* 운전석에서 잘 보이도록 글씨를 아주 크게 설정했습니다 */
         .speed-text {
             font-size: 60px;
             font-weight: bold;
@@ -79,13 +78,13 @@
         let watchId = null;
         let wakeLock = null;
 
-        // 화면 안 꺼지게 막아주는 마법의 기능 (Wake Lock API)
+        // 화면 안 꺼지게 막아주는 기능
         async function requestWakeLock() {
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
                 document.getElementById('logArea').innerHTML = "💡 화면 꺼짐 방지 작동 중";
             } catch (err) {
-                document.getElementById('logArea').innerHTML = "⚠️ 이 기기는 화면 꺼짐 방지를 지원하지 않습니다.";
+                document.getElementById('logArea').innerHTML = "⚠️ 화면 꺼짐 방지 미지원 기기 (화면이 꺼지지 않게 주의하세요)";
             }
         }
 
@@ -96,18 +95,16 @@
                 return;
             }
 
-            // 버튼 모양 바꾸기
+            // [정상 작동 확인용] 버튼이 빨간색으로 바로 바뀝니다!
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
             
-            // 화면 켜짐 유지 요청
             requestWakeLock();
 
             document.getElementById('speedDisplay').innerHTML = "측정 중...";
 
-            // 내비게이션처럼 계속 위치와 속도를 추적 (watchPosition)
             const options = {
-                enableHighAccuracy: true, // 배터리를 조금 쓰더라도 가장 정확한 GPS 사용
+                enableHighAccuracy: true,
                 maximumAge: 0,
                 timeout: 5000
             };
@@ -119,16 +116,14 @@
                     const accuracy = position.coords.accuracy;
                     let speedMetersPerSecond = position.coords.speed;
 
-                    // 스마트폰이 속도를 못 잡으면 0으로 표시
                     if (speedMetersPerSecond === null) {
                         speedMetersPerSecond = 0;
                     }
 
-                    // 초속(m/s)을 시속(km/h)으로 변환
                     const speedKmh = Math.round(speedMetersPerSecond * 3.6);
 
-                    // 화면에 업데이트
-                    document.getElementById('speedDisplay').innerHTML = speedKmh + ' <span style="font-size: 24px;">km/h</span>';
+                    // 백틱(`)을 사용하여 오류를 수정했습니다.
+                    document.getElementById('speedDisplay').innerHTML = `${speedKmh} <span style="font-size: 24px;">km/h</span>`;
                     document.getElementById('locationDisplay').innerHTML = 
                         `위도: ${lat.toFixed(5)} <br>경도: ${lon.toFixed(5)} <br>(오차범위: ${Math.round(accuracy)}m)`;
                 }, 
@@ -152,7 +147,9 @@
             
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
-            document.getElementById('speedDisplay').innerHTML = "0 <span style="font-size: 24px;">km/h</span>";
+            
+            // 오류가 발생했던 부분을 수정했습니다!
+            document.getElementById('speedDisplay').innerHTML = '0 <span style="font-size: 24px;">km/h</span>';
             document.getElementById('logArea').innerHTML = "주행 기록이 중지되었습니다.";
         }
     </script>
