@@ -136,14 +136,17 @@
         
         let busMarkers = {};
         let incidentMarkers = {}; 
-        let tailPolylines = []; // 🐾 지렁이 꼬리(선)들을 기억할 배열
+        let tailPolylines = []; 
         let trackingBusId = null; 
 
         let appStartTime = Date.now();
         let announcedIncidents = new Set();
         let lastTrackedStatus = "";
         let tooCloseWarned = false;
-        let lastTailTime = 0; // 마지막으로 꼬리를 남긴 시간
+        let lastTailTime = 0; 
+
+        // ⏱️ 정차 타이머 변수 추가!
+        let stopStartTime = null; 
 
         // 👥 실시간 접속자 수
         const liveConnectionsRef = database.ref('live_connections');
@@ -208,6 +211,10 @@
             document.getElementById('mapScreen').style.display = 'block';
             document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 [${myVehicle}]`;
 
+            // 👻 마법 1: 브라우저 강제 종료 시 자동으로 서버에서 내 위치랑 꼬리 삭제! (onDisconnect)
+            database.ref('live_buses/' + myBusId).onDisconnect().remove();
+            database.ref('live_tails/' + myBusId).onDisconnect().remove();
+
             if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
 
             requestWakeLock();
@@ -215,7 +222,7 @@
             startGPS();
             startReceivingData();
             loadIncidents(); 
-            loadTails(); // 🐾 지렁이 꼬리 불러오기 시작!
+            loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
             
             setTimeout(() => { speakText("안전 운행을 시작합니다."); }, 1000);
@@ -281,20 +288,29 @@
             
             let now = Date.now();
 
-            // 1. 현재 내 위치 갱신 (5초마다)
+            // ⏱️ 정차 타이머 로직: 속도가 3km/h 이하이면 타이머 시작, 이상이면 타이머 초기화
+            if (currentSpeed <= 3 && manualStatus === "운행 중") {
+                if (!stopStartTime) stopStartTime = now;
+            } else {
+                stopStartTime = null;
+            }
+
+            // 1. 현재 내 위치 갱신 (마지막 업데이트 시간과 정차 시작 시간도 함께 보냅니다)
             database.ref('live_buses/' + myBusId).set({
                 route: myRoute, vehicle: myVehicle, status: currentStatusText,
-                speed: currentSpeed, lat: currentLat, lon: currentLon, timestamp: new Date().toLocaleTimeString()
+                speed: currentSpeed, lat: currentLat, lon: currentLon, 
+                timestamp: new Date().toLocaleTimeString(),
+                last_update_ms: now, // 👻 유령 버스 판별용 시간
+                stopStartTime: stopStartTime // ⏱️ 정차 타이머용 시간
             });
 
-            // 🐾 2. 지렁이 꼬리 발자국 남기기 (15초마다 1번씩만)
+            // 🐾 2. 지렁이 꼬리
             if (now - lastTailTime > 15000) {
                 database.ref('live_tails/' + myBusId).push({
                     lat: currentLat, lon: currentLon, speed: currentSpeed, time: now
                 });
                 lastTailTime = now;
 
-                // 🧹 30분(1800000 밀리초)이 지난 내 옛날 꼬리 흔적 지우기 (서버 용량 절약)
                 let cutoff = now - 1800000;
                 database.ref('live_tails/' + myBusId).orderByChild('time').endAt(cutoff).once('value', snapshot => {
                     snapshot.forEach(child => { child.ref.remove(); });
@@ -305,23 +321,47 @@
         function startReceivingData() {
             database.ref('live_buses').on('value', (snapshot) => {
                 const data = snapshot.val();
+                let nowMs = Date.now(); // 현재 시간
+
                 if (data) {
                     for (const key in data) {
                         const bus = data[key];
+
+                        // 👻 마법 2: 10분(600,000 밀리초) 이상 업데이트가 없는 버스는 유령이므로 화면에서 무시!
+                        if (bus.last_update_ms && (nowMs - bus.last_update_ms > 600000)) {
+                            if (busMarkers[key]) {
+                                busMarkers[key].setMap(null);
+                                delete busMarkers[key];
+                            }
+                            continue; // 유령 버스는 지도에 그리지 않고 패스!
+                        }
+
                         if (bus.lat && bus.lon) {
                             const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                             let isMyBus = (key === myBusId) ? " my-bus" : "";
                             let labelColor = "good";
                             let displayStatus = `${bus.speed}km/h`; 
+                            let stopTimerText = ""; // ⏱️ 정차 표시 글씨
                             
                             if (bus.status.includes("정체")) labelColor = "jam";
                             if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") {
                                 labelColor = "break"; displayStatus = bus.status; 
                             }
                             
+                            // ⏱️ 마법 3: 정차 시간이 1분(60초) 이상이면 시간 표시
+                            if (bus.stopStartTime && bus.speed <= 3 && bus.status === "정체/서행") {
+                                let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
+                                if (diffSec >= 60) {
+                                    let stopMins = Math.floor(diffSec / 60);
+                                    stopTimerText = `<br><span style="color:#ffe6e6; font-size:11px;">⏱️ ${stopMins}분째 정차중</span>`;
+                                    labelColor = "jam"; // 정차가 길어지면 빨간색으로
+                                }
+                            }
+                            
                             let contentHtml = document.createElement('div');
                             contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
-                            contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style="font-size:11px; font-weight:normal;">${displayStatus}</span>`;
+                            // 상태 표시 밑에 정차 타이머를 추가로 보여줍니다.
+                            contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style="font-size:11px; font-weight:normal;">${displayStatus}</span>${stopTimerText}`;
                             contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
 
                             if (busMarkers[key]) {
@@ -372,14 +412,26 @@
                             }
                         }
                     }
+                    
+                    // 👻 마법 2-1: 서버 데이터에서 아예 사라진 버스(정상 종료)도 로컬 지도에서 지워주기
+                    for (const key in busMarkers) {
+                        if (!data[key]) {
+                            busMarkers[key].setMap(null);
+                            delete busMarkers[key];
+                        }
+                    }
+                } else {
+                    // 데이터가 아예 없으면 모든 버스 지우기
+                    for (const key in busMarkers) {
+                        busMarkers[key].setMap(null);
+                        delete busMarkers[key];
+                    }
                 }
             });
         }
 
-        // 🐾 지렁이 꼬리(궤적)를 서버에서 받아와서 지도에 그리는 함수
         function loadTails() {
             database.ref('live_tails').on('value', (snapshot) => {
-                // 기존에 그려진 꼬리들을 지도에서 싹 지웁니다.
                 tailPolylines.forEach(line => line.setMap(null));
                 tailPolylines = [];
 
@@ -387,29 +439,25 @@
                 if (!data) return;
 
                 let now = Date.now();
-                let cutoff = now - 1800000; // 30분 전 데이터는 무시
+                let cutoff = now - 1800000; 
 
                 for (let busId in data) {
-                    // 점들을 시간순으로 예쁘게 정렬합니다.
                     let points = Object.values(data[busId]).filter(p => p.time > cutoff).sort((a,b) => a.time - b.time);
                     if (points.length < 2) continue;
 
-                    // 점과 점 사이를 선으로 이어줍니다.
                     for (let i = 1; i < points.length; i++) {
                         let p1 = points[i-1];
                         let p2 = points[i];
 
-                        // 만약 앞차가 시동을 끄고 5분 이상 멈춰있었다면, 선을 강제로 잇지 않고 끊어줍니다.
                         if (p2.time - p1.time > 300000) continue;
 
-                        // 시속 20km 이하면 빨간선, 이상이면 초록선!
                         let lineColor = p2.speed <= 20 ? '#ff4d4d' : '#00cc44';
                         
                         let polyline = new kakao.maps.Polyline({
                             path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)],
-                            strokeWeight: 6, // 선 두께
-                            strokeColor: lineColor, // 선 색깔
-                            strokeOpacity: 0.7, // 살짝 투명하게 해서 지도를 가리지 않게
+                            strokeWeight: 6, 
+                            strokeColor: lineColor, 
+                            strokeOpacity: 0.7, 
                             strokeStyle: 'solid'
                         });
                         polyline.setMap(map);
@@ -465,7 +513,7 @@
                 if (document.exitFullscreen) { document.exitFullscreen(); }
                 if (myBusId) {
                     database.ref('live_buses/' + myBusId).remove();
-                    database.ref('live_tails/' + myBusId).remove(); // 🧹 퇴근할 때 내 꼬리도 깔끔하게 지우고 갑니다!
+                    database.ref('live_tails/' + myBusId).remove(); 
                 }
                 if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
                 window.location.reload(); 
