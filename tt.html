@@ -11,6 +11,11 @@
         }
     </script>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -31,7 +36,7 @@
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.97); }
         
-        /* 지도 및 상단 UI (반투명 유리 효과 추가) */
+        /* 지도 및 상단 UI (반투명 유리 효과) */
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
@@ -41,7 +46,7 @@
         .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; }
         .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         
-        /* 하단 컨트롤 패널 (반투명 유리 효과 추가) */
+        /* 하단 컨트롤 패널 (반투명 유리 효과) */
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(26, 26, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
         .status-select { background-color: rgba(26, 26, 28, 0.8); color: #00cc44; border: 2px solid #00cc44; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; outline: none; }
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
@@ -51,7 +56,7 @@
         #trackAlert { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 12px 25px; border-radius: 30px; text-align: center; display: none; box-shadow: 0 6px 20px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 180px; }
         .dist-text { font-size: 24px; font-weight: bold; color: #ffe600; margin: 5px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
-        /* 버스 마커 (그림자 등 디테일 추가) */
+        /* 버스 마커 */
         .bus-label { color: white; padding: 7px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); white-space: nowrap; cursor: pointer; text-align: center; }
         .bus-label.jam { background-color: #ff4d4d; }
         .bus-label.good { background-color: #00cc44; }
@@ -144,17 +149,16 @@
         let lastTrackedStatus = "";
         let tooCloseWarned = false;
 
-        // 👥 실시간 접속자 수 관리 기능
+        // 👥 실시간 접속자 수
         const liveConnectionsRef = database.ref('live_connections');
         const connectedRef = database.ref('.info/connected');
         let myConnectionKey = null;
 
-        // 접속 감지 및 카운트
         connectedRef.on('value', (snap) => {
             if (snap.val() === true) {
                 const con = liveConnectionsRef.push();
                 myConnectionKey = con.key;
-                con.onDisconnect().remove(); // 창을 닫으면 자동으로 지워집니다.
+                con.onDisconnect().remove(); 
                 con.set(true);
             }
         });
@@ -190,11 +194,21 @@
 
         async function requestWakeLock() { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
 
+        // 🚀 전체 화면 만들기 함수 (주소창 날리기!)
+        function openFullscreen() {
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } // 아이폰, 사파리 등
+        }
+
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
             if (myVehicle === "") { alert("차량 번호를 입력해주세요!"); return; }
             
+            // 🚀 운행 시작 누르자마자 전체 화면 실행!
+            openFullscreen();
+
             myBusId = myRoute + "_" + myVehicle;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mapScreen').style.display = 'block';
@@ -301,7 +315,6 @@
                             if (busMarkers[key]) {
                                 busMarkers[key].setPosition(pos);
                                 busMarkers[key].setContent(contentHtml);
-                                // 내 차는 그릴 때 항상 맨 위로 올라오게 z-index 조정
                                 if(isMyBus) busMarkers[key].setZIndex(10);
                             } else {
                                 const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
@@ -394,6 +407,7 @@
 
         function stopApp() {
             if (confirm("운행을 종료하고 앱을 닫으시겠습니까?")) {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
                 if (myBusId) database.ref('live_buses/' + myBusId).remove();
                 if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
                 window.location.reload(); 
