@@ -35,21 +35,24 @@
         .start-btn:active { transform: scale(0.97); }
         
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        #map { width: 100%; height: 100%; z-index: 1; }
         
-        .header-overlay { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 15px 20px; border-radius: 15px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; }
+        /* 💡 태블릿 터치 먹통 해결을 위한 마법의 1줄: touch-action: none; */
+        #map { width: 100%; height: 100%; z-index: 1; touch-action: none; }
         
-        /* 💡 제목 누르기 효과를 위해 포인터 추가 */
-        .header-info h2 { margin: 0 0 5px 0; font-size: 19px; color: #ff7f50; cursor: pointer; } 
+        /* 💡 2단 분리형 디자인으로 바뀐 상단바 */
+        .header-overlay { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 12px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        .status-text { font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 8px; }
-        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; }
+        .header-info h2 { margin: 0; font-size: 20px; color: #ff7f50; cursor: pointer; white-space: nowrap; } 
+        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 5px 10px; border-radius: 10px; font-weight: bold; font-size: 13px; border: 1px solid #00cc44; white-space: nowrap; }
+        .status-text { font-size: 14px; color: #ccc; white-space: nowrap; }
         
         .btn-group { display: flex; gap: 8px; }
-        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } /* 전체노선 보기 버튼 */
+        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         
-        .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(26, 26, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
+        .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(26, 26, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
         .status-select { background-color: rgba(26, 26, 28, 0.8); color: #00cc44; border: 2px solid #00cc44; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: bold; outline: none; }
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
@@ -84,7 +87,7 @@
             </div>
             <div class="input-group">
                 <label>차량 번호 (또는 순번)</label>
-                <input type="text" id="vehicleInput" placeholder="예: 1234 또는 3호차">
+                <input type="text" id="vehicleInput" placeholder="예: 1988 또는 3호차">
             </div>
             <button class="start-btn" onclick="startApp()">🚀 운행 시작 (음성 안내)</button>
         </div>
@@ -92,16 +95,16 @@
 
     <div id="mapScreen">
         <div class="header-overlay">
-            <div class="header-info">
+            <div class="header-top">
                 <h2 id="myRouteInfo" onclick="handleAdminClick()">🗺️ 실시간 노선도</h2>
-                <div class="status-text">
-                    <span id="topStatus">GPS 연결 중... 📡</span>
-                    <span class="user-count" id="userCount">👥 1명 접속</span>
-                </div>
+                <span class="user-count" id="userCount">👥 1명</span>
             </div>
-            <div class="btn-group">
-                <button id="toggleRouteBtn" class="stop-btn toggle-btn" onclick="toggleRouteView()">🗺️ 전체 노선</button>
-                <button class="stop-btn" onclick="stopApp()">종료</button>
+            <div class="header-bottom">
+                <div class="status-text"><span id="topStatus">GPS 연결 중... 📡</span></div>
+                <div class="btn-group">
+                    <button id="toggleRouteBtn" class="stop-btn toggle-btn" onclick="toggleRouteView()">🗺️ 전체 노선</button>
+                    <button class="stop-btn" onclick="stopApp()">종료</button>
+                </div>
             </div>
         </div>
         
@@ -155,15 +158,12 @@
         let lastTailTime = 0; 
         let stopStartTime = null; 
 
-        // 💡 필터링용 변수들
-        let showAllRoutes = false; // 기본값은 '내 노선만 보기'
-        let lastFirebaseData = null; // 버튼 누를 때 즉시 화면 갱신용
+        let showAllRoutes = false; 
+        let lastFirebaseData = null; 
 
-        // 🤫 5번 터치 비밀 관리자 기능용 변수들
         let adminClickCount = 0;
         let adminClickTimer = null;
 
-        // 👥 접속자 관리
         const liveConnectionsRef = database.ref('live_connections');
         const connectedRef = database.ref('.info/connected');
         let myConnectionKey = null;
@@ -224,7 +224,7 @@
 
             requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
-            setTimeout(() => { speakText("안전 운행을 시작합니다. 내 노선만 표시됩니다."); }, 1000);
+            setTimeout(() => { speakText("안전 운행을 시작합니다."); }, 1000);
         }
 
         function initMap() {
@@ -235,55 +235,38 @@
             geocoder = new kakao.maps.services.Geocoder(); 
         }
 
-        // 💡 노선 전체보기 / 내 노선 보기 토글 함수
         function toggleRouteView() {
             showAllRoutes = !showAllRoutes;
             const btn = document.getElementById('toggleRouteBtn');
             if(showAllRoutes) {
                 btn.innerText = "🚌 내 노선만";
-                btn.style.backgroundColor = "#ff9900"; // 오렌지색
+                btn.style.backgroundColor = "#ff9900"; 
                 btn.style.borderColor = "#cc7a00";
             } else {
                 btn.innerText = "🗺️ 전체 노선";
-                btn.style.backgroundColor = "rgba(0, 102, 255, 0.8)"; // 파란색
+                btn.style.backgroundColor = "rgba(0, 102, 255, 0.8)"; 
                 btn.style.borderColor = "#005ce6";
             }
-            // 버튼을 누르자마자 즉시 화면을 다시 그립니다!
             if(lastFirebaseData) renderBuses(lastFirebaseData);
         }
 
-        // 🤫 5번 터치 비밀 관리자 함수 (제목을 터치할 때마다 실행)
         function handleAdminClick() {
             adminClickCount++;
             clearTimeout(adminClickTimer);
-            
-            if (adminClickCount >= 5) {
-                cleanUpGhostBuses(); // 5번 달성 시 청소기 작동!
-                adminClickCount = 0;
-            } else {
-                // 2초 안에 연속으로 안 누르면 초기화
-                adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000);
-            }
+            if (adminClickCount >= 5) { cleanUpGhostBuses(); adminClickCount = 0; } 
+            else { adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000); }
         }
 
-        // 🧹 서버 유령 청소기 로직
         function cleanUpGhostBuses() {
             if(!confirm("⚠️ [관리자 전용] 서버의 모든 유령 버스(오래된 데이터)를 강제 삭제하시겠습니까?")) return;
-            
             database.ref('live_buses').once('value', snap => {
                 let data = snap.val();
                 if(!data) { alert("현재 지도에 등록된 버스가 없습니다."); return; }
-                
-                let now = Date.now();
-                let deletedCount = 0;
-                
+                let now = Date.now(); let deletedCount = 0;
                 for(let key in data) {
                     let bus = data[key];
-                    // 꼬리표가 없거나, 10분이 넘었으면 서버에서 싹 삭제!
                     if(!bus.last_update_ms || (now - bus.last_update_ms > 600000)) {
-                        database.ref('live_buses/' + key).remove();
-                        database.ref('live_tails/' + key).remove();
-                        deletedCount++;
+                        database.ref('live_buses/' + key).remove(); database.ref('live_tails/' + key).remove(); deletedCount++;
                     }
                 }
                 alert(`🧹 서버 청소 완료!\n총 ${deletedCount}대의 유령 버스를 삭제했습니다.`);
@@ -293,24 +276,14 @@
         function updateManualStatus() {
             const selectBox = document.getElementById('myManualStatus');
             manualStatus = selectBox.value;
-            
-            if(manualStatus === "운행 중") {
-                selectBox.style.color = "#00cc44"; selectBox.style.borderColor = "#00cc44";
-                currentStatusText = (currentSpeed <= 20) ? "정체/서행" : "정상 주행";
-            } else {
-                selectBox.style.color = "#ffcc00"; selectBox.style.borderColor = "#ffcc00";
-                currentStatusText = manualStatus; 
-            }
+            if(manualStatus === "운행 중") { selectBox.style.color = "#00cc44"; selectBox.style.borderColor = "#00cc44"; currentStatusText = (currentSpeed <= 20) ? "정체/서행" : "정상 주행"; } 
+            else { selectBox.style.color = "#ffcc00"; selectBox.style.borderColor = "#ffcc00"; currentStatusText = manualStatus; }
             sendMyLocation(); 
         }
 
         function reportIncident() {
             if (currentLat === 0) return;
-            if (confirm("현재 위치에 돌발상황을 제보하시겠습니까?")) {
-                database.ref('live_incidents').push({
-                    route: myRoute, lat: currentLat, lon: currentLon, time: new Date().toLocaleTimeString(), timestamp_ms: Date.now()
-                });
-            }
+            if (confirm("현재 위치에 돌발상황을 제보하시겠습니까?")) { database.ref('live_incidents').push({ route: myRoute, lat: currentLat, lon: currentLon, time: new Date().toLocaleTimeString(), timestamp_ms: Date.now() }); }
         }
 
         function startGPS() {
@@ -348,59 +321,32 @@
             }
         }
 
-        // 💡 화면 그리기 로직을 별도로 분리했습니다.
         function startReceivingData() {
-            database.ref('live_buses').on('value', (snapshot) => {
-                lastFirebaseData = snapshot.val(); // 데이터를 받아두고
-                renderBuses(lastFirebaseData); // 그림 그리는 함수 실행
-            });
+            database.ref('live_buses').on('value', (snapshot) => { lastFirebaseData = snapshot.val(); renderBuses(lastFirebaseData); });
         }
 
         function renderBuses(data) {
             let nowMs = Date.now();
 
-            // 1. 데이터에 없는 버스나 필터링된 버스 지우기
-            for (const key in busMarkers) {
-                if (!data || !data[key]) {
-                    busMarkers[key].setMap(null); delete busMarkers[key];
-                }
-            }
-
+            for (const key in busMarkers) { if (!data || !data[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } }
             if (!data) return;
 
-            // 2. 버스 새로 그리기
             for (const key in data) {
                 const bus = data[key];
-
-                // 🛡️ 방어 1: 꼬리표(last_update_ms)가 아예 없거나, 10분이 지난 버스는 무조건 숨깁니다.
-                if (!bus.last_update_ms || (nowMs - bus.last_update_ms > 600000)) {
-                    if (busMarkers[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; }
-                    continue; 
-                }
-
-                // 🛡️ 방어 2: '내 노선만 보기' 상태인데, 내 노선도 아니고 내 차도 아니면 숨깁니다.
-                if (!showAllRoutes && bus.route !== myRoute && key !== myBusId) {
-                    if (busMarkers[key]) { busMarkers[key].setMap(null); }
-                    continue; 
-                }
+                if (!bus.last_update_ms || (nowMs - bus.last_update_ms > 600000)) { if (busMarkers[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } continue; }
+                if (!showAllRoutes && bus.route !== myRoute && key !== myBusId) { if (busMarkers[key]) { busMarkers[key].setMap(null); } continue; }
 
                 if (bus.lat && bus.lon) {
                     const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                     let isMyBus = (key === myBusId) ? " my-bus" : "";
-                    let labelColor = "good";
-                    let displayStatus = `${bus.speed}km/h`; 
-                    let stopTimerText = ""; 
+                    let labelColor = "good"; let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
                     
                     if (bus.status.includes("정체")) labelColor = "jam";
                     if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { labelColor = "break"; displayStatus = bus.status; }
                     
                     if (bus.stopStartTime && bus.speed <= 3 && bus.status === "정체/서행") {
                         let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
-                        if (diffSec >= 60) {
-                            let stopMins = Math.floor(diffSec / 60);
-                            stopTimerText = `<br><span style="color:#ffe6e6; font-size:11px;">⏱️ ${stopMins}분째 정차중</span>`;
-                            labelColor = "jam"; 
-                        }
+                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style="color:#ffe6e6; font-size:11px;">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
                     }
                     
                     let contentHtml = document.createElement('div');
@@ -409,18 +355,14 @@
                     contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
 
                     if (busMarkers[key]) {
-                        busMarkers[key].setMap(map); // 혹시 필터링으로 숨겨졌을까봐 다시 켭니다.
-                        busMarkers[key].setPosition(pos);
-                        busMarkers[key].setContent(contentHtml);
+                        busMarkers[key].setMap(map); busMarkers[key].setPosition(pos); busMarkers[key].setContent(contentHtml);
                         if(isMyBus) busMarkers[key].setZIndex(20);
                     } else {
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
-                        overlay.setMap(map);
-                        busMarkers[key] = overlay;
+                        overlay.setMap(map); busMarkers[key] = overlay;
                         if(isMyBus) overlay.setZIndex(20);
                     }
 
-                    // 추적 로직 (생략 없이 유지)
                     if (trackingBusId === key && currentLat !== 0) {
                         const distInMeters = getDistance(currentLat, currentLon, bus.lat, bus.lon);
                         if (lastTrackedStatus !== bus.status) {
@@ -444,7 +386,6 @@
                 let now = Date.now(); let cutoff = now - 1800000; 
 
                 for (let busId in data) {
-                    // 🛡️ 지렁이 꼬리도 필터링: 전체 보기가 아니고 내 노선/내 차가 아니면 꼬리 안 그림!
                     let busRoute = busId.split('_')[0];
                     if (!showAllRoutes && busRoute !== myRoute && busId !== myBusId) continue;
 
@@ -469,8 +410,6 @@
                     const now = Date.now();
                     for(let key in data) {
                         const inc = data[key]; if (now - inc.timestamp_ms > 7200000) continue; 
-                        
-                        // 🛡️ 돌발 제보 필터링: 내 노선이 아니면 굳이 안 봐도 됨
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { announcedIncidents.add(key); speakText("전방에, 새로운 돌발 상황이 제보되었습니다."); }
