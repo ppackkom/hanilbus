@@ -7,12 +7,12 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801"></script>
+    
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801&libraries=services"></script>
 
     <style>
+        /* (디자인은 이전과 동일하게 유지하여 익숙하게 사용할 수 있도록 했습니다) */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
-        
-        /* 로그인 화면 */
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #2c2c2e; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; border: 2px solid #ff7f50; }
         .login-box h2 { color: #ff7f50; margin-top: 0; }
@@ -21,7 +21,6 @@
         .input-group select, .input-group input { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: none; background-color: #333; color: white; outline: none; box-sizing: border-box; }
         .start-btn { background-color: #ff7f50; color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; margin-top: 10px; }
         
-        /* 지도 및 상단 UI */
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
         .header-overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.9); padding: 15px; border-radius: 10px; border: 1px solid #ff7f50; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; }
@@ -29,21 +28,18 @@
         .status-text { font-size: 13px; color: #ccc; }
         .stop-btn { background-color: #555; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        /* 하단 컨트롤 패널 (새로 추가됨!) */
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(30, 30, 30, 0.95); padding: 15px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 2px solid #444; }
         .status-select { background-color: #1a1a1c; color: #00cc44; border: 2px solid #00cc44; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
         .report-btn { background-color: #ff4d4d; color: white; border: 2px solid #cc0000; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .report-btn:active { background-color: #cc0000; }
 
-        /* 알림창 위치 조정 (하단 바 위로) */
         #trackAlert { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 2; background-color: rgba(0, 102, 255, 0.9); padding: 10px 20px; border-radius: 30px; text-align: center; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; border: 2px solid white; min-width: 180px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; }
 
-        /* 버스 마커 및 돌발상황 마커 디자인 */
         .bus-label { color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; cursor: pointer; text-align: center; }
         .bus-label.jam { background-color: #ff4d4d; }
         .bus-label.good { background-color: #00cc44; }
-        .bus-label.break { background-color: #777; border-color: #aaa; color: #fff; } /* 휴식, 충전 등 */
+        .bus-label.break { background-color: #777; border-color: #aaa; color: #fff; } 
         .bus-label.my-bus { border: 3px solid #ffe600; } 
         
         .incident-marker { background-color: #ffcc00; color: #cc0000; padding: 5px 10px; border-radius: 10px; font-weight: bold; font-size: 14px; border: 2px solid #cc0000; box-shadow: 0 2px 5px rgba(0,0,0,0.5); animation: blink 1.5s infinite; }
@@ -54,7 +50,7 @@
 
     <div id="loginScreen">
         <div class="login-box">
-            <h2>🚌 한일운수 운행 시작</h2>
+            <h2>🚌 한일운수 스마트 상황판</h2>
             <div class="input-group">
                 <label>노선 선택</label>
                 <select id="routeInput">
@@ -69,7 +65,7 @@
                 <label>차량 번호 (또는 순번)</label>
                 <input type="text" id="vehicleInput" placeholder="예: 1234 또는 3호차">
             </div>
-            <button class="start-btn" onclick="startApp()">🚀 위치 공유 및 지도 보기</button>
+            <button class="start-btn" onclick="startApp()">🚀 운행 시작 (음성 안내 켜기)</button>
         </div>
     </div>
 
@@ -85,7 +81,7 @@
         <div id="trackAlert" onclick="cancelTracking()">
             <div id="trackTitle" style="font-size: 13px; color: white;">👀 앞차 추적 중</div>
             <div id="trackDist" class="dist-text">계산 중...</div>
-            <div style="font-size: 11px; color: #ccc;">터치하여 자동 확대 해제</div>
+            <div style="font-size: 11px; color: #ccc;">터치하여 해제</div>
         </div>
         
         <div id="map"></div>
@@ -114,21 +110,45 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
-        let map, wakeLock = null;
+        let map, geocoder, wakeLock = null;
         let watchId = null, serverTimer = null;
         let myRoute = "", myVehicle = "", myBusId = "";
-        let currentLat = 0, currentLon = 0, currentSpeed = 0;
+        let currentLat = 0, currentLon = 0, currentSpeed = 0, manualStatus = "운행 중";
         let currentStatusText = "대기중";
-        let manualStatus = "운행 중"; // 기사님이 직접 선택한 상태
         
         let busMarkers = {};
-        let incidentMarkers = {}; // 돌발상황 마커들
+        let incidentMarkers = {}; 
         let trackingBusId = null; 
 
+        // 음성 안내용 상태 저장 변수들
+        let appStartTime = Date.now();
+        let announcedIncidents = new Set();
+        let lastTrackedStatus = "";
+        let tooCloseWarned = false;
+
+        // 🎙️ [마법의 음성 비서 함수] (두 번 반복, 여성 목소리, 차분하게)
+        function speakText(text) {
+            if (!window.speechSynthesis) return;
+            const synth = window.speechSynthesis;
+            const voices = synth.getVoices();
+            
+            // 한국어 여성 목소리 찾기
+            let koVoice = voices.find(v => v.lang.includes('ko') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Yuna') || v.name.includes('Siri')));
+            if (!koVoice) koVoice = voices.find(v => v.lang.includes('ko'));
+
+            // 정확히 2번 반복해서 읽어줍니다.
+            for (let i = 0; i < 2; i++) {
+                let utterance = new SpeechSynthesisUtterance(text);
+                if (koVoice) utterance.voice = koVoice;
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9; // 속도를 살짝 늦춰서 차분하고 명확하게
+                utterance.pitch = 1.1; // 살짝 높은 톤으로 친절한 느낌
+                synth.speak(utterance);
+            }
+        }
+
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; 
-            const dLat = (lat2 - lat1) * Math.PI / 180; 
-            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const R = 6371e3; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
             return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
@@ -138,19 +158,24 @@
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
-            if (myVehicle === "") { alert("차량 번호나 순번을 입력해주세요!"); return; }
+            if (myVehicle === "") { alert("차량 번호를 입력해주세요!"); return; }
             
             myBusId = myRoute + "_" + myVehicle;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mapScreen').style.display = 'block';
             document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 (${myVehicle})`;
 
+            // 스마트폰 정책상 버튼을 누를 때 빈 소리를 한 번 내주어야 이후에 음성 안내가 막히지 않습니다.
+            if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
             requestWakeLock();
             initMap();
             startGPS();
             startReceivingData();
-            loadIncidents(); // 돌발상황 데이터 불러오기
+            loadIncidents(); 
             serverTimer = setInterval(sendMyLocation, 5000);
+            
+            setTimeout(() => { speakText("안전 운행을 시작합니다."); }, 1000);
         }
 
         function initMap() {
@@ -158,34 +183,29 @@
             const mapOption = { center: new kakao.maps.LatLng(35.8714, 128.6014), level: 5 };
             map = new kakao.maps.Map(mapContainer, mapOption);
             kakao.maps.event.addListener(map, 'dragstart', function() { cancelTracking(); });
+            
+            // 주소 번역기(Geocoder) 준비 완료!
+            geocoder = new kakao.maps.services.Geocoder(); 
         }
 
-        // [기능 추가 1] 상태 메시지 변경 시 즉시 서버 전송
         function updateManualStatus() {
             const selectBox = document.getElementById('myManualStatus');
             manualStatus = selectBox.value;
-            
-            // 시각적 피드백 (운행 중이면 초록색, 아니면 주황/회색)
             if(manualStatus === "운행 중") {
                 selectBox.style.color = "#00cc44"; selectBox.style.borderColor = "#00cc44";
             } else {
                 selectBox.style.color = "#ffcc00"; selectBox.style.borderColor = "#ffcc00";
             }
-            sendMyLocation(); // 상태 바꾸자마자 바로 전송
+            sendMyLocation(); 
         }
 
-        // [기능 추가 2] 돌발 상황 제보 버튼 클릭 시
         function reportIncident() {
-            if (currentLat === 0) { alert("아직 GPS 위치를 잡지 못했습니다."); return; }
-            if (confirm("현재 위치에 돌발상황(정체/사고)을 제보하시겠습니까?")) {
+            if (currentLat === 0) return;
+            if (confirm("현재 위치에 돌발상황을 제보하시겠습니까?")) {
                 database.ref('live_incidents').push({
-                    route: myRoute,
-                    lat: currentLat,
-                    lon: currentLon,
-                    time: new Date().toLocaleTimeString(),
-                    timestamp_ms: Date.now() // 시간이 지난 마커를 지우기 위해 저장
+                    route: myRoute, lat: currentLat, lon: currentLon,
+                    time: new Date().toLocaleTimeString(), timestamp_ms: Date.now()
                 });
-                alert("돌발 상황이 지도에 공유되었습니다!");
             }
         }
 
@@ -197,7 +217,6 @@
                     currentLon = position.coords.longitude;
                     currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
                     
-                    // 수동 상태가 '운행 중'일 때만 속도로 정체 판단, 휴식이면 휴식 상태 띄움
                     if (manualStatus === "운행 중") {
                         currentStatusText = (currentSpeed <= 20) ? "정체/서행" : "정상 주행";
                     } else {
@@ -205,13 +224,11 @@
                     }
 
                     document.getElementById('topStatus').innerText = `내 속도: ${currentSpeed}km/h | 수신 중 📡`;
-                    
                     if (trackingBusId === null && busMarkers[myBusId] === undefined) {
                         map.panTo(new kakao.maps.LatLng(currentLat, currentLon));
                     }
                 }, 
-                function(error) { document.getElementById('topStatus').innerText = "⚠️ GPS 수신 오류"; }, 
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+                function(error) {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
             );
         }
 
@@ -233,15 +250,12 @@
                         if (bus.lat && bus.lon) {
                             const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                             let isMyBus = (key === myBusId) ? " my-bus" : "";
-                            
-                            // 상태에 따른 라벨 색상 및 텍스트 결정
                             let labelColor = "good";
-                            let displayStatus = `${bus.speed}km/h`; // 기본은 속도 표시
+                            let displayStatus = `${bus.speed}km/h`; 
                             
                             if (bus.status.includes("정체")) labelColor = "jam";
                             if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 점검") {
-                                labelColor = "break"; // 회색 처리
-                                displayStatus = bus.status; // 속도 대신 상태 글자 표시
+                                labelColor = "break"; displayStatus = bus.status; 
                             }
                             
                             let contentHtml = document.createElement('div');
@@ -258,14 +272,41 @@
                                 busMarkers[key] = overlay;
                             }
 
-                            // 거리 계산 및 지능형 자동 확대(Auto-Zoom)
+                            // 🎯 [음성 비서 작동 구간] 앞차를 추적 중일 때만 알림 발생
                             if (trackingBusId === key && currentLat !== 0) {
                                 const distInMeters = getDistance(currentLat, currentLon, bus.lat, bus.lon);
-                                let distText = distInMeters >= 1000 ? (distInMeters / 1000).toFixed(1) + " km" : distInMeters + " m";
                                 
+                                // 1. 앞차 상태 변경 알림 및 지명 기반 정체 알림
+                                if (lastTrackedStatus !== bus.status) {
+                                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 점검") {
+                                        speakText(`앞차가, ${bus.status} 상태로 변경되었습니다.`);
+                                    } 
+                                    else if (bus.status.includes("정체") && !lastTrackedStatus.includes("정체")) {
+                                        // 정체가 시작되면, 카카오 API로 현재 위치의 '동(예: 범어동)' 이름을 알아냅니다.
+                                        geocoder.coord2RegionCode(bus.lon, bus.lat, function(result, status) {
+                                            if (status === kakao.maps.services.Status.OK) {
+                                                let dongName = result[0].region_3depth_name; 
+                                                speakText(`앞차가, ${dongName} 부근에서 정체 중입니다.`);
+                                            }
+                                        });
+                                    }
+                                    lastTrackedStatus = bus.status;
+                                }
+
+                                // 2. 배차 간격 근접 경고 (300미터 이내로 붙었을 때 1번만 알림)
+                                if (distInMeters < 300) {
+                                    if (!tooCloseWarned) {
+                                        speakText("주의, 앞차와의 간격이 너무 가깝습니다.");
+                                        tooCloseWarned = true;
+                                    }
+                                } else if (distInMeters > 500) {
+                                    tooCloseWarned = false; // 거리가 다시 500m 이상 벌어지면 경고 초기화
+                                }
+
+                                // 자동 화면 조절
+                                let distText = distInMeters >= 1000 ? (distInMeters / 1000).toFixed(1) + " km" : distInMeters + " m";
                                 document.getElementById('trackTitle').innerText = `👀 ${bus.route}번 [${bus.vehicle}] 앞차 간격`;
                                 document.getElementById('trackDist').innerText = distText;
-
                                 const bounds = new kakao.maps.LatLngBounds();
                                 bounds.extend(new kakao.maps.LatLng(currentLat, currentLon)); 
                                 bounds.extend(pos); 
@@ -277,10 +318,9 @@
             });
         }
 
-        // [기능 추가 3] 돌발상황 마커 화면에 띄우기
+        // 3. 신규 돌발 상황 음성 알림
         function loadIncidents() {
             database.ref('live_incidents').on('value', (snapshot) => {
-                // 기존 마커 초기화
                 for(let k in incidentMarkers) incidentMarkers[k].setMap(null);
                 incidentMarkers = {};
 
@@ -289,12 +329,16 @@
                     const now = Date.now();
                     for(let key in data) {
                         const inc = data[key];
-                        // 2시간(7,200,000 밀리초)이 지난 오래된 제보는 화면에 그리지 않습니다.
                         if (now - inc.timestamp_ms > 7200000) continue; 
+
+                        // 앱을 켠 이후에 올라온 새로운 제보만 음성으로 읽어줍니다.
+                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) {
+                            announcedIncidents.add(key);
+                            speakText("전방에, 새로운 돌발 상황이 제보되었습니다.");
+                        }
 
                         const pos = new kakao.maps.LatLng(inc.lat, inc.lon);
                         const content = `<div class="incident-marker">⚠️ 돌발상황<br><span style="font-size:10px;">${inc.time}</span></div>`;
-                        
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1 });
                         overlay.setMap(map);
                         incidentMarkers[key] = overlay;
@@ -306,8 +350,10 @@
         function startTrackingBus(busKey, route, vehicle) {
             if (busKey === myBusId) { alert("내 차를 추적할 수는 없습니다!"); return; }
             trackingBusId = busKey;
+            lastTrackedStatus = ""; // 새 차를 추적할 때 상태 초기화
+            tooCloseWarned = false;
             document.getElementById('trackAlert').style.display = 'block';
-            document.getElementById('trackDist').innerText = "거리 계산 중...";
+            speakText(`${route}번 버스 추적을 시작합니다.`);
         }
 
         function cancelTracking() {
