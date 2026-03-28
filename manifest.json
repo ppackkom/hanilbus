@@ -2,7 +2,7 @@
   "name": "한일운수 도로정보",
   "short_name": "한일도로정보",
   "description": "한일교통 노선 실시간 상황 공유 앱",
-  "start_url": "index.html",
+  "start_url": "tt.html",
   "display": "standalone",
   "background_color": "#1a1a1c",
   "theme_color": "#1a1a1c",
