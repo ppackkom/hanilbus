@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>609번 실시간 정체 수집기 (v6.0)</title>
+    <title>한일운수 실시간 정체 수집기 (v0.3)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: #ffffff; margin: 0; padding: 20px; text-align: center; }
         .header { border-bottom: 2px solid #ff7f50; padding-bottom: 10px; margin-bottom: 15px; }
+        
+        /* 노선 선택기 디자인 추가 */
+        .route-selector { background-color: #2c2c2e; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ff7f50; }
+        .route-selector select { width: 100%; padding: 10px; font-size: 18px; border-radius: 5px; background-color: #333; color: white; border: none; outline: none; text-align: center; font-weight: bold; }
+        
         #statusBoard { background-color: #333; color: white; font-size: 24px; font-weight: bold; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #555; transition: 0.5s; }
         .status-box { background-color: #2c2c2e; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
         .speed-text { font-size: 60px; font-weight: bold; color: #ccc; margin: 10px 0; }
@@ -25,8 +30,19 @@
 <body>
 
     <div class="header">
-        <h2>📡 609번 정체상황 수집기 (서버 송신용)</h2>
+        <h2>📡 한일운수 정체상황 수집기</h2>
         <p style="font-size: 13px; color: #ff7f50;">(이 폰은 거치대에 계속 켜두시면 됩니다)</p>
+    </div>
+
+    <div class="route-selector">
+        <div style="font-size: 16px; margin-bottom: 8px; color: #ccc;">현재 운행 중인 노선을 선택하세요</div>
+        <select id="routeSelect">
+            <option value="609" selected>🚌 609번</option>
+            <option value="204">🚌 204번</option>
+            <option value="894">🚌 894번</option>
+            <option value="937">🚌 937번</option>
+            <option value="dalseo6">🚌 달서6번</option>
+        </select>
     </div>
 
     <div id="statusBoard">상태 분석 대기 중...</div>
@@ -48,20 +64,18 @@
     <div id="serverLog" style="color: #888;">대기 중...</div>
 
     <script>
-                  // ========================================================
+        // 파이어베이스 설정 (기존과 동일)
         const firebaseConfig = {
             apiKey: "AIzaSyCKXl4AYBlrotyF3VHv6Gr0GP-p1ii4Bww",
             authDomain: "hanilbus-760ae.firebaseapp.com",
-            databaseURL: "https://hanilbus-760ae-default-rtdb.firebaseio.com/", // 👈 이 줄을 꼭 추가해야 합니다!
+            databaseURL: "https://hanilbus-760ae-default-rtdb.firebaseio.com/",
             projectId: "hanilbus-760ae",
             storageBucket: "hanilbus-760ae.firebasestorage.app",
             messagingSenderId: "454505545954",
             appId: "1:454505545954:web:a1951147f2b4b34d019ebb",
             measurementId: "G-160EWPVGM5"
         };
-        // ========================================================
 
-        // 파이어베이스 시작
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
@@ -70,11 +84,12 @@
         let crawlSeconds = 0, isJam = false, startJamLat = 0, startJamLon = 0;
         let currentStatusText = "대기중";
 
-        // 서버로 데이터 쏘기
         function sendDataToServer() {
-            // 위치(GPS)를 제대로 잡았을 때만 서버로 쏩니다!
             if (currentLat !== 0) {
-                database.ref('test_busStatus/609').set({
+                // 핵심 변경점: 선택한 노선 번호를 가져와서 서버 경로를 동적으로 만듭니다!
+                const selectedRoute = document.getElementById('routeSelect').value;
+                
+                database.ref('test_busStatus/' + selectedRoute).set({
                     status: currentStatusText,
                     speed: currentSpeed,
                     lat: currentLat,
@@ -82,7 +97,7 @@
                     jamTime: crawlSeconds,
                     timestamp: new Date().toLocaleTimeString()
                 }).then(() => {
-                    document.getElementById('serverLog').innerText = `✅ 파이어베이스 전송 중: ${new Date().toLocaleTimeString()}`;
+                    document.getElementById('serverLog').innerText = `✅ [${selectedRoute}번] 서버 전송 완료: ${new Date().toLocaleTimeString()}`;
                     document.getElementById('serverLog').style.color = "#00cc44";
                 }).catch((error) => {
                     document.getElementById('serverLog').innerText = "❌ 전송 실패: " + error.message;
@@ -91,7 +106,6 @@
             }
         }
 
-        // 거리 계산 공식 (미터)
         function getDistanceInMeters(lat1, lon1, lat2, lon2) {
             const R = 6371e3; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -102,12 +116,15 @@
 
         function startTracking() {
             if (!("geolocation" in navigator)) return;
+            
+            // 수집 중에는 노선을 바꿀 수 없도록 선택 창을 비활성화합니다.
+            document.getElementById('routeSelect').disabled = true;
+            
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
             requestWakeLock();
             document.getElementById('serverLog').innerText = "GPS 위치 확인 중...";
 
-            // 1. 재민님의 '가다서다' 감지 AI 두뇌 (1초마다 판단)
             logicTimer = setInterval(function() {
                 const statusBoard = document.getElementById('statusBoard');
                 const jamInfoBox = document.getElementById('jamInfoBox');
@@ -143,10 +160,8 @@
                 }
             }, 1000);
 
-            // 2. 서버 전송 타이머 (5초마다 파이어베이스로 쏘기)
             serverTimer = setInterval(sendDataToServer, 5000);
 
-            // 3. GPS 수신부
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
                     currentLat = position.coords.latitude;
@@ -166,6 +181,9 @@
             if (wakeLock !== null) wakeLock.release();
             if (logicTimer !== null) clearInterval(logicTimer);
             if (serverTimer !== null) clearInterval(serverTimer);
+            
+            // 수집을 멈추면 다시 노선을 선택할 수 있게 풀어줍니다.
+            document.getElementById('routeSelect').disabled = false;
             
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
