@@ -3,62 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한일운수 실시간 노선도</title>
+    <title>한일운수 스마트 상황판</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801"></script>
 
     <style>
-        /* 지도를 화면에 꽉 차게 만듭니다 */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
+        
+        /* --- 시작(로그인) 화면 디자인 --- */
+        #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .login-box { background-color: #2c2c2e; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; border: 2px solid #ff7f50; }
+        .login-box h2 { color: #ff7f50; margin-top: 0; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; }
+        .input-group select, .input-group input { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: none; background-color: #333; color: white; outline: none; box-sizing: border-box; }
+        .start-btn { background-color: #ff7f50; color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; margin-top: 10px; }
+        
+        /* --- 지도 및 상단 UI 디자인 --- */
+        #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
-        
-        /* 지도 위에 떠 있는 상단 정보창 */
-        .header-overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.9); padding: 15px; border-radius: 10px; color: white; border: 1px solid #ff7f50; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .header-overlay h2 { margin: 0 0 5px 0; font-size: 18px; color: #ff7f50; }
+        .header-overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.9); padding: 15px; border-radius: 10px; border: 1px solid #ff7f50; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; }
+        .header-info h2 { margin: 0 0 5px 0; font-size: 18px; color: #ff7f50; }
         .status-text { font-size: 13px; color: #ccc; }
+        .stop-btn { background-color: #ff4d4d; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        /* 버스 위치를 표시할 예쁜 이름표(마커) 디자인 */
-        .bus-label { background-color: #ff7f50; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); white-space: nowrap; }
-        .bus-label.jam { background-color: #ff4d4d; } /* 정체 시 빨간색 */
-        .bus-label.good { background-color: #00cc44; } /* 원활 시 초록색 */
+        #trackAlert { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2; background-color: #4d79ff; padding: 10px 20px; border-radius: 20px; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer; }
+
+        /* 버스 마커 디자인 */
+        .bus-label { color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; cursor: pointer; }
+        .bus-label.jam { background-color: #ff4d4d; }
+        .bus-label.good { background-color: #00cc44; }
+        .bus-label.my-bus { border: 3px solid #ffe600; } /* 내 차는 노란색 테두리 강조 */
     </style>
 </head>
 <body>
 
-    <div class="header-overlay">
-        <h2>🗺️ 한일운수 실시간 노선도</h2>
-        <div class="status-text" id="topStatus">서버와 연결 중입니다... 📡</div>
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🚌 한일운수 운행 시작</h2>
+            <div class="input-group">
+                <label>노선 선택</label>
+                <select id="routeInput">
+                    <option value="609" selected>609번</option>
+                    <option value="204">204번</option>
+                    <option value="894">894번</option>
+                    <option value="937">937번</option>
+                    <option value="dalseo6">달서6번</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>차량 번호 (또는 순번)</label>
+                <input type="text" id="vehicleInput" placeholder="예: 1234 또는 3호차">
+            </div>
+            <button class="start-btn" onclick="startApp()">🚀 위치 공유 및 지도 보기</button>
+        </div>
     </div>
 
-    <div id="map"></div>
+    <div id="mapScreen">
+        <div class="header-overlay">
+            <div class="header-info">
+                <h2 id="myRouteInfo">🗺️ 실시간 노선도</h2>
+                <div class="status-text" id="topStatus">GPS 연결 중... 📡</div>
+            </div>
+            <button class="stop-btn" onclick="stopApp()">운행 종료</button>
+        </div>
+        
+        <div id="trackAlert" onclick="cancelTracking()">👀 현재 [ ] 추적 중 (터치하여 해제)</div>
+        <div id="map"></div>
+    </div>
 
     <script>
-        // 1. 화면 꺼짐 방지 (Wake Lock) - 이제 지도를 켜둬도 화면이 안 꺼집니다!
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {
-                console.error('화면 꺼짐 방지 실패:', err);
-            }
-        }
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-        });
-        requestWakeLock(); // 화면 유지 기능 즉시 실행
-
-        // 2. 카카오 지도 생성 (기본 중심 좌표를 대구 시내로 잡았습니다)
-        const mapContainer = document.getElementById('map'); 
-        const mapOption = { 
-            center: new kakao.maps.LatLng(35.8714, 128.6014), // 대구 중심
-            level: 5 // 지도의 확대 레벨 (숫자가 작을수록 확대됨)
-        };
-        const map = new kakao.maps.Map(mapContainer, mapOption);
-
-        // 3. 파이어베이스 설정
+        // 파이어베이스 설정
         const firebaseConfig = {
             apiKey: "AIzaSyCKXl4AYBlrotyF3VHv6Gr0GP-p1ii4Bww",
             authDomain: "hanilbus-760ae.firebaseapp.com",
@@ -68,58 +85,158 @@
             messagingSenderId: "454505545954",
             appId: "1:454505545954:web:a1951147f2b4b34d019ebb"
         };
-
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
-        // 버스 마커들을 기억해둘 공간 (차가 움직일 때마다 기존 마커를 이동시키기 위함)
+        // 전역 변수들
+        let map, wakeLock = null;
+        let watchId = null, serverTimer = null;
+        let myRoute = "", myVehicle = "", myBusId = "";
+        let currentLat = 0, currentLon = 0, currentSpeed = 0, currentStatusText = "대기중";
         let busMarkers = {};
+        let trackingBusId = null; // 현재 화면이 따라가고 있는 버스 ID
 
-        // 4. 실시간 데이터 수신 및 지도에 버스 띄우기
-        database.ref('test_busStatus').on('value', (snapshot) => {
-            const data = snapshot.val();
+        // [화면 꺼짐 방지]
+        async function requestWakeLock() { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+
+        // [앱 시작] - 로그인 화면에서 버튼 누를 때 실행
+        function startApp() {
+            myRoute = document.getElementById('routeInput').value;
+            myVehicle = document.getElementById('vehicleInput').value.trim();
             
-            if (data) {
-                document.getElementById('topStatus').innerText = "✅ 실시간 버스 위치 수신 중";
-                
-                for (const routeName in data) {
-                    const busData = data[routeName];
+            if (myVehicle === "") { alert("차량 번호나 순번을 입력해주세요!"); return; }
+            
+            // 내 버스의 고유 ID 생성 (예: 609_1234)
+            myBusId = myRoute + "_" + myVehicle;
+
+            // 화면 전환
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mapScreen').style.display = 'block';
+            document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 (${myVehicle})`;
+
+            requestWakeLock();
+            initMap();
+            startGPS();
+            startReceivingData();
+            
+            // 5초마다 내 위치 서버로 쏘기
+            serverTimer = setInterval(sendMyLocation, 5000);
+        }
+
+        // [지도 초기화]
+        function initMap() {
+            const mapContainer = document.getElementById('map'); 
+            const mapOption = { center: new kakao.maps.LatLng(35.8714, 128.6014), level: 5 };
+            map = new kakao.maps.Map(mapContainer, mapOption);
+            
+            // 지도를 드래그하면 자동 추적 모드 해제
+            kakao.maps.event.addListener(map, 'dragstart', function() { cancelTracking(); });
+        }
+
+        // [GPS 수집 (송신기 역할)]
+        function startGPS() {
+            if (!("geolocation" in navigator)) return;
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    currentLat = position.coords.latitude;
+                    currentLon = position.coords.longitude;
+                    currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
                     
-                    // 위도와 경도 값이 정상적으로 들어왔을 때만 지도에 그립니다
-                    if (busData.lat && busData.lon) {
-                        const busPosition = new kakao.maps.LatLng(busData.lat, busData.lon);
-                        
-                        // 현재 정체 상태에 따라 이름표 색상을 바꿉니다
-                        let labelClass = "bus-label";
-                        if (busData.status.includes("정체")) labelClass += " jam";
-                        else if (busData.status.includes("정상") || busData.status.includes("원활")) labelClass += " good";
+                    if (currentSpeed <= 20) currentStatusText = "정체 또는 서행";
+                    else currentStatusText = "원활하게 정상 주행";
 
-                        // 지도 위에 띄울 이름표 내용 (예: 🚍 609번 (40km/h))
-                        const content = `<div class="${labelClass}">🚍 ${routeName}번 (${busData.speed}km/h)</div>`;
+                    document.getElementById('topStatus').innerText = `내 속도: ${currentSpeed}km/h | 수신 중 📡`;
+                    
+                    // 내 차를 처음 잡았고, 누군가를 추적 중이 아니라면 내 차로 카메라 이동
+                    if (trackingBusId === null && busMarkers[myBusId] === undefined) {
+                        map.panTo(new kakao.maps.LatLng(currentLat, currentLon));
+                    }
+                }, 
+                function(error) { document.getElementById('topStatus').innerText = "⚠️ GPS 수신 오류 (설정 확인)"; }, 
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
 
-                        // 이미 지도에 생성된 버스라면 위치와 내용만 부드럽게 업데이트
-                        if (busMarkers[routeName]) {
-                            busMarkers[routeName].setPosition(busPosition);
-                            busMarkers[routeName].setContent(content);
-                        } else {
-                            // 처음 발견된 버스라면 지도에 새로 마커를 만듭니다
-                            const customOverlay = new kakao.maps.CustomOverlay({
-                                position: busPosition,
-                                content: content,
-                                yAnchor: 1 // 이름표가 정확한 위치를 가리키도록 조정
-                            });
-                            customOverlay.setMap(map);
-                            busMarkers[routeName] = customOverlay;
+        // [내 위치 서버로 전송]
+        function sendMyLocation() {
+            if (currentLat !== 0) {
+                database.ref('live_buses/' + myBusId).set({
+                    route: myRoute,
+                    vehicle: myVehicle,
+                    status: currentStatusText,
+                    speed: currentSpeed,
+                    lat: currentLat,
+                    lon: currentLon,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+            }
+        }
+
+        // [서버에서 모든 버스 위치 수신 (수신기 역할)]
+        function startReceivingData() {
+            database.ref('live_buses').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    for (const key in data) {
+                        const bus = data[key];
+                        if (bus.lat && bus.lon) {
+                            const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                             
-                            // 팁: 처음 버스 신호가 잡히면 지도의 화면을 그 버스 쪽으로 스르륵 이동시킵니다
-                            map.panTo(busPosition);
+                            // 내 차인지 확인 (내 차는 노란색 테두리 적용)
+                            let isMyBus = (key === myBusId) ? " my-bus" : "";
+                            let labelColor = bus.status.includes("정체") ? "jam" : "good";
+                            
+                            // 마커(이름표) HTML 생성 (클릭 시 해당 버스 추적 시작)
+                            let contentHtml = document.createElement('div');
+                            contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
+                            contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style="font-size:11px; font-weight:normal;">${bus.speed}km/h</span>`;
+                            contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
+
+                            // 지도에 그리기
+                            if (busMarkers[key]) {
+                                busMarkers[key].setPosition(pos);
+                                busMarkers[key].setContent(contentHtml);
+                            } else {
+                                const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
+                                overlay.setMap(map);
+                                busMarkers[key] = overlay;
+                            }
+
+                            // 🎯 [자동 추적 기능] 만약 내가 클릭한 버스가 이동했다면 지도 화면도 따라가기
+                            if (trackingBusId === key) {
+                                map.panTo(pos);
+                            }
                         }
                     }
                 }
-            } else {
-                document.getElementById('topStatus').innerText = "수집된 차량 데이터가 없습니다.";
+            });
+        }
+
+        // [특정 버스 추적 시작]
+        function startTrackingBus(busKey, route, vehicle) {
+            trackingBusId = busKey;
+            const alertBox = document.getElementById('trackAlert');
+            alertBox.innerText = `👀 ${route}번 [${vehicle}] 추적 중 (터치하여 해제)`;
+            alertBox.style.display = 'block';
+            
+            // 클릭 즉시 그 버스 위치로 카메라 이동
+            if (busMarkers[busKey]) map.panTo(busMarkers[busKey].getPosition());
+        }
+
+        // [추적 해제]
+        function cancelTracking() {
+            trackingBusId = null;
+            document.getElementById('trackAlert').style.display = 'none';
+        }
+
+        // [운행 종료]
+        function stopApp() {
+            if (confirm("운행을 종료하고 앱을 닫으시겠습니까?")) {
+                // 서버에서 내 버스 정보 삭제 (퇴근 처리)
+                if (myBusId) database.ref('live_buses/' + myBusId).remove();
+                window.location.reload(); // 앱 초기화 (로그인 화면으로 돌아감)
             }
-        });
+        }
     </script>
 </body>
 </html>
