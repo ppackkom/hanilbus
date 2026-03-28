@@ -253,10 +253,10 @@
                             let labelColor = "good";
                             let displayStatus = `${bus.speed}km/h`; 
                             
-                            if (bus.status.includes("정체")) labelColor = "jam";
-                            if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 점검") {
-                                labelColor = "break"; displayStatus = bus.status; 
-                            }
+                            if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") {
+    labelColor = "break"; displayStatus = bus.status; 
+}
+
                             
                             let contentHtml = document.createElement('div');
                             contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
@@ -278,7 +278,7 @@
                                 
                                 // 1. 앞차 상태 변경 알림 및 지명 기반 정체 알림
                                 if (lastTrackedStatus !== bus.status) {
-                                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 점검") {
+                                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") {
                                         speakText(`앞차가, ${bus.status} 상태로 변경되었습니다.`);
                                     } 
                                     else if (bus.status.includes("정체") && !lastTrackedStatus.includes("정체")) {
