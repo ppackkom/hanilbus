@@ -24,20 +24,22 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
         
+        /* 💡 로그인 화면 디자인 럭셔리 튜닝 */
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .login-box { background-color: #2c2c2e; padding: 35px 30px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 25px; font-size: 22px; }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; font-weight: bold; }
-        .input-group select, .input-group input { width: 100%; padding: 14px; font-size: 16px; border-radius: 10px; border: 1px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; }
-        .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 8px rgba(255, 127, 80, 0.3); }
+        .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 22px; }
         
-        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
+        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+        .input-group select, .input-group input { width: 100%; padding: 15px; font-size: 16px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; }
+        .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 10px rgba(255, 127, 80, 0.4); background-color: #3a3a3c; }
+        
+        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.97); }
         
-        /* 💡 잃어버린 바탕화면 설치 버튼 디자인 복구! */
-        .install-btn { background-color: transparent; color: #888; border: 1px solid #444; padding: 12px; font-size: 14px; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
-        .install-btn:active { background-color: #333; color: #ccc; }
+        /* 💡 홈 화면 설치 전용 버튼 디자인 */
+        .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
+        .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
@@ -55,19 +57,10 @@
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
         
-        /* 💡 겹침 해결: 전광판 위치를 top: 130px로 넉넉하게 내렸습니다! */
-        .marquee-wrapper { position: absolute; top: 130px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
-        .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(26, 26, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 12px 15px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -4px 15px rgba(0,0,0,0.4); }
         .status-select { background-color: rgba(26, 26, 28, 0.8); color: #00cc44; border: 2px solid #00cc44; padding: 10px; border-radius: 10px; font-size: 15px; font-weight: bold; outline: none; }
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
-
-        #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-        .modal-content { background: #2c2c2e; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; color: white; margin-bottom: 10px; cursor: pointer; }
 
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
@@ -88,7 +81,7 @@
         <div class="login-box">
             <h2>🚌 한일운수 스마트 상황판</h2>
             <div class="input-group">
-                <label>노선 선택</label>
+                <label>📍 노선 선택</label>
                 <select id="routeInput">
                     <option value="609" selected>609번</option>
                     <option value="204">204번</option>
@@ -98,12 +91,12 @@
                 </select>
             </div>
             <div class="input-group">
-                <label>차량 번호 (또는 순번)</label>
+                <label>🚍 차량 번호 (또는 순번)</label>
                 <input type="text" id="vehicleInput" placeholder="예: 1988 또는 3호차">
             </div>
             <button class="start-btn" onclick="startApp()">🚀 운행 시작 (음성 안내)</button>
             
-            <button class="install-btn" onclick="showInstallGuide()">📲 스마트폰 바탕화면에 설치</button>
+            <button id="installBtn" class="install-btn" onclick="installApp()">📲 스마트폰 바탕화면에 설치</button>
         </div>
     </div>
 
@@ -123,10 +116,6 @@
             </div>
         </div>
         
-        <div class="marquee-wrapper">
-            <div class="marquee-text">🚌 동료들과 함께 오늘도 안전운행! 식사 든든하게 챙겨 드시고, 무사고 화이팅입니다! 🚍</div>
-        </div>
-
         <div id="trackAlert" onclick="cancelTracking()">
             <div id="trackTitle" style="font-size: 12px; color: white;">👀 앞차 추적 중</div>
             <div id="trackDist" class="dist-text">계산 중...</div>
@@ -142,21 +131,35 @@
                 <option value="식사/휴식">🍚 식사/휴식</option>
                 <option value="차량 고장">🔧 차량 고장</option> 
             </select>
-            <button class="report-btn" onclick="openIncidentModal()">🚨 돌발상황 제보</button>
-        </div>
-    </div>
-
-    <div id="incidentModal">
-        <div class="modal-content">
-            <h3 style="color:#ff7f50; margin-top:0; margin-bottom:20px;">🚨 상황을 선택해주세요</h3>
-            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('🚧 포트홀 / 도로파손')">🚧 포트홀 / 도로파손</button>
-            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('⛔ 불법주차 / 막힘')">⛔ 불법주차 / 막힘</button>
-            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('💥 교통사고 / 정체')">💥 교통사고 / 정체</button>
-            <button class="stop-btn" style="width:100%; padding:15px; margin-top:5px; font-size:16px;" onclick="closeIncidentModal()">취소</button>
+            <button class="report-btn" onclick="reportIncident()">🚨 돌발상황 제보</button>
         </div>
     </div>
 
     <script>
+        // 💡 [홈 화면 설치 기능] 브라우저 설치 이벤트를 잡아둡니다.
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        // 💡 버튼을 눌렀을 때 실행되는 설치 함수
+        function installApp() {
+            if (deferredPrompt) {
+                // 안드로이드 등 설치 지원 기기
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('사용자가 홈 화면 설치를 수락했습니다.');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // 아이폰 등 설치 팝업을 지원하지 않는 기기용 친절한 안내
+                alert("현재 인터넷 창에서는 자동 설치 팝업을 띄울 수 없습니다.\n\n화면 우측 상단(점 3개) 또는 하단 메뉴에서\n[홈 화면에 추가] 버튼을 직접 눌러주세요!");
+            }
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyCKXl4AYBlrotyF3VHv6Gr0GP-p1ii4Bww",
             authDomain: "hanilbus-760ae.firebaseapp.com",
@@ -211,6 +214,7 @@
             document.getElementById('userCount').innerText = `👥 ${count}명`;
         });
 
+        // 💡 음성 비서 함수
         function speakText(text, repeat = 2) {
             if (!window.speechSynthesis) return;
             const synth = window.speechSynthesis;
@@ -222,11 +226,12 @@
                 if (koVoice) utterance.voice = koVoice;
                 utterance.lang = 'ko-KR'; 
                 utterance.rate = 0.9; 
-                utterance.pitch = 1.0; 
+                utterance.pitch = 1.0; // 
                 synth.speak(utterance);
             }
         }
 
+        
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -268,8 +273,7 @@
 
             requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
-            
-            setTimeout(() => { speakText("기사님, 오늘도 안전한 운행 하세요.", 1); }, 1000);
+            setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!",1); }, 1000);
         }
 
         function initMap() {
@@ -326,26 +330,9 @@
             sendMyLocation(); 
         }
 
-        function openIncidentModal() {
-            if (currentLat === 0) { alert("GPS 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
-            document.getElementById('incidentModal').style.display = 'flex';
-        }
-
-        function closeIncidentModal() {
-            document.getElementById('incidentModal').style.display = 'none';
-        }
-
-        function submitIncident(incidentType) {
-            database.ref('live_incidents').push({ 
-                route: myRoute, 
-                lat: currentLat, 
-                lon: currentLon, 
-                time: new Date().toLocaleTimeString(), 
-                timestamp_ms: Date.now(),
-                type: incidentType 
-            });
-            closeIncidentModal(); 
-            speakText(incidentType + " 제보가 완료되었습니다.", 1); 
+        function reportIncident() {
+            if (currentLat === 0) return;
+            if (confirm("현재 위치에 돌발상황을 제보하시겠습니까?")) { database.ref('live_incidents').push({ route: myRoute, lat: currentLat, lon: currentLon, time: new Date().toLocaleTimeString(), timestamp_ms: Date.now() }); }
         }
 
         function startGPS() {
@@ -471,19 +458,11 @@
                 const data = snapshot.val(); if(data) {
                     const now = Date.now();
                     for(let key in data) {
-                        // 💡 돌발상황 제보 후 30분(1800000 밀리초) 지나면 자동 삭제!
-                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
+                        const inc = data[key]; if (now - inc.timestamp_ms > 7200000) continue; 
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
-                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
-                            announcedIncidents.add(key); 
-                            const typeMsg = inc.type ? inc.type : "돌발 상황";
-                            speakText("전방에, " + typeMsg + " 제보가 있습니다."); 
-                        }
-
-                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
-                        const displayType = inc.type || "⚠️ 돌발상황"; 
-                        const content = `<div class="incident-marker">${displayType}<br><span style="font-size:10px;">${inc.time}</span></div>`;
+                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { announcedIncidents.add(key); speakText("전방에, 새로운 돌발 상황이 제보되었습니다."); }
+                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); const content = `<div class="incident-marker">⚠️ 돌발상황<br><span style="font-size:10px;">${inc.time}</span></div>`;
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
                         overlay.setMap(map); incidentMarkers[key] = overlay;
                     }
@@ -501,11 +480,6 @@
                 if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
                 window.location.reload(); 
             }
-        }
-
-        // 💡 잃어버린 설치 안내창 띄우기 함수 복구!
-        function showInstallGuide() {
-            alert("현재 인터넷 창에서는 자동 설치 팝업을 띄울 수 없습니다.\n\n화면 우측 상단(점 3개) 또는 하단 메뉴에서\n[홈 화면에 추가] 버튼을 직접 눌러주세요!");
         }
     </script>
 </body>
