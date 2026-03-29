@@ -24,7 +24,7 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
         
-        /* 💡 로그인 화면 디자인 럭셔리 튜닝 */
+        /* 💡 로그인 화면 디자인 럭셔리 튜닝 (재민님 원본 유지!) */
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 22px; }
@@ -37,7 +37,7 @@
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.97); }
         
-        /* 💡 홈 화면 설치 전용 버튼 디자인 */
+        /* 💡 홈 화면 설치 전용 버튼 디자인 (재민님 원본 유지!) */
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
         .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
@@ -56,11 +56,21 @@
         .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
+
+        /* 💡 B코스: 응원 전광판 CSS (위치 130px로 넉넉히 내렸습니다!) */
+        .marquee-wrapper { position: absolute; top: 130px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         
         .bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(26, 26, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 12px 15px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; border-top: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 -4px 15px rgba(0,0,0,0.4); }
         .status-select { background-color: rgba(26, 26, 28, 0.8); color: #00cc44; border: 2px solid #00cc44; padding: 10px; border-radius: 10px; font-size: 15px; font-weight: bold; outline: none; }
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
+
+        /* 💡 A코스: 돌발상황 제보 팝업창 CSS */
+        #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: #2c2c2e; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; color: white; margin-bottom: 10px; cursor: pointer; }
 
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
@@ -116,6 +126,10 @@
             </div>
         </div>
         
+        <div class="marquee-wrapper">
+            <div class="marquee-text">🚌 동료들과 함께 오늘도 안전운행! 식사 든든하게 챙겨 드시고, 무사고 화이팅입니다! 🚍</div>
+        </div>
+
         <div id="trackAlert" onclick="cancelTracking()">
             <div id="trackTitle" style="font-size: 12px; color: white;">👀 앞차 추적 중</div>
             <div id="trackDist" class="dist-text">계산 중...</div>
@@ -131,7 +145,17 @@
                 <option value="식사/휴식">🍚 식사/휴식</option>
                 <option value="차량 고장">🔧 차량 고장</option> 
             </select>
-            <button class="report-btn" onclick="reportIncident()">🚨 돌발상황 제보</button>
+            <button class="report-btn" onclick="openIncidentModal()">🚨 돌발상황 제보</button>
+        </div>
+    </div>
+
+    <div id="incidentModal">
+        <div class="modal-content">
+            <h3 style="color:#ff7f50; margin-top:0; margin-bottom:20px;">🚨 상황을 선택해주세요</h3>
+            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('🚧 포트홀 / 도로파손')">🚧 포트홀 / 도로파손</button>
+            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('⛔ 불법주차 / 막힘')">⛔ 불법주차 / 막힘</button>
+            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('💥 교통사고 / 정체')">💥 교통사고 / 정체</button>
+            <button class="stop-btn" style="width:100%; padding:15px; margin-top:5px; font-size:16px;" onclick="closeIncidentModal()">취소</button>
         </div>
     </div>
 
@@ -330,9 +354,28 @@
             sendMyLocation(); 
         }
 
-        function reportIncident() {
-            if (currentLat === 0) return;
-            if (confirm("현재 위치에 돌발상황을 제보하시겠습니까?")) { database.ref('live_incidents').push({ route: myRoute, lat: currentLat, lon: currentLon, time: new Date().toLocaleTimeString(), timestamp_ms: Date.now() }); }
+        // 💡 팝업창 열고 닫는 함수
+        function openIncidentModal() {
+            if (currentLat === 0) { alert("GPS 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
+            document.getElementById('incidentModal').style.display = 'flex';
+        }
+
+        function closeIncidentModal() {
+            document.getElementById('incidentModal').style.display = 'none';
+        }
+
+        // 💡 팝업창에서 선택한 내용을 저장하는 함수
+        function submitIncident(incidentType) {
+            database.ref('live_incidents').push({ 
+                route: myRoute, 
+                lat: currentLat, 
+                lon: currentLon, 
+                time: new Date().toLocaleTimeString(), 
+                timestamp_ms: Date.now(),
+                type: incidentType 
+            });
+            closeIncidentModal(); 
+            speakText(incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
         function startGPS() {
@@ -458,11 +501,19 @@
                 const data = snapshot.val(); if(data) {
                     const now = Date.now();
                     for(let key in data) {
-                        const inc = data[key]; if (now - inc.timestamp_ms > 7200000) continue; 
+                        // 💡 30분 타이머 적용!
+                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
-                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { announcedIncidents.add(key); speakText("전방에, 새로운 돌발 상황이 제보되었습니다."); }
-                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); const content = `<div class="incident-marker">⚠️ 돌발상황<br><span style="font-size:10px;">${inc.time}</span></div>`;
+                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
+                            announcedIncidents.add(key); 
+                            const typeMsg = inc.type ? inc.type : "돌발 상황";
+                            speakText("전방에, " + typeMsg + " 제보가 있습니다."); 
+                        }
+
+                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
+                        const displayType = inc.type || "⚠️ 돌발상황"; 
+                        const content = `<div class="incident-marker">${displayType}<br><span style="font-size:10px;">${inc.time}</span></div>`;
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
                         overlay.setMap(map); incidentMarkers[key] = overlay;
                     }
