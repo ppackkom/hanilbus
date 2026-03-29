@@ -31,9 +31,14 @@
         .input-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; font-weight: bold; }
         .input-group select, .input-group input { width: 100%; padding: 14px; font-size: 16px; border-radius: 10px; border: 1px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; }
         .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 8px rgba(255, 127, 80, 0.3); }
+        
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.97); }
         
+        /* 💡 잃어버린 바탕화면 설치 버튼 디자인 복구! */
+        .install-btn { background-color: transparent; color: #888; border: 1px solid #444; padding: 12px; font-size: 14px; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
+        .install-btn:active { background-color: #333; color: #ccc; }
+
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
@@ -50,8 +55,8 @@
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
         
-                /* 💡 B코스: 응원 전광판 CSS (위치 아래로 넉넉하게 내림!) */
-        .marquee-wrapper { position: absolute; top: 125px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        /* 💡 겹침 해결: 전광판 위치를 top: 130px로 넉넉하게 내렸습니다! */
+        .marquee-wrapper { position: absolute; top: 130px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
 
@@ -60,7 +65,6 @@
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
 
-        /* 💡 A코스: 돌발상황 제보 팝업창 CSS */
         #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal-content { background: #2c2c2e; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .modal-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; color: white; margin-bottom: 10px; cursor: pointer; }
@@ -98,6 +102,8 @@
                 <input type="text" id="vehicleInput" placeholder="예: 1988 또는 3호차">
             </div>
             <button class="start-btn" onclick="startApp()">🚀 운행 시작 (음성 안내)</button>
+            
+            <button class="install-btn" onclick="showInstallGuide()">📲 스마트폰 바탕화면에 설치</button>
         </div>
     </div>
 
@@ -320,7 +326,6 @@
             sendMyLocation(); 
         }
 
-        // 💡 A코스: 제보 버튼 누르면 팝업창 띄우기
         function openIncidentModal() {
             if (currentLat === 0) { alert("GPS 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
             document.getElementById('incidentModal').style.display = 'flex';
@@ -330,7 +335,6 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
-        // 💡 A코스: 선택한 상황을 서버에 전송하기
         function submitIncident(incidentType) {
             database.ref('live_incidents').push({ 
                 route: myRoute, 
@@ -338,10 +342,10 @@
                 lon: currentLon, 
                 time: new Date().toLocaleTimeString(), 
                 timestamp_ms: Date.now(),
-                type: incidentType // 어떤 사고인지 종류도 같이 보냄!
+                type: incidentType 
             });
-            closeIncidentModal(); // 창 닫기
-            speakText(incidentType + " 제보가 완료되었습니다.", 1); // 안내 멘트
+            closeIncidentModal(); 
+            speakText(incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
         function startGPS() {
@@ -467,18 +471,17 @@
                 const data = snapshot.val(); if(data) {
                     const now = Date.now();
                     for(let key in data) {
+                        // 💡 돌발상황 제보 후 30분(1800000 밀리초) 지나면 자동 삭제!
                         const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
                             announcedIncidents.add(key); 
-                            // 💡 어떤 사고인지 더 구체적으로 말해줍니다!
                             const typeMsg = inc.type ? inc.type : "돌발 상황";
                             speakText("전방에, " + typeMsg + " 제보가 있습니다."); 
                         }
 
                         const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
-                        // 💡 옛날 데이터(type 없는 것)는 기본값 처리, 새 데이터는 구체적으로 표시
                         const displayType = inc.type || "⚠️ 돌발상황"; 
                         const content = `<div class="incident-marker">${displayType}<br><span style="font-size:10px;">${inc.time}</span></div>`;
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
@@ -498,6 +501,11 @@
                 if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
                 window.location.reload(); 
             }
+        }
+
+        // 💡 잃어버린 설치 안내창 띄우기 함수 복구!
+        function showInstallGuide() {
+            alert("현재 인터넷 창에서는 자동 설치 팝업을 띄울 수 없습니다.\n\n화면 우측 상단(점 3개) 또는 하단 메뉴에서\n[홈 화면에 추가] 버튼을 직접 눌러주세요!");
         }
     </script>
 </body>
