@@ -50,8 +50,8 @@
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
         
-        /* 💡 B코스: 응원 전광판 CSS */
-        .marquee-wrapper { position: absolute; top: 95px; left: 15px; right: 15px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+                /* 💡 B코스: 응원 전광판 CSS (위치 아래로 넉넉하게 내림!) */
+        .marquee-wrapper { position: absolute; top: 125px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
 
@@ -467,7 +467,7 @@
                 const data = snapshot.val(); if(data) {
                     const now = Date.now();
                     for(let key in data) {
-                        const inc = data[key]; if (now - inc.timestamp_ms > 7200000) continue; 
+                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
