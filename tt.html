@@ -42,23 +42,23 @@
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
-        /* 💡 상단 메뉴 초강력 다이어트 완료! */
-        .header-overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 2px; }
+        /* 💡 1. 상단 메뉴 여백 및 줄간격 완벽 제거! (초강력 다이어트) */
+        .header-overlay { position: absolute; top: 5px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 5px 10px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 3px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        .header-info h2 { margin: 0; font-size: 16px; color: #ff7f50; cursor: pointer; white-space: nowrap; } 
-        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 3px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; white-space: nowrap; }
-        .status-text { font-size: 12px; color: #ccc; white-space: nowrap; }
+        /* 💡 글씨 위아래로 쓸데없이 차지하는 공간(line-height)을 확 줄였습니다. */
+        .header-info h2 { margin: 0; font-size: 17px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } 
+        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
+        .status-text { font-size: 12px; color: #ccc; white-space: nowrap; line-height: 1.1; }
         
-        /* 💡 버튼 크기 살짝 다이어트 완료! */
         .btn-group { display: flex; gap: 6px; }
-        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 3px 8px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; }
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        /* 💡 전광판 위치 다이어트 된 메뉴에 맞춰 110px로 안 겹치게 셋팅! */
-        .marquee-wrapper { position: absolute; top: 110px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        /* 💡 2. 전광판 위치를 날씬해진 상단바에 맞춰 75px로 찰떡같이 끌어올림! */
+        .marquee-wrapper { position: absolute; top: 75px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         
@@ -155,9 +155,9 @@
     <div id="incidentModal">
         <div class="modal-content">
             <h3 style="color:#ff7f50; margin-top:0; margin-bottom:20px;">🚨 상황을 선택해주세요</h3>
-            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('🚧 포트홀 / 도로파손')">🚧 포트홀 / 도로파손</button>
-            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('⛔ 불법주차 / 막힘')">⛔ 불법주차 / 막힘</button>
-            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('💥 교통사고 / 정체')">💥 교통사고 / 정체</button>
+            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('🚗 정체')">🚗 정체</button>
+            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('🚧 불법 주차 및 공사')">🚧 불법 주차 및 공사</button>
+            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('📢 행사 및 집회')">📢 행사 및 집회</button>
             <button class="stop-btn" style="width:100%; padding:15px; margin-top:5px; font-size:16px;" onclick="closeIncidentModal()">취소</button>
         </div>
     </div>
