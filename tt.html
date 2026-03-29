@@ -24,7 +24,6 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
         
-        /* 💡 로그인 화면 디자인 럭셔리 튜닝 (재민님 원본 유지!) */
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 22px; }
@@ -37,28 +36,30 @@
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.97); }
         
-        /* 💡 홈 화면 설치 전용 버튼 디자인 (재민님 원본 유지!) */
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
         .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
+        
+        /* 💡 수정완료 1: 상단바 전체 박스 다이어트 (padding, gap 줄임) */
         .header-overlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 10px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 4px; }
-       .
         .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        .header-info h2 { margin: 0; font-size: 17px; color: #ff7f50; cursor: pointer; white-space: nowrap; } 
+        /* 💡 수정완료 2: 글씨 크기 살짝 줄임 */
+        .header-info h2 { margin: 0; font-size: 16px; color: #ff7f50; cursor: pointer; white-space: nowrap; } 
         .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 3px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; white-space: nowrap; }
-        .status-text { font-size: 13px; color: #ccc; white-space: nowrap; }
+        .status-text { font-size: 12px; color: #ccc; white-space: nowrap; }
         
+        /* 💡 수정완료 3: 버튼 위아래 여백 다이어트 */
         .btn-group { display: flex; gap: 6px; }
-        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 5px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        /* 💡 B코스: 응원 전광판 CSS (위치 130px로 넉넉히 내렸습니다!) */
-        .marquee-wrapper { position: absolute; top: 130px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        /* 💡 수정완료 4: 슬림해진 상단바에 맞춰 전광판 위치 끌어올림 (top: 90px) */
+        .marquee-wrapper { position: absolute; top: 90px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         
@@ -67,7 +68,6 @@
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
 
-        /* 💡 A코스: 돌발상황 제보 팝업창 CSS */
         #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal-content { background: #2c2c2e; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .modal-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; color: white; margin-bottom: 10px; cursor: pointer; }
@@ -160,17 +160,14 @@
     </div>
 
     <script>
-        // 💡 [홈 화면 설치 기능] 브라우저 설치 이벤트를 잡아둡니다.
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
         });
 
-        // 💡 버튼을 눌렀을 때 실행되는 설치 함수
         function installApp() {
             if (deferredPrompt) {
-                // 안드로이드 등 설치 지원 기기
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
@@ -179,7 +176,6 @@
                     deferredPrompt = null;
                 });
             } else {
-                // 아이폰 등 설치 팝업을 지원하지 않는 기기용 친절한 안내
                 alert("현재 인터넷 창에서는 자동 설치 팝업을 띄울 수 없습니다.\n\n화면 우측 상단(점 3개) 또는 하단 메뉴에서\n[홈 화면에 추가] 버튼을 직접 눌러주세요!");
             }
         }
@@ -238,7 +234,6 @@
             document.getElementById('userCount').innerText = `👥 ${count}명`;
         });
 
-        // 💡 음성 비서 함수
         function speakText(text, repeat = 2) {
             if (!window.speechSynthesis) return;
             const synth = window.speechSynthesis;
@@ -250,11 +245,10 @@
                 if (koVoice) utterance.voice = koVoice;
                 utterance.lang = 'ko-KR'; 
                 utterance.rate = 0.9; 
-                utterance.pitch = 1.0; // 
+                utterance.pitch = 1.0; 
                 synth.speak(utterance);
             }
         }
-
         
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -354,7 +348,6 @@
             sendMyLocation(); 
         }
 
-        // 💡 팝업창 열고 닫는 함수
         function openIncidentModal() {
             if (currentLat === 0) { alert("GPS 연결 중입니다. 잠시 후 다시 시도해주세요."); return; }
             document.getElementById('incidentModal').style.display = 'flex';
@@ -364,7 +357,6 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
-        // 💡 팝업창에서 선택한 내용을 저장하는 함수
         function submitIncident(incidentType) {
             database.ref('live_incidents').push({ 
                 route: myRoute, 
@@ -501,7 +493,6 @@
                 const data = snapshot.val(); if(data) {
                     const now = Date.now();
                     for(let key in data) {
-                        // 💡 30분 타이머 적용!
                         const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
                         if (!showAllRoutes && inc.route !== myRoute) continue;
 
