@@ -42,12 +42,10 @@
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
         
-        /* 💡 1. 상단 메뉴 여백 및 줄간격 완벽 제거! (초강력 다이어트) */
         .header-overlay { position: absolute; top: 5px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 5px 10px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 3px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        /* 💡 글씨 위아래로 쓸데없이 차지하는 공간(line-height)을 확 줄였습니다. */
         .header-info h2 { margin: 0; font-size: 17px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } 
         .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
         .status-text { font-size: 12px; color: #ccc; white-space: nowrap; line-height: 1.1; }
@@ -57,7 +55,7 @@
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        /* 💡 2. 전광판 위치를 날씬해진 상단바에 맞춰 75px로 찰떡같이 끌어올림! */
+        /* 💡 대장님이 직접 찾으신 전광판 황금 비율 115px 유지! */
         .marquee-wrapper { position: absolute; top: 115px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
@@ -74,8 +72,10 @@
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
+        /* 💡 신규 컬러(주황색: slow) 추가! */
         .bus-label { color: white; padding: 6px 12px; border-radius: 15px; font-weight: bold; font-size: 13px; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); white-space: nowrap; cursor: pointer; text-align: center; }
         .bus-label.jam { background-color: #ff4d4d; }
+        .bus-label.slow { background-color: #ff9900; } /* 40초 대기 중인 서행/정류장 상태 */
         .bus-label.good { background-color: #00cc44; }
         .bus-label.break { background-color: #666; border-color: #aaa; color: #eee; } 
         .bus-label.my-bus { border: 3px solid #ffe600; box-shadow: 0 0 10px rgba(255, 230, 0, 0.6); z-index: 10; } 
@@ -207,6 +207,10 @@
         let trackingBusId = null; 
         
         let isTrackingMe = true; 
+
+        // 💡 40초 정체 판별을 위한 핵심 변수 추가!
+        let slowStartTime = 0; 
+        let currentTrafficState = "good"; // good(녹색), slow(주황색), jam(빨간색)
 
         let appStartTime = Date.now();
         let announcedIncidents = new Set();
@@ -359,8 +363,15 @@
         function updateManualStatus() {
             const selectBox = document.getElementById('myManualStatus');
             manualStatus = selectBox.value;
-            if(manualStatus === "운행 중") { selectBox.style.color = "#00cc44"; selectBox.style.borderColor = "#00cc44"; currentStatusText = (currentSpeed <= 20) ? "정체/서행" : "정상 주행"; } 
-            else { selectBox.style.color = "#ffcc00"; selectBox.style.borderColor = "#ffcc00"; currentStatusText = manualStatus; }
+            // 💡 여기서 상태 업데이트하는 부분은 아래 startGPS()에서 통합 관리합니다.
+            if(manualStatus !== "운행 중") { 
+                selectBox.style.color = "#ffcc00"; 
+                selectBox.style.borderColor = "#ffcc00"; 
+                currentStatusText = manualStatus; 
+            } else {
+                selectBox.style.color = "#00cc44"; 
+                selectBox.style.borderColor = "#00cc44";
+            }
             sendMyLocation(); 
         }
 
@@ -391,8 +402,29 @@
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
                     currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
-                    if (manualStatus === "운행 중") currentStatusText = (currentSpeed <= 20) ? "정체/서행" : "정상 주행";
-                    else currentStatusText = manualStatus;
+                    
+                    // 💡 [핵심] 정류장 정차 vs 진짜 정체 판별 알고리즘 (40초 룰)
+                    if (currentSpeed > 15) {
+                        slowStartTime = 0; // 15km/h 넘으면 카운터 초기화
+                        currentTrafficState = "good"; // 녹색
+                    } else {
+                        if (slowStartTime === 0) slowStartTime = Date.now(); // 15km/h 이하로 떨어지면 타이머 시작!
+                        
+                        if (Date.now() - slowStartTime > 40000) {
+                            currentTrafficState = "jam"; // 40초 넘게 멈춰있으면 진짜 정체(빨간색)
+                        } else {
+                            currentTrafficState = "slow"; // 40초 전까지는 정류장 정차/서행(주황색)
+                        }
+                    }
+
+                    // 💡 상태창 텍스트 업데이트
+                    if (manualStatus === "운행 중") {
+                        if (currentTrafficState === "good") currentStatusText = "정상 주행";
+                        else if (currentTrafficState === "slow") currentStatusText = "서행/정차";
+                        else currentStatusText = "정체 (40초+)";
+                    } else {
+                        currentStatusText = manualStatus; // 기사님이 식사/가스충전 누르셨을 때
+                    }
 
                     document.getElementById('topStatus').innerText = `내 속도: ${currentSpeed}km/h`;
                     
@@ -417,7 +449,8 @@
             });
 
             if (now - lastTailTime > 15000) {
-                database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, time: now });
+                // 💡 서버에 꼬리 정보 보낼 때 방금 계산한 '현재 교통 상태(state)'도 같이 보냅니다!
+                database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, state: currentTrafficState, time: now });
                 lastTailTime = now;
                 let cutoff = now - 1800000;
                 database.ref('live_tails/' + myBusId).orderByChild('time').endAt(cutoff).once('value', snapshot => { snapshot.forEach(child => { child.ref.remove(); }); });
@@ -442,19 +475,24 @@
                 if (bus.lat && bus.lon) {
                     const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                     let isMyBus = (key === myBusId) ? " my-bus" : "";
-                    let labelColor = "good"; let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
                     
-                    if (bus.status.includes("정체")) labelColor = "jam";
+                    // 💡 버스 아이콘 색깔을 3단계로 분리!
+                    let labelColor = "good"; 
+                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; // 빨간색
+                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; // 주황색
+                    
+                    let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
+                    
                     if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { labelColor = "break"; displayStatus = bus.status; }
                     
-                    if (bus.stopStartTime && bus.speed <= 3 && bus.status === "정체/서행") {
+                    if (bus.stopStartTime && bus.speed <= 3 && bus.status.includes("정체")) {
                         let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
-                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style="color:#ffe6e6; font-size:11px;">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
+                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style=\"color:#ffe6e6; font-size:11px;\">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
                     }
                     
                     let contentHtml = document.createElement('div');
                     contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
-                    contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style="font-size:11px; font-weight:normal;">${displayStatus}</span>${stopTimerText}`;
+                    contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style=\"font-size:11px; font-weight:normal;\">${displayStatus}</span>${stopTimerText}`;
                     contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
 
                     if (busMarkers[key]) {
@@ -498,7 +536,13 @@
                     for (let i = 1; i < points.length; i++) {
                         let p1 = points[i-1]; let p2 = points[i];
                         if (p2.time - p1.time > 300000) continue;
-                        let lineColor = p2.speed <= 20 ? '#ff4d4d' : '#00cc44';
+                        
+                        // 💡 꼬리 선 색깔도 3단계로 분리해서 그립니다!
+                        let lineColor = '#00cc44'; // 기본은 녹색 (good)
+                        if (p2.state === 'jam') lineColor = '#ff4d4d'; // 진짜 정체는 빨간색
+                        else if (p2.state === 'slow') lineColor = '#ff9900'; // 정차/서행은 주황색
+                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; // (구버전 호환용)
+
                         let polyline = new kakao.maps.Polyline({ path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)], strokeWeight: 6, strokeColor: lineColor, strokeOpacity: 0.7, strokeStyle: 'solid' });
                         polyline.setMap(map); tailPolylines.push(polyline);
                     }
@@ -523,7 +567,7 @@
 
                         const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
                         const displayType = inc.type || "⚠️ 돌발상황"; 
-                        const content = `<div class="incident-marker">${displayType}<br><span style="font-size:10px;">${inc.time}</span></div>`;
+                        const content = `<div class=\"incident-marker\">${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
                         overlay.setMap(map); incidentMarkers[key] = overlay;
                     }
