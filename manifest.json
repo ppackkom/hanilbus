@@ -1,16 +1,15 @@
 {
-  "name": "한일운수 도로정보",
-  "short_name": "한일도로정보",
-  "description": "한일교통 노선 실시간 상황 공유 앱",
+  "name": "한일운수 스마트 상황판",
+  "short_name": "한일상황판",
   "start_url": "tt.html",
   "display": "standalone",
   "background_color": "#1a1a1c",
   "theme_color": "#1a1a1c",
-  "icons": [
+    "icons": [
     {
-      "src": "https://img.icons8.com/fluency/512/bus.png",
+      "src": "https://img.icons8.com/fluency/512/bus.png", 
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
-}
+
