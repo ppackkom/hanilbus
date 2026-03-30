@@ -27,14 +27,13 @@
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* 💡 1. 첫 화면 글자 크기 대폭 확대! */
-        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 26px; } /* 제목 크기 키움 */
+        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 26px; } 
         .input-group { margin-bottom: 25px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } /* 라벨 크기 키움 */
-        .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-weight: bold; } /* 입력창 크기 키움 */
+        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } 
+        .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-weight: bold; } 
         .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 10px rgba(255, 127, 80, 0.4); background-color: #3a3a3c; }
         
-        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; } /* 시작 버튼 크기 키움 */
+        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; } 
         .start-btn:active { transform: scale(0.97); }
         
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
@@ -42,7 +41,6 @@
 
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         
-        /* 💡 5. 카카오 맵 야간 모드(다크 모드) 마법 필터! */
         #map { width: 100%; height: 100%; z-index: 1; transition: filter 1s ease; }
         .dark-map { filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%) grayscale(20%); }
         
@@ -50,17 +48,15 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        /* 💡 4. 상단 메뉴판 글자 큼직하게 확대! */
-        .header-info h2 { margin: 0; font-size: 22px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } /* 609번 글씨 커짐 */
+        .header-info h2 { margin: 0; font-size: 22px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } 
         .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 15px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
-        .status-text { font-size: 15px; color: #ccc; white-space: nowrap; line-height: 1.1; font-weight: bold; } /* 내 속도 글씨 커짐 */
+        .status-text { font-size: 15px; color: #ccc; white-space: nowrap; line-height: 1.1; font-weight: bold; } 
         
         .btn-group { display: flex; gap: 8px; }
-        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } /* 버튼 글씨 커짐 */
+        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } 
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        /* 💡 상단 메뉴가 뚱뚱해졌으니 전광판 위치를 115px -> 135px 로 조정! */
         .marquee-wrapper { position: absolute; top: 135px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
@@ -70,12 +66,18 @@
         .report-btn { background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4); transition: transform 0.1s; }
         .report-btn:active { transform: scale(0.95); }
 
-        #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal-content { background: #2c2c2e; padding: 30px 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 360px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* 💡 2. 제보 버튼 메뉴 글씨 크고 진하게! */
         .modal-content h3 { color:#ff7f50; margin-top:0; margin-bottom:25px; font-size: 24px; font-weight: 900; }
         .modal-btn { width: 100%; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; border: none; color: white; margin-bottom: 15px; cursor: pointer; }
+
+        /* 💡 관리자 전용 모달창 스타일 추가 */
+        .admin-section { margin-bottom: 20px; text-align: left; background: #1a1a1c; padding: 15px; border-radius: 10px; }
+        .admin-section h4 { color: #00cc44; margin-top: 0; margin-bottom: 10px; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .admin-input { width: 100%; padding: 10px; font-size: 14px; border-radius: 8px; border: 1px solid #555; background: #333; color: white; box-sizing: border-box; margin-bottom: 10px; }
+        .admin-small-btn { background: #005ce6; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+        .log-list { max-height: 120px; overflow-y: auto; font-size: 13px; color: #ccc; line-height: 1.5; }
 
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
@@ -135,7 +137,7 @@
         </div>
         
         <div class="marquee-wrapper">
-            <div class="marquee-text">🚌 동료들과 함께 오늘도 안전운행! 식사 든든하게 챙겨 드시고, 무사고 화이팅입니다! 🚍</div>
+            <div class="marquee-text" id="mainMarqueeText">🚌 동료들과 함께 오늘도 안전운행! 식사 든든하게 챙겨 드시고, 무사고 화이팅입니다! 🚍</div>
         </div>
 
         <div id="trackAlert" onclick="cancelTracking()">
@@ -159,13 +161,37 @@
         </div>
     </div>
 
-    <div id="incidentModal">
+    <div id="incidentModal" class="modal-overlay">
         <div class="modal-content">
             <h3>🚨 상황을 선택해주세요</h3>
             <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('정체')">🚗 정체</button>
             <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('공사중')">🚧 공사중</button>
             <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('사고')">💥 사고</button>
             <button class="stop-btn" style="width:100%; padding:20px; margin-top:5px; font-size:20px; font-weight:900; border-radius:12px;" onclick="closeIncidentModal()">취소</button>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h3 style="color:#00cc44;">👑 최고 관리자 모드</h3>
+            
+            <div class="admin-section">
+                <h4>📝 전광판 문구 실시간 변경</h4>
+                <input type="text" id="adminMarqueeInput" class="admin-input" placeholder="새로운 전광판 문구 입력">
+                <button class="admin-small-btn" onclick="saveMarqueeText()">전광판 띄우기 🚀</button>
+            </div>
+
+            <div class="admin-section">
+                <h4>📋 오늘 접속 차량 명단 (출근부)</h4>
+                <div id="dailyLogList" class="log-list">기록을 불러오는 중...</div>
+            </div>
+
+            <div class="admin-section">
+                <h4>🧹 서버 관리</h4>
+                <button class="admin-small-btn" style="background:#cc0000;" onclick="cleanUpGhostBuses()">유령 버스(에러 데이터) 삭제</button>
+            </div>
+
+            <button class="stop-btn" style="width:100%; padding:15px; font-size:18px; border-radius:12px;" onclick="closeAdminModal()">닫기</button>
         </div>
     </div>
 
@@ -216,7 +242,6 @@
         let currentLat = 0, currentLon = 0, currentSpeed = 0, manualStatus = "운행 중";
         let currentStatusText = "대기중";
         
-        // 💡 3. 평균 속도 계산을 위한 변수 추가!
         let totalSpeed = 0;
         let speedCount = 0;
         let avgSpeed = 0;
@@ -243,8 +268,11 @@
 
         let adminClickCount = 0;
         let adminClickTimer = null;
-
         let gpsAlerted = false; 
+
+        // 💡 오늘 날짜 문자열 구하기 (예: 2026-03-31)
+        const todayObj = new Date();
+        const dateKey = todayObj.getFullYear() + "-" + String(todayObj.getMonth() + 1).padStart(2, '0') + "-" + String(todayObj.getDate()).padStart(2, '0');
 
         const liveConnectionsRef = database.ref('live_connections');
         const connectedRef = database.ref('.info/connected');
@@ -299,7 +327,6 @@
             }
         }
 
-        // 💡 5. 다크 모드 (야간 모드) 체크 함수! (저녁 6시 ~ 아침 7시)
         function checkDarkMode() {
             const hour = new Date().getHours();
             const mapEl = document.getElementById('map');
@@ -328,9 +355,21 @@
             database.ref('live_buses/' + myBusId).onDisconnect().remove();
             database.ref('live_tails/' + myBusId).onDisconnect().remove();
 
+            // 💡 1. 앱 시작 시 오늘의 출근부에 기록 남기기!
+            database.ref('daily_logs/' + dateKey + '/' + myBusId).set({
+                route: myRoute,
+                vehicle: myVehicle,
+                time: new Date().toLocaleTimeString()
+            });
+
+            // 💡 2. 관리자가 변경한 전광판 문구 실시간으로 받아오기!
+            database.ref('admin_settings/marquee_text').on('value', snap => {
+                const text = snap.val();
+                if (text) { document.getElementById('mainMarqueeText').innerText = text; }
+            });
+
             if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
 
-            // 다크 모드 실행 및 1분마다 체크!
             checkDarkMode();
             setInterval(checkDarkMode, 60000);
 
@@ -382,15 +421,53 @@
             if(lastFirebaseData) renderBuses(lastFirebaseData);
         }
 
+        // 💡 관리자 모드 창 열기 (5번 탭)
         function handleAdminClick() {
             adminClickCount++;
             clearTimeout(adminClickTimer);
-            if (adminClickCount >= 5) { cleanUpGhostBuses(); adminClickCount = 0; } 
+            if (adminClickCount >= 5) { 
+                openAdminModal(); 
+                adminClickCount = 0; 
+            } 
             else { adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000); }
         }
 
+        function openAdminModal() {
+            document.getElementById('adminModal').style.display = 'flex';
+            
+            // 기존 전광판 문구 인풋창에 채워넣기
+            document.getElementById('adminMarqueeInput').value = document.getElementById('mainMarqueeText').innerText;
+            
+            // 오늘의 출근부 리스트 불러오기
+            const listDiv = document.getElementById('dailyLogList');
+            listDiv.innerHTML = '불러오는 중...';
+            database.ref('daily_logs/' + dateKey).once('value', snap => {
+                const logs = snap.val();
+                if (!logs) { listDiv.innerHTML = '오늘 접속한 동료가 없습니다.'; return; }
+                let html = '<ul>';
+                for (let key in logs) {
+                    html += `<li>${logs[key].route}번 [${logs[key].vehicle}] - ${logs[key].time} 접속</li>`;
+                }
+                html += '</ul>';
+                listDiv.innerHTML = html;
+            });
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        // 💡 관리자가 전광판 문구 변경 시 서버로 저장
+        function saveMarqueeText() {
+            const newText = document.getElementById('adminMarqueeInput').value.trim();
+            if (newText) {
+                database.ref('admin_settings/marquee_text').set(newText);
+                alert("성공! 접속 중인 모든 기사님의 전광판이 즉시 변경됩니다.");
+            }
+        }
+
         function cleanUpGhostBuses() {
-            if(!confirm("⚠️ [관리자 전용] 서버의 모든 유령 버스(오래된 데이터)를 강제 삭제하시겠습니까?")) return;
+            if(!confirm("⚠️ 서버의 모든 유령 버스(오래된 데이터)를 강제 삭제하시겠습니까?")) return;
             database.ref('live_buses').once('value', snap => {
                 let data = snap.val();
                 if(!data) { alert("현재 지도에 등록된 버스가 없습니다."); return; }
@@ -401,7 +478,7 @@
                         database.ref('live_buses/' + key).remove(); database.ref('live_tails/' + key).remove(); deletedCount++;
                     }
                 }
-                alert(`🧹 서버 청소 완료!\n총 ${deletedCount}대의 유령 버스를 삭제했습니다.`);
+                alert(`🧹 청소 완료! 총 ${deletedCount}대의 유령 버스를 삭제했습니다.`);
             });
         }
 
@@ -506,7 +583,6 @@
                 function(position) {
                     currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
                     
-                    // 💡 평균 속도 누적 계산 (운행 중일 때만 계산해서 평균을 안 깎아 먹게!)
                     if (manualStatus === "운행 중") {
                         totalSpeed += currentSpeed;
                         speedCount++;
@@ -534,7 +610,6 @@
                         currentStatusText = manualStatus; 
                     }
 
-                    // 💡 상단 메뉴바에 현재 속도와 평균 속도를 함께 띄워줍니다!
                     document.getElementById('topStatus').innerText = `속도: ${currentSpeed}km/h (평균: ${avgSpeed})`;
                     
                     if (isTrackingMe && trackingBusId === null) {
@@ -558,167 +633,3 @@
                 }, 
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 } 
             );
-        }
-
-        function sendMyLocation() {
-            if (currentLat === 0) return;
-            let now = Date.now();
-
-            if (currentSpeed <= 3 && manualStatus === "운행 중") { if (!stopStartTime) stopStartTime = now; } 
-            else { stopStartTime = null; }
-
-            database.ref('live_buses/' + myBusId).set({
-                route: myRoute, vehicle: myVehicle, status: currentStatusText, speed: currentSpeed, lat: currentLat, lon: currentLon, 
-                timestamp: new Date().toLocaleTimeString(), last_update_ms: now, stopStartTime: stopStartTime 
-            });
-
-            if (now - lastTailTime > 15000) {
-                database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, state: currentTrafficState, time: now });
-                lastTailTime = now;
-                let cutoff = now - 1800000;
-                database.ref('live_tails/' + myBusId).orderByChild('time').endAt(cutoff).once('value', snapshot => { snapshot.forEach(child => { child.ref.remove(); }); });
-            }
-        }
-
-        function startReceivingData() {
-            database.ref('live_buses').on('value', (snapshot) => { lastFirebaseData = snapshot.val(); renderBuses(lastFirebaseData); });
-        }
-
-        function renderBuses(data) {
-            let nowMs = Date.now();
-
-            for (const key in busMarkers) { if (!data || !data[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } }
-            if (!data) return;
-
-            for (const key in data) {
-                const bus = data[key];
-                if (!bus.last_update_ms || (nowMs - bus.last_update_ms > 600000)) { if (busMarkers[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } continue; }
-                if (!showAllRoutes && bus.route !== myRoute && key !== myBusId) { if (busMarkers[key]) { busMarkers[key].setMap(null); } continue; }
-
-                if (bus.lat && bus.lon) {
-                    const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
-                    let isMyBus = (key === myBusId) ? " my-bus" : "";
-                    
-                    let labelColor = "good"; 
-                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; 
-                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; 
-                    
-                    let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
-                    
-                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { labelColor = "break"; displayStatus = bus.status; }
-                    
-                    if (bus.stopStartTime && bus.speed <= 3 && bus.status.includes("정체")) {
-                        let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
-                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style=\"color:#ffe6e6; font-size:11px;\">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
-                    }
-                    
-                    let contentHtml = document.createElement('div');
-                    contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
-                    contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style=\"font-size:11px; font-weight:normal;\">${displayStatus}</span>${stopTimerText}`;
-                    contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
-
-                    if (busMarkers[key]) {
-                        busMarkers[key].setMap(map); busMarkers[key].setPosition(pos); busMarkers[key].setContent(contentHtml);
-                        if(isMyBus) busMarkers[key].setZIndex(20);
-                    } else {
-                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
-                        overlay.setMap(map); busMarkers[key] = overlay;
-                        if(isMyBus) overlay.setZIndex(20);
-                    }
-
-                    if (trackingBusId === key && currentLat !== 0) {
-                        const distInMeters = getDistance(currentLat, currentLon, bus.lat, bus.lon);
-                        if (lastTrackedStatus !== bus.status) {
-                            if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { speakText(`앞차가, ${bus.status} 상태로 변경되었습니다.`); } 
-                            else if (bus.status.includes("정체") && !lastTrackedStatus.includes("정체")) { geocoder.coord2RegionCode(bus.lon, bus.lat, function(result, status) { if (status === kakao.maps.services.Status.OK) { speakText(`앞차가, ${result[0].region_3depth_name} 부근에서 정체 중입니다.`); } }); }
-                            lastTrackedStatus = bus.status;
-                        }
-                        if (distInMeters < 300) { if (!tooCloseWarned) { speakText("주의, 앞차와의 간격이 너무 가깝습니다."); tooCloseWarned = true; } } else if (distInMeters > 500) { tooCloseWarned = false; }
-                        let distText = distInMeters >= 1000 ? (distInMeters / 1000).toFixed(1) + " km" : distInMeters + " m";
-                        document.getElementById('trackTitle').innerText = `👀 ${bus.route}번 [${bus.vehicle}] 앞차 간격`; document.getElementById('trackDist').innerText = distText;
-                        const bounds = new kakao.maps.LatLngBounds(); bounds.extend(new kakao.maps.LatLng(currentLat, currentLon)); bounds.extend(pos); map.setBounds(bounds, 50, 50, 50, 50); 
-                    }
-                }
-            }
-        }
-
-        function loadTails() {
-            database.ref('live_tails').on('value', (snapshot) => {
-                tailPolylines.forEach(line => line.setMap(null)); tailPolylines = [];
-                let data = snapshot.val(); if (!data) return;
-                let now = Date.now(); let cutoff = now - 1800000; 
-
-                for (let busId in data) {
-                    let busRoute = busId.split('_')[0];
-                    if (!showAllRoutes && busRoute !== myRoute && busId !== myBusId) continue;
-
-                    let points = Object.values(data[busId]).filter(p => p.time > cutoff).sort((a,b) => a.time - b.time);
-                    if (points.length < 2) continue;
-
-                    for (let i = 1; i < points.length; i++) {
-                        let p1 = points[i-1]; let p2 = points[i];
-                        if (p2.time - p1.time > 300000) continue;
-                        
-                        let lineColor = '#00cc44'; 
-                        if (p2.state === 'jam') lineColor = '#ff4d4d'; 
-                        else if (p2.state === 'slow') lineColor = '#ff9900'; 
-                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; 
-
-                        let polyline = new kakao.maps.Polyline({ path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)], strokeWeight: 6, strokeColor: lineColor, strokeOpacity: 0.7, strokeStyle: 'solid' });
-                        polyline.setMap(map); tailPolylines.push(polyline);
-                    }
-                }
-            });
-        }
-
-        function loadIncidents() {
-            database.ref('live_incidents').on('value', (snapshot) => {
-                for(let k in incidentMarkers) incidentMarkers[k].setMap(null); incidentMarkers = {};
-                const data = snapshot.val(); if(data) {
-                    const now = Date.now();
-                    for(let key in data) {
-                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
-                        if (!showAllRoutes && inc.route !== myRoute) continue;
-
-                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
-                            announcedIncidents.add(key); 
-                            speakText("전방에, " + inc.type + " 제보가 있습니다."); 
-                        }
-
-                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
-                        const displayType = inc.type || "⚠️ 돌발상황"; 
-                        const content = `<div class=\"incident-marker\">🚨 ${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
-                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
-                        overlay.setMap(map); incidentMarkers[key] = overlay;
-                    }
-                }
-            });
-        }
-
-        function startTrackingBus(busKey, route, vehicle) { 
-            if (busKey === myBusId) { alert("내 차를 추적할 수는 없습니다!"); return; } 
-            trackingBusId = busKey; 
-            isTrackingMe = false; 
-            document.getElementById('myLocationBtn').style.display = 'block'; 
-            
-            lastTrackedStatus = ""; tooCloseWarned = false; 
-            document.getElementById('trackAlert').style.display = 'block'; 
-            speakText(`${route}번 버스 추적을 시작합니다.`); 
-        }
-        
-        function cancelTracking() { 
-            trackingBusId = null; 
-            document.getElementById('trackAlert').style.display = 'none'; 
-        }
-        
-        function stopApp() {
-            if (confirm("운행을 종료하고 앱을 닫으시겠습니까?")) {
-                if (document.exitFullscreen) { document.exitFullscreen(); }
-                if (myBusId) { database.ref('live_buses/' + myBusId).remove(); database.ref('live_tails/' + myBusId).remove(); }
-                if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
-                window.location.reload(); 
-            }
-        }
-    </script>
-</body>
-</html>
