@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카카오 GPS 테스트</title>
+<style>
+  body{background:#0d1117;color:#e6edf3;font-family:'Noto Sans KR',sans-serif;padding:20px;max-width:480px;margin:0 auto;}
+  h2{color:#f97316;margin-bottom:20px;text-align:center;}
+  .card{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;margin-bottom:14px;}
+  .label{font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+  .value{font-size:16px;font-weight:700;color:#e6edf3;min-height:24px;}
+  .value.green{color:#22c55e;}
+  .value.orange{color:#f97316;}
+  .value.red{color:#ef4444;}
+  .value.blue{color:#3b82f6;}
+  button{width:100%;padding:16px;border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-gps{background:#f97316;color:white;}
+  .btn-voice{background:#22c55e;color:white;}
+  .btn-stop{background:#ef4444;color:white;}
+  .btn-clear{background:#21262d;color:#8b949e;border:1px solid #30363d;}
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+  .log{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:12px;max-height:200px;overflow-y:auto;font-size:12px;color:#8b949e;font-family:monospace;}
+  .log-item{padding:3px 0;border-bottom:1px solid #21262d;}
+  .log-item.ok{color:#22c55e;}
+  .log-item.err{color:#ef4444;}
+  .log-item.info{color:#3b82f6;}
+  .key-input{width:100%;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 12px;color:#e6edf3;font-size:14px;outline:none;box-sizing:border-box;margin-top:6px;}
+  .key-input:focus{border-color:#f97316;}
+  .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+  .dot-ok{background:#22c55e;}
+  .dot-err{background:#ef4444;}
+  .dot-wait{background:#8b949e;}
+  .result-big{font-size:22px;font-weight:900;color:#f97316;text-align:center;padding:12px;background:#21262d;border-radius:10px;margin-top:8px;min-height:40px;}
+</style>
+</head>
+<body>
+
+<h2>🚌 카카오 GPS 테스트</h2>
+
+<!-- API 키 입력 -->
+<div class="card">
+  <div class="label">카카오 REST API 키</div>
+  <input class="key-input" id="apiKey" type="text" placeholder="REST API 키를 입력하세요" oninput="saveKey()">
+  <div style="font-size:11px;color:#8b949e;margin-top:6px;">입력한 키는 이 기기에만 저장돼요</div>
+</div>
+
+<!-- 현재 GPS 좌표 -->
+<div class="card">
+  <div class="label">📍 현재 GPS 좌표</div>
+  <div class="value blue" id="coords">버튼을 눌러 위치를 가져오세요</div>
+</div>
+
+<!-- 카카오 버스정류장 결과 -->
+<div class="card">
+  <div class="label">🚏 카카오 버스정류장 검색 결과</div>
+  <div class="value" id="kakaoStop">-</div>
+  <div class="result-big" id="resultBig">-</div>
+</div>
+
+<!-- 카카오 주소 변환 결과 -->
+<div class="card">
+  <div class="label">🏠 카카오 주소 변환 결과</div>
+  <div class="value" id="kakaoAddr">-</div>
+</div>
+
+<!-- API 상태 -->
+<div class="card">
+  <div class="label">⚙️ API 연결 상태</div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+    <div><span class="status-dot dot-wait" id="dot1"></span><span id="status1" style="font-size:13px;">정류장 검색 API — 대기 중</span></div>
+    <div><span class="status-dot dot-wait" id="dot2"></span><span id="status2" style="font-size:13px;">주소 변환 API — 대기 중</span></div>
+    <div><span class="status-dot dot-wait" id="dot3"></span><span id="status3" style="font-size:13px;">GPS — 대기 중</span></div>
+  </div>
+</div>
+
+<!-- 버튼 -->
+<button class="btn-gps" id="btnGps" onclick="runTest()">
+  📍 GPS 위치 가져오기 + 카카오 검색
+</button>
+<button class="btn-voice" id="btnVoice" onclick="speakResult()" disabled>
+  🔊 결과 음성으로 읽어주기
+</button>
+<button class="btn-stop" onclick="stopVoice()">
+  ⏹️ 음성 중지
+</button>
+<button class="btn-clear" onclick="clearLog()">
+  🗑️ 로그 지우기
+</button>
+
+<!-- 로그 -->
+<div class="card">
+  <div class="label">📋 테스트 로그</div>
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+// ── 저장된 키 불러오기 ──────────────────────
+try{
+  var saved=localStorage.getItem('kakao_test_key');
+  if(saved) document.getElementById('apiKey').value=saved;
+}catch(e){}
+
+function saveKey(){
+  try{localStorage.setItem('kakao_test_key',document.getElementById('apiKey').value);}catch(e){}
+}
+
+// ── 로그 ────────────────────────────────────
+function log(msg,type){
+  type=type||'info';
+  var logDiv=document.getElementById('log');
+  var item=document.createElement('div');
+  item.className='log-item '+type;
+  var time=new Date().toLocaleTimeString('ko-KR');
+  item.textContent='['+time+'] '+msg;
+  logDiv.appendChild(item);
+  logDiv.scrollTop=logDiv.scrollHeight;
+}
+function clearLog(){document.getElementById('log').innerHTML='';}
+
+// ── 상태 업데이트 ────────────────────────────
+function setStatus(n,ok,msg){
+  var dot=document.getElementById('dot'+n);
+  var status=document.getElementById('status'+n);
+  dot.className='status-dot '+(ok===true?'dot-ok':ok===false?'dot-err':'dot-wait');
+  status.textContent=msg;
+}
+
+// ── 메인 테스트 함수 ─────────────────────────
+function runTest(){
+  var key=document.getElementById('apiKey').value.trim();
+  if(!key){
+    alert('REST API 키를 입력해 주세요!');
+    return;
+  }
+  var btn=document.getElementById('btnGps');
+  btn.disabled=true;
+  btn.innerHTML='⏳ 위치 가져오는 중...';
+
+  document.getElementById('coords').textContent='GPS 신호 수신 중...';
+  document.getElementById('kakaoStop').textContent='-';
+  document.getElementById('kakaoAddr').textContent='-';
+  document.getElementById('resultBig').textContent='-';
+  document.getElementById('btnVoice').disabled=true;
+
+  setStatus(3,null,'GPS — 신호 수신 중...');
+  log('GPS 위치 요청 시작','info');
+
+  if(!navigator.geolocation){
+    log('이 기기는 GPS를 지원하지 않아요','err');
+    setStatus(3,false,'GPS — 미지원');
+    btn.disabled=false;btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      var lat=pos.coords.latitude;
+      var lon=pos.coords.longitude;
+      var acc=Math.round(pos.coords.accuracy);
+
+      document.getElementById('coords').textContent=
+        '위도: '+lat.toFixed(6)+'  경도: '+lon.toFixed(6)+'\n정확도: ±'+acc+'m';
+      setStatus(3,true,'GPS — 수신 완료 (정확도 ±'+acc+'m)');
+      log('GPS 수신 완료: '+lat.toFixed(5)+', '+lon.toFixed(5)+' (±'+acc+'m)','ok');
+
+      btn.innerHTML='⏳ 카카오 API 검색 중...';
+
+      // 정류장 검색 + 주소 변환 동시 실행
+      var stopDone=false, addrDone=false;
+      var stopResult=null, addrResult=null;
+
+      function checkDone(){
+        if(!stopDone||!addrDone) return;
+        // 최종 결과 표시
+        var final=stopResult||addrResult||'위치를 확인할 수 없어요';
+        document.getElementById('resultBig').textContent=final;
+        log('최종 결과: '+final,'ok');
+        document.getElementById('btnVoice').disabled=false;
+        btn.disabled=false;
+        btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
+      }
+
+      // ① 버스정류장 검색
+      searchBusStop(key,lat,lon,function(result,raw){
+        stopDone=true;
+        if(result){
+          stopResult=result;
+          document.getElementById('kakaoStop').className='value green';
+          document.getElementById('kakaoStop').textContent=result;
+          if(raw) log('정류장 검색: '+raw.place_name+' ('+raw.distance+'m)','ok');
+          setStatus(1,true,'정류장 검색 API — 성공');
+        } else {
+          document.getElementById('kakaoStop').className='value red';
+          document.getElementById('kakaoStop').textContent='300m 내 버스정류장 없음';
+          setStatus(1,null,'정류장 검색 API — 정류장 없음');
+          log('300m 내 버스정류장 없음','info');
+        }
+        checkDone();
+      });
+
+      // ② 주소 변환
+      convertAddress(key,lat,lon,function(result){
+        addrDone=true;
+        if(result){
+          addrResult=result;
+          document.getElementById('kakaoAddr').className='value orange';
+          document.getElementById('kakaoAddr').textContent=result;
+          setStatus(2,true,'주소 변환 API — 성공');
+          log('주소 변환: '+result,'ok');
+        } else {
+          document.getElementById('kakaoAddr').className='value red';
+          document.getElementById('kakaoAddr').textContent='주소 변환 실패';
+          setStatus(2,false,'주소 변환 API — 실패');
+          log('주소 변환 실패','err');
+        }
+        checkDone();
+      });
+    },
+    function(err){
+      setStatus(3,false,'GPS — 실패');
+      btn.disabled=false;
+      btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
+      if(err.code===1){
+        log('위치 권한이 거부됐어요. 브라우저 설정에서 허용해 주세요.','err');
+        alert('위치 권한을 허용해 주세요!');
+      } else if(err.code===2){
+        log('GPS 신호를 받을 수 없어요. 실외에서 다시 시도해 주세요.','err');
+      } else {
+        log('GPS 시간 초과. 다시 시도해 주세요.','err');
+      }
+    },
+    {timeout:15000, enableHighAccuracy:true, maximumAge:0}
+  );
+}
+
+// ── 버스정류장 검색 ──────────────────────────
+function searchBusStop(key,lat,lon,cb){
+  var url='https://dapi.kakao.com/v2/local/search/category.json' +
+    '?category_group_code=SW8' +
+    '&x='+lon+'&y='+lat +
+    '&radius=300&sort=distance&size=5';
+
+  log('정류장 검색 API 호출 중...','info');
+
+  fetch(url,{headers:{'Authorization':'KakaoAK '+key}})
+  .then(function(r){
+    if(r.status===401){
+      setStatus(1,false,'정류장 검색 API — 키 오류 (401)');
+      log('API 키 오류! REST API 키가 맞는지 확인하고 플랫폼에 도메인이 등록됐는지 확인해 주세요.','err');
+      cb(null,null);return Promise.reject('401');
+    }
+    if(!r.ok){
+      log('API 오류: HTTP '+r.status,'err');
+      cb(null,null);return Promise.reject(r.status);
+    }
+    return r.json();
+  })
+  .then(function(data){
+    var docs=data.documents;
+    if(!docs||docs.length===0){cb(null,null);return;}
+
+    // 가장 가까운 정류장
+    var stop=docs[0];
+    var dist=parseInt(stop.distance||0);
+    var name=stop.place_name
+      .replace('버스정류장','').replace('정류장','')
+      .replace('버스승강장','').replace('승강장','').trim();
+
+    // 전체 결과 로그
+    for(var i=0;i<Math.min(docs.length,3);i++){
+      log('  '+(i+1)+'. '+docs[i].place_name+' ('+docs[i].distance+'m)','info');
+    }
+
+    var label='';
+    if(dist<=80) label=name+' 앞';
+    else if(dist<=200) label=name+' 부근';
+    else label=name+' 방향';
+
+    cb(label,stop);
+  })
+  .catch(function(e){
+    if(e!=='401') log('정류장 검색 오류: '+e,'err');
+    cb(null,null);
+  });
+}
+
+// ── 주소 변환 ────────────────────────────────
+function convertAddress(key,lat,lon,cb){
+  var url='https://dapi.kakao.com/v2/local/geo/coord2address.json?x='+lon+'&y='+lat;
+
+  log('주소 변환 API 호출 중...','info');
+
+  fetch(url,{headers:{'Authorization':'KakaoAK '+key}})
+  .then(function(r){
+    if(r.status===401){
+      log('주소 변환 API 키 오류 (401)','err');
+      cb(null);return Promise.reject('401');
+    }
+    if(!r.ok){cb(null);return Promise.reject(r.status);}
+    return r.json();
+  })
+  .then(function(data){
+    var docs=data.documents;
+    if(!docs||docs.length===0){cb(null);return;}
+    var addr=docs[0];
+    if(addr.road_address&&addr.road_address.road_name){
+      cb(addr.road_address.road_name+' 부근');
+    } else if(addr.address){
+      cb(addr.address.region_3depth_name+' 부근');
+    } else {
+      cb(null);
+    }
+  })
+  .catch(function(e){
+    if(e!=='401') log('주소 변환 오류: '+e,'err');
+    cb(null);
+  });
+}
+
+// ── 음성 ────────────────────────────────────
+function speakResult(){
+  var result=document.getElementById('resultBig').textContent;
+  if(!result||result==='-'){alert('먼저 GPS 테스트를 해주세요!');return;}
+  if(!window.speechSynthesis){alert('이 브라우저는 음성을 지원하지 않아요');return;}
+
+  window.speechSynthesis.cancel();
+  var text='현재 위치는 '+result+' 입니다.';
+  var u=new SpeechSynthesisUtterance(text);
+  u.lang='ko-KR';u.rate=0.9;u.volume=1.0;
+
+  var voices=window.speechSynthesis.getVoices();
+  for(var i=0;i<voices.length;i++){
+    if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}
+  }
+  window.speechSynthesis.speak(u);
+  log('음성 재생: '+text,'ok');
+}
+
+function stopVoice(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  log('음성 중지','info');
+}
+
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};
+}
+</script>
+</body>
+</html>
