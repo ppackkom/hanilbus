@@ -153,9 +153,9 @@
     <div id="incidentModal">
         <div class="modal-content">
             <h3 style="color:#ff7f50; margin-top:0; margin-bottom:20px;">🚨 상황을 선택해주세요</h3>
-            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('🚗 정체')">🚗 정체</button>
-            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('🚧 불법 주차 및 공사')">🚧 불법 주차 및 공사</button>
-            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('📢 행사 및 집회')">📢 행사 및 집회</button>
+            <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('정체')">🚗 정체</button>
+            <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('공사중')">🚧 공사중</button>
+            <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('사고')">💥 사고</button>
             <button class="stop-btn" style="width:100%; padding:15px; margin-top:5px; font-size:16px;" onclick="closeIncidentModal()">취소</button>
         </div>
     </div>
@@ -193,7 +193,6 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
-        // 💡 ps(Places) 객체 추가 선언
         let map, geocoder, ps, wakeLock = null;
         let watchId = null, serverTimer = null;
         let myRoute = "", myVehicle = "", myBusId = "";
@@ -298,6 +297,15 @@
 
             requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
+            
+            // 💡 1분마다 서버를 검사해서 30분이 지난 돌발상황을 '완전히 삭제'하는 로봇 가동!
+            setInterval(function() {
+                let thirtyMinsAgo = Date.now() - 1800000;
+                database.ref('live_incidents').orderByChild('timestamp_ms').endAt(thirtyMinsAgo).once('value', snapshot => {
+                    snapshot.forEach(child => child.ref.remove());
+                });
+            }, 60000);
+
             setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!",1); }, 1000);
         }
 
@@ -313,7 +321,7 @@
             });
             
             geocoder = new kakao.maps.services.Geocoder(); 
-            ps = new kakao.maps.services.Places(); // 💡 장소 검색(버스정류장 탐색용) 객체 초기화!
+            ps = new kakao.maps.services.Places(); 
         }
 
         function resumeTrackingMe() {
@@ -383,42 +391,32 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
-        // 🚀 [핵심 업데이트] 버튼 하나로 정류장/동네 찾고 서버 전송 + 음성 안내까지 원스톱!
+        // 💡 정류장 검색 능력 향상! (좌표 정확히 입력 & 반경 500m로 확대)
         function submitIncident(incidentType) {
             if (currentLat === 0) return;
             
-            const locPosition = new kakao.maps.LatLng(currentLat, currentLon);
-            
-            // 💡 플랜 A: 반경 300m 이내에서 '버스정류장' 검색
-            ps.keywordSearch('버스정류장', function(data, status, pagination) {
+            ps.keywordSearch('버스정류장', function(data, status) {
                 if (status === kakao.maps.services.Status.OK && data.length > 0) {
-                    // 가장 가까운 정류장 이름 가져오기
-                    let stationName = data[0].place_name;
-                    // "수송교회앞 버스정류장" -> "수송교회앞" 처럼 글자 깔끔하게 다듬기
-                    stationName = stationName.replace(/ 버스정류장| 정류장|버스정류장|정류장/g, '').trim();
-                    
+                    let stationName = data[0].place_name.replace(/ 버스정류장| 정류장|버스정류장|정류장/g, '').trim();
                     finalizeIncident(incidentType, stationName + " 부근");
                 } else {
-                    // 💡 플랜 B: 정류장이 안 잡히면 '법정동 이름(예: 성당동)'으로 검색
                     geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
                         if (status === kakao.maps.services.Status.OK) {
                             finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
                         } else {
-                            // 최후의 보루
                             finalizeIncident(incidentType, "현재 위치"); 
                         }
                     });
                 }
             }, {
-                location: locPosition,
-                radius: 300, 
+                x: currentLon,  // 경도를 명확하게 입력
+                y: currentLat,  // 위도를 명확하게 입력
+                radius: 500,    // 검색 반경을 300m에서 500m로 더 넓게!
                 sort: kakao.maps.services.SortBy.DISTANCE 
             });
         }
 
-        // 💡 최종적으로 서버에 올리고 음성으로 읽어주는 헬퍼 함수
         function finalizeIncident(incidentType, locationText) {
-            // "🚗 정체 (수송교회앞 부근)" 형태로 완성
             let finalMessage = incidentType + " (" + locationText + ")";
             
             database.ref('live_incidents').push({ 
@@ -431,8 +429,7 @@
             });
             
             closeIncidentModal(); 
-            
-            // "수송교회앞 부근, 🚗 정체 제보가 완료되었습니다" 읽어주기
+            // 💡 "수송교회앞 부근, 정체 제보가 완료되었습니다." 처럼 자연스럽게 말해줍니다!
             speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
@@ -595,13 +592,13 @@
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
                             announcedIncidents.add(key); 
-                            // 💡 여기서 나오는 음성은 다른 기사님들이 제보를 받았을 때 듣는 음성입니다.
+                            // 💡 "전방에, 정체 (수송교회앞 부근) 제보가 있습니다." 로 완벽하게 읽어줍니다.
                             speakText("전방에, " + inc.type + " 제보가 있습니다."); 
                         }
 
                         const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
                         const displayType = inc.type || "⚠️ 돌발상황"; 
-                        const content = `<div class=\"incident-marker\">${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
+                        const content = `<div class=\"incident-marker\">🚨 ${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
                         const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
                         overlay.setMap(map); incidentMarkers[key] = overlay;
                     }
