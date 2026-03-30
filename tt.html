@@ -55,7 +55,6 @@
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        /* 💡 대장님이 직접 찾으신 전광판 황금 비율 115px 유지! */
         .marquee-wrapper { position: absolute; top: 115px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
@@ -72,10 +71,9 @@
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
-        /* 💡 신규 컬러(주황색: slow) 추가! */
         .bus-label { color: white; padding: 6px 12px; border-radius: 15px; font-weight: bold; font-size: 13px; border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); white-space: nowrap; cursor: pointer; text-align: center; }
         .bus-label.jam { background-color: #ff4d4d; }
-        .bus-label.slow { background-color: #ff9900; } /* 40초 대기 중인 서행/정류장 상태 */
+        .bus-label.slow { background-color: #ff9900; } 
         .bus-label.good { background-color: #00cc44; }
         .bus-label.break { background-color: #666; border-color: #aaa; color: #eee; } 
         .bus-label.my-bus { border: 3px solid #ffe600; box-shadow: 0 0 10px rgba(255, 230, 0, 0.6); z-index: 10; } 
@@ -195,7 +193,8 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
-        let map, geocoder, wakeLock = null;
+        // 💡 ps(Places) 객체 추가 선언
+        let map, geocoder, ps, wakeLock = null;
         let watchId = null, serverTimer = null;
         let myRoute = "", myVehicle = "", myBusId = "";
         let currentLat = 0, currentLon = 0, currentSpeed = 0, manualStatus = "운행 중";
@@ -208,9 +207,8 @@
         
         let isTrackingMe = true; 
 
-        // 💡 40초 정체 판별을 위한 핵심 변수 추가!
         let slowStartTime = 0; 
-        let currentTrafficState = "good"; // good(녹색), slow(주황색), jam(빨간색)
+        let currentTrafficState = "good"; 
 
         let appStartTime = Date.now();
         let announcedIncidents = new Set();
@@ -313,7 +311,9 @@
                 isTrackingMe = false; 
                 document.getElementById('myLocationBtn').style.display = 'block'; 
             });
+            
             geocoder = new kakao.maps.services.Geocoder(); 
+            ps = new kakao.maps.services.Places(); // 💡 장소 검색(버스정류장 탐색용) 객체 초기화!
         }
 
         function resumeTrackingMe() {
@@ -363,7 +363,6 @@
         function updateManualStatus() {
             const selectBox = document.getElementById('myManualStatus');
             manualStatus = selectBox.value;
-            // 💡 여기서 상태 업데이트하는 부분은 아래 startGPS()에서 통합 관리합니다.
             if(manualStatus !== "운행 중") { 
                 selectBox.style.color = "#ffcc00"; 
                 selectBox.style.borderColor = "#ffcc00"; 
@@ -384,17 +383,57 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
+        // 🚀 [핵심 업데이트] 버튼 하나로 정류장/동네 찾고 서버 전송 + 음성 안내까지 원스톱!
         function submitIncident(incidentType) {
+            if (currentLat === 0) return;
+            
+            const locPosition = new kakao.maps.LatLng(currentLat, currentLon);
+            
+            // 💡 플랜 A: 반경 300m 이내에서 '버스정류장' 검색
+            ps.keywordSearch('버스정류장', function(data, status, pagination) {
+                if (status === kakao.maps.services.Status.OK && data.length > 0) {
+                    // 가장 가까운 정류장 이름 가져오기
+                    let stationName = data[0].place_name;
+                    // "수송교회앞 버스정류장" -> "수송교회앞" 처럼 글자 깔끔하게 다듬기
+                    stationName = stationName.replace(/ 버스정류장| 정류장|버스정류장|정류장/g, '').trim();
+                    
+                    finalizeIncident(incidentType, stationName + " 부근");
+                } else {
+                    // 💡 플랜 B: 정류장이 안 잡히면 '법정동 이름(예: 성당동)'으로 검색
+                    geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
+                        if (status === kakao.maps.services.Status.OK) {
+                            finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
+                        } else {
+                            // 최후의 보루
+                            finalizeIncident(incidentType, "현재 위치"); 
+                        }
+                    });
+                }
+            }, {
+                location: locPosition,
+                radius: 300, 
+                sort: kakao.maps.services.SortBy.DISTANCE 
+            });
+        }
+
+        // 💡 최종적으로 서버에 올리고 음성으로 읽어주는 헬퍼 함수
+        function finalizeIncident(incidentType, locationText) {
+            // "🚗 정체 (수송교회앞 부근)" 형태로 완성
+            let finalMessage = incidentType + " (" + locationText + ")";
+            
             database.ref('live_incidents').push({ 
                 route: myRoute, 
                 lat: currentLat, 
                 lon: currentLon, 
                 time: new Date().toLocaleTimeString(), 
                 timestamp_ms: Date.now(),
-                type: incidentType 
+                type: finalMessage 
             });
+            
             closeIncidentModal(); 
-            speakText(incidentType + " 제보가 완료되었습니다.", 1); 
+            
+            // "수송교회앞 부근, 🚗 정체 제보가 완료되었습니다" 읽어주기
+            speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
         function startGPS() {
@@ -403,27 +442,25 @@
                 function(position) {
                     currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
                     
-                    // 💡 [핵심] 정류장 정차 vs 진짜 정체 판별 알고리즘 (40초 룰)
                     if (currentSpeed > 15) {
-                        slowStartTime = 0; // 15km/h 넘으면 카운터 초기화
-                        currentTrafficState = "good"; // 녹색
+                        slowStartTime = 0; 
+                        currentTrafficState = "good"; 
                     } else {
-                        if (slowStartTime === 0) slowStartTime = Date.now(); // 15km/h 이하로 떨어지면 타이머 시작!
+                        if (slowStartTime === 0) slowStartTime = Date.now(); 
                         
                         if (Date.now() - slowStartTime > 40000) {
-                            currentTrafficState = "jam"; // 40초 넘게 멈춰있으면 진짜 정체(빨간색)
+                            currentTrafficState = "jam"; 
                         } else {
-                            currentTrafficState = "slow"; // 40초 전까지는 정류장 정차/서행(주황색)
+                            currentTrafficState = "slow"; 
                         }
                     }
 
-                    // 💡 상태창 텍스트 업데이트
                     if (manualStatus === "운행 중") {
                         if (currentTrafficState === "good") currentStatusText = "정상 주행";
                         else if (currentTrafficState === "slow") currentStatusText = "서행/정차";
                         else currentStatusText = "정체 (40초+)";
                     } else {
-                        currentStatusText = manualStatus; // 기사님이 식사/가스충전 누르셨을 때
+                        currentStatusText = manualStatus; 
                     }
 
                     document.getElementById('topStatus').innerText = `내 속도: ${currentSpeed}km/h`;
@@ -449,7 +486,6 @@
             });
 
             if (now - lastTailTime > 15000) {
-                // 💡 서버에 꼬리 정보 보낼 때 방금 계산한 '현재 교통 상태(state)'도 같이 보냅니다!
                 database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, state: currentTrafficState, time: now });
                 lastTailTime = now;
                 let cutoff = now - 1800000;
@@ -476,10 +512,9 @@
                     const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
                     let isMyBus = (key === myBusId) ? " my-bus" : "";
                     
-                    // 💡 버스 아이콘 색깔을 3단계로 분리!
                     let labelColor = "good"; 
-                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; // 빨간색
-                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; // 주황색
+                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; 
+                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; 
                     
                     let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
                     
@@ -537,11 +572,10 @@
                         let p1 = points[i-1]; let p2 = points[i];
                         if (p2.time - p1.time > 300000) continue;
                         
-                        // 💡 꼬리 선 색깔도 3단계로 분리해서 그립니다!
-                        let lineColor = '#00cc44'; // 기본은 녹색 (good)
-                        if (p2.state === 'jam') lineColor = '#ff4d4d'; // 진짜 정체는 빨간색
-                        else if (p2.state === 'slow') lineColor = '#ff9900'; // 정차/서행은 주황색
-                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; // (구버전 호환용)
+                        let lineColor = '#00cc44'; 
+                        if (p2.state === 'jam') lineColor = '#ff4d4d'; 
+                        else if (p2.state === 'slow') lineColor = '#ff9900'; 
+                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; 
 
                         let polyline = new kakao.maps.Polyline({ path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)], strokeWeight: 6, strokeColor: lineColor, strokeOpacity: 0.7, strokeStyle: 'solid' });
                         polyline.setMap(map); tailPolylines.push(polyline);
@@ -561,8 +595,8 @@
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
                             announcedIncidents.add(key); 
-                            const typeMsg = inc.type ? inc.type : "돌발 상황";
-                            speakText("전방에, " + typeMsg + " 제보가 있습니다."); 
+                            // 💡 여기서 나오는 음성은 다른 기사님들이 제보를 받았을 때 듣는 음성입니다.
+                            speakText("전방에, " + inc.type + " 제보가 있습니다."); 
                         }
 
                         const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
