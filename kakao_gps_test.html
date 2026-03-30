@@ -9,100 +9,298 @@
   h2{color:#f97316;margin-bottom:20px;text-align:center;}
   .card{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;margin-bottom:14px;}
   .label{font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
-  .value{font-size:16px;font-weight:700;color:#e6edf3;min-height:24px;}
+  .value{font-size:15px;font-weight:700;color:#e6edf3;min-height:22px;}
   .value.green{color:#22c55e;}
   .value.orange{color:#f97316;}
   .value.red{color:#ef4444;}
   .value.blue{color:#3b82f6;}
+  .value.yellow{color:#eab308;}
   button{width:100%;padding:16px;border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
   .btn-gps{background:#f97316;color:white;}
   .btn-voice{background:#22c55e;color:white;}
   .btn-stop{background:#ef4444;color:white;}
   .btn-clear{background:#21262d;color:#8b949e;border:1px solid #30363d;}
   button:disabled{opacity:0.5;cursor:not-allowed;}
-  .log{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:12px;max-height:200px;overflow-y:auto;font-size:12px;color:#8b949e;font-family:monospace;}
+  .log{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:12px;max-height:220px;overflow-y:auto;font-size:12px;color:#8b949e;font-family:monospace;}
   .log-item{padding:3px 0;border-bottom:1px solid #21262d;}
   .log-item.ok{color:#22c55e;}
   .log-item.err{color:#ef4444;}
   .log-item.info{color:#3b82f6;}
+  .log-item.warn{color:#eab308;}
   .key-input{width:100%;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 12px;color:#e6edf3;font-size:14px;outline:none;box-sizing:border-box;margin-top:6px;}
   .key-input:focus{border-color:#f97316;}
   .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
   .dot-ok{background:#22c55e;}
   .dot-err{background:#ef4444;}
   .dot-wait{background:#8b949e;}
-  .result-big{font-size:22px;font-weight:900;color:#f97316;text-align:center;padding:12px;background:#21262d;border-radius:10px;margin-top:8px;min-height:40px;}
+  .dot-warn{background:#eab308;}
+  /* 최종 결과 큰 박스 */
+  .result-box{padding:14px 16px;border-radius:12px;margin-top:10px;text-align:center;}
+  .result-box.stop{background:rgba(34,197,94,0.12);border:1.5px solid rgba(34,197,94,0.3);}
+  .result-box.section{background:rgba(249,115,22,0.12);border:1.5px solid rgba(249,115,22,0.3);}
+  .result-box.addr{background:rgba(59,130,246,0.12);border:1.5px solid rgba(59,130,246,0.3);}
+  .result-box.none{background:rgba(139,148,158,0.1);border:1.5px solid #30363d;}
+  .result-label{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+  .result-label.stop{color:#22c55e;}
+  .result-label.section{color:#f97316;}
+  .result-label.addr{color:#3b82f6;}
+  .result-label.none{color:#8b949e;}
+  .result-text{font-size:20px;font-weight:900;}
+  .result-text.stop{color:#22c55e;}
+  .result-text.section{color:#f97316;}
+  .result-text.addr{color:#3b82f6;}
+  .result-text.none{color:#8b949e;}
+  .source-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-top:6px;}
+  .badge-kakao{background:rgba(255,230,0,0.15);color:#eab308;border:1px solid rgba(255,230,0,0.3);}
+  .badge-internal{background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.3);}
+  .badge-addr{background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.3);}
+  .route-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .route-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #30363d;background:#21262d;color:#8b949e;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .route-chip.selected{background:#f97316;border-color:#f97316;color:white;}
 </style>
 </head>
 <body>
 
-<h2>🚌 카카오 GPS 테스트</h2>
+<h2>🚌 카카오 GPS 정류장 테스트</h2>
 
-<!-- API 키 입력 -->
+<!-- API 키 -->
 <div class="card">
   <div class="label">카카오 REST API 키</div>
-  <input class="key-input" id="apiKey" type="text" placeholder="REST API 키를 입력하세요" oninput="saveKey()">
-  <div style="font-size:11px;color:#8b949e;margin-top:6px;">입력한 키는 이 기기에만 저장돼요</div>
+  <input class="key-input" id="apiKey" type="text" placeholder="REST API 키 입력" oninput="saveKey()">
+  <div style="font-size:11px;color:#8b949e;margin-top:5px;">💡 developers.kakao.com → 내 애플리케이션 → REST API 키</div>
 </div>
 
-<!-- 현재 GPS 좌표 -->
+<!-- 노선 선택 -->
 <div class="card">
-  <div class="label">📍 현재 GPS 좌표</div>
-  <div class="value blue" id="coords">버튼을 눌러 위치를 가져오세요</div>
+  <div class="label">노선 선택 (선택 시 더 정확한 정류장 매칭)</div>
+  <div class="route-select">
+    <button class="route-chip" onclick="selectRoute(this,'')">전체</button>
+    <button class="route-chip" onclick="selectRoute(this,'204')">204번</button>
+    <button class="route-chip" onclick="selectRoute(this,'609')">609번</button>
+    <button class="route-chip" onclick="selectRoute(this,'894')">894번</button>
+    <button class="route-chip" onclick="selectRoute(this,'937')">937번</button>
+    <button class="route-chip" onclick="selectRoute(this,'달서6')">달서6번</button>
+  </div>
 </div>
 
-<!-- 카카오 버스정류장 결과 -->
+<!-- GPS 좌표 -->
 <div class="card">
-  <div class="label">🚏 카카오 버스정류장 검색 결과</div>
-  <div class="value" id="kakaoStop">-</div>
-  <div class="result-big" id="resultBig">-</div>
+  <div class="label">📍 GPS 좌표</div>
+  <div class="value blue" id="coords">버튼을 눌러 시작하세요</div>
 </div>
 
-<!-- 카카오 주소 변환 결과 -->
+<!-- 결과 비교 -->
 <div class="card">
-  <div class="label">🏠 카카오 주소 변환 결과</div>
-  <div class="value" id="kakaoAddr">-</div>
+  <div class="label">🔍 결과 비교</div>
+
+  <div style="margin-bottom:10px;">
+    <div style="font-size:11px;color:#eab308;font-weight:700;margin-bottom:4px;">🟡 카카오 API 정류장 검색</div>
+    <div class="value yellow" id="kakaoResult">-</div>
+  </div>
+
+  <div style="margin-bottom:10px;">
+    <div style="font-size:11px;color:#a855f7;font-weight:700;margin-bottom:4px;">🟣 내장 정류장 데이터 (구간 표시)</div>
+    <div class="value" id="internalResult">-</div>
+  </div>
+
+  <div>
+    <div style="font-size:11px;color:#3b82f6;font-weight:700;margin-bottom:4px;">🔵 카카오 주소 변환</div>
+    <div class="value blue" id="addrResult">-</div>
+  </div>
+
+  <!-- 최종 채택 결과 -->
+  <div class="result-box none" id="finalBox" style="margin-top:12px;">
+    <div class="result-label none" id="finalLabel">최종 결과</div>
+    <div class="result-text none" id="finalText">-</div>
+    <div id="sourceBadge"></div>
+  </div>
 </div>
 
 <!-- API 상태 -->
 <div class="card">
-  <div class="label">⚙️ API 연결 상태</div>
-  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-    <div><span class="status-dot dot-wait" id="dot1"></span><span id="status1" style="font-size:13px;">정류장 검색 API — 대기 중</span></div>
-    <div><span class="status-dot dot-wait" id="dot2"></span><span id="status2" style="font-size:13px;">주소 변환 API — 대기 중</span></div>
-    <div><span class="status-dot dot-wait" id="dot3"></span><span id="status3" style="font-size:13px;">GPS — 대기 중</span></div>
+  <div class="label">⚙️ API 상태</div>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <div><span class="status-dot dot-wait" id="dot1"></span><span id="st1" style="font-size:12px;">카카오 정류장 검색 — 대기</span></div>
+    <div><span class="status-dot dot-wait" id="dot2"></span><span id="st2" style="font-size:12px;">내장 데이터 매칭 — 대기</span></div>
+    <div><span class="status-dot dot-wait" id="dot3"></span><span id="st3" style="font-size:12px;">카카오 주소 변환 — 대기</span></div>
+    <div><span class="status-dot dot-wait" id="dot4"></span><span id="st4" style="font-size:12px;">GPS — 대기</span></div>
   </div>
 </div>
 
-<!-- 버튼 -->
-<button class="btn-gps" id="btnGps" onclick="runTest()">
-  📍 GPS 위치 가져오기 + 카카오 검색
-</button>
-<button class="btn-voice" id="btnVoice" onclick="speakResult()" disabled>
-  🔊 결과 음성으로 읽어주기
-</button>
-<button class="btn-stop" onclick="stopVoice()">
-  ⏹️ 음성 중지
-</button>
-<button class="btn-clear" onclick="clearLog()">
-  🗑️ 로그 지우기
-</button>
+<button class="btn-gps" id="btnGps" onclick="runTest()">📍 GPS 위치 가져오기</button>
+<button class="btn-voice" id="btnVoice" onclick="speakResult()" disabled>🔊 최종 결과 음성으로 읽기</button>
+<button class="btn-stop" onclick="if(window.speechSynthesis)window.speechSynthesis.cancel();">⏹️ 음성 중지</button>
+<button class="btn-clear" onclick="document.getElementById('log').innerHTML='';">🗑️ 로그 지우기</button>
 
 <!-- 로그 -->
 <div class="card">
-  <div class="label">📋 테스트 로그</div>
+  <div class="label">📋 로그</div>
   <div class="log" id="log"></div>
 </div>
 
 <script>
-// ── 저장된 키 불러오기 ──────────────────────
+// ── 내장 정류장 데이터 ───────────────────────
+var ROUTE_STOPS={
+  '204':[
+    {name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},
+    {name:'범물청구타운',lat:35.8258,lon:128.6460},
+    {name:'지산우방아파트',lat:35.8310,lon:128.6420},
+    {name:'지산동서맨션',lat:35.8340,lon:128.6390},
+    {name:'대구경찰청',lat:35.8380,lon:128.6350},
+    {name:'황금네거리',lat:35.8450,lon:128.6280},
+    {name:'황금시장',lat:35.8470,lon:128.6230},
+    {name:'중동행정복지센터',lat:35.8500,lon:128.6180},
+    {name:'희망교',lat:35.8530,lon:128.6120},
+    {name:'봉명네거리',lat:35.8560,lon:128.6050},
+    {name:'명덕역',lat:35.8600,lon:128.5980},
+    {name:'남문시장',lat:35.8630,lon:128.5960},
+    {name:'반월당역',lat:35.8659,lon:128.5966},
+    {name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},
+    {name:'경상감영공원',lat:35.8700,lon:128.5920},
+    {name:'대구콘서트하우스',lat:35.8730,lon:128.5900},
+    {name:'중구보건소',lat:35.8750,lon:128.5880},
+    {name:'북비산네거리',lat:35.8800,lon:128.5820},
+    {name:'비산초등학교',lat:35.8820,lon:128.5790},
+    {name:'대평중학교',lat:35.8840,lon:128.5760},
+    {name:'서대구중학교',lat:35.8860,lon:128.5730},
+    {name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},
+    {name:'서구문화회관',lat:35.8880,lon:128.5640},
+    {name:'서대구공단네거리',lat:35.8900,lon:128.5600},
+    {name:'서대구역',lat:35.8840,lon:128.5560},
+    {name:'사수초등학교',lat:35.9060,lon:128.5670},
+    {name:'e편한세상대구금호',lat:35.9100,lon:128.5680},
+    {name:'금호지구종점',lat:35.9140,lon:128.5700}
+  ],
+  '609':[
+    {name:'대천동공영차고지',lat:35.8092,lon:128.5148},
+    {name:'진천역',lat:35.8180,lon:128.5260},
+    {name:'이마트월배점',lat:35.8200,lon:128.5300},
+    {name:'조암초등학교',lat:35.8250,lon:128.5350},
+    {name:'월성2동행정복지센터',lat:35.8280,lon:128.5380},
+    {name:'올림픽기념관',lat:35.8320,lon:128.5420},
+    {name:'남부교육지원청',lat:35.8360,lon:128.5480},
+    {name:'서부정류장(관문시장앞)',lat:35.8550,lon:128.5700},
+    {name:'두류공원네거리',lat:35.8590,lon:128.5780},
+    {name:'문화예술회관',lat:35.8600,lon:128.5820},
+    {name:'성당시장',lat:35.8620,lon:128.5870},
+    {name:'대명사회복지관',lat:35.8630,lon:128.5900},
+    {name:'경북공고',lat:35.8640,lon:128.5930},
+    {name:'남산초등학교',lat:35.8650,lon:128.5940},
+    {name:'청라언덕(신남)역',lat:35.8660,lon:128.5950},
+    {name:'반월당역',lat:35.8659,lon:128.5966},
+    {name:'수성교',lat:35.8660,lon:128.6050},
+    {name:'대구은행역',lat:35.8670,lon:128.6100},
+    {name:'수성네거리',lat:35.8680,lon:128.6150},
+    {name:'범어역',lat:35.8710,lon:128.6220},
+    {name:'수성구청',lat:35.8680,lon:128.6270},
+    {name:'경신고등학교',lat:35.8660,lon:128.6300},
+    {name:'만촌역',lat:35.8650,lon:128.6340},
+    {name:'수성대학교',lat:35.8580,lon:128.6420},
+    {name:'담티역',lat:35.8550,lon:128.6480},
+    {name:'대륜중고등학교',lat:35.8520,lon:128.6560},
+    {name:'방공포병학교',lat:35.8490,lon:128.6640},
+    {name:'연호동화훼단지',lat:35.8470,lon:128.6720},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'경기장네거리',lat:35.8440,lon:128.6950},
+    {name:'대구스타디움',lat:35.8430,lon:128.7020},
+    {name:'덕원고등학교',lat:35.8350,lon:128.6850},
+    {name:'시지중학교',lat:35.8320,lon:128.6780},
+    {name:'신매시장',lat:35.8290,lon:128.7020},
+    {name:'사월역',lat:35.8240,lon:128.7100},
+    {name:'영남대앞',lat:35.8280,lon:128.7460},
+    {name:'임당역',lat:35.8240,lon:128.7340},
+    {name:'경산시장',lat:35.8210,lon:128.7400},
+    {name:'경산시외버스정류장',lat:35.8200,lon:128.7420},
+    {name:'중방네거리',lat:35.8180,lon:128.7450},
+    {name:'금구동종점',lat:35.8050,lon:128.7580}
+  ],
+  '937':[
+    {name:'덕원고등학교',lat:35.8350,lon:128.6850},
+    {name:'시지중학교',lat:35.8320,lon:128.6780},
+    {name:'신매역',lat:35.8290,lon:128.7020},
+    {name:'고산역화성파크드림',lat:35.8430,lon:128.6950},
+    {name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'연호동화훼단지',lat:35.8470,lon:128.6720},
+    {name:'방공포병학교',lat:35.8490,lon:128.6640},
+    {name:'담티고개',lat:35.8530,lon:128.6510},
+    {name:'담티역',lat:35.8550,lon:128.6480},
+    {name:'수성대학교',lat:35.8580,lon:128.6420},
+    {name:'구남부정류장',lat:35.8600,lon:128.6360},
+    {name:'만촌2동행정복지센터',lat:35.8630,lon:128.6320},
+    {name:'만촌태왕리더스',lat:35.8640,lon:128.6280},
+    {name:'범어역',lat:35.8710,lon:128.6220},
+    {name:'동대구역',lat:35.8790,lon:128.6280},
+    {name:'평화시장(닭똥집골목)',lat:35.8800,lon:128.6200},
+    {name:'공고네거리',lat:35.8820,lon:128.6150},
+    {name:'경북대학교정문',lat:35.8880,lon:128.6060},
+    {name:'영진전문대학교후문',lat:35.8920,lon:128.5980},
+    {name:'복현오거리',lat:35.8930,lon:128.5950},
+    {name:'엑스코',lat:35.9000,lon:128.6080},
+    {name:'전자상가',lat:35.9020,lon:128.6020},
+    {name:'무태네거리',lat:35.9080,lon:128.5780},
+    {name:'북구구민운동장',lat:35.9180,lon:128.5720},
+    {name:'칠곡그린빌',lat:35.9220,lon:128.5710},
+    {name:'강북경찰서',lat:35.9250,lon:128.5690},
+    {name:'칠곡운암역',lat:35.9280,lon:128.5680},
+    {name:'칠곡우방타운(종점)',lat:35.9390,lon:128.5600}
+  ],
+  '894':[
+    {name:'경일대학교',lat:35.7950,lon:128.7980},
+    {name:'대구가톨릭대학교',lat:35.8020,lon:128.7820},
+    {name:'하양역',lat:35.8080,lon:128.7750},
+    {name:'대구대정문',lat:35.8180,lon:128.7520},
+    {name:'압량읍사무소',lat:35.8120,lon:128.7550},
+    {name:'영남대앞',lat:35.8280,lon:128.7460},
+    {name:'임당역',lat:35.8240,lon:128.7340},
+    {name:'경산시장',lat:35.8210,lon:128.7400},
+    {name:'옥산네거리',lat:35.8180,lon:128.7300},
+    {name:'대구스타디움',lat:35.8430,lon:128.7020},
+    {name:'경기장네거리',lat:35.8440,lon:128.6950},
+    {name:'수성알파시티역',lat:35.8460,lon:128.6800},
+    {name:'담티고개',lat:35.8530,lon:128.6510},
+    {name:'만촌우방1차',lat:35.8620,lon:128.6360},
+    {name:'만촌자이르네',lat:35.8650,lon:128.6290},
+    {name:'수성소방서',lat:35.8460,lon:128.6350},
+    {name:'지산타운',lat:35.8380,lon:128.6440},
+    {name:'범물청구타운',lat:35.8260,lon:128.6480},
+    {name:'범물1동행정복지센터',lat:35.8234,lon:128.6487}
+  ],
+  '달서6':[
+    {name:'남도버스',lat:35.8280,lon:128.5180},
+    {name:'진월초등학교',lat:35.8270,lon:128.5200},
+    {name:'월배역',lat:35.8220,lon:128.5330},
+    {name:'상인초등학교',lat:35.8260,lon:128.5420},
+    {name:'월촌역',lat:35.8330,lon:128.5520},
+    {name:'앞산청구제네스',lat:35.8370,lon:128.5560},
+    {name:'송현역',lat:35.8430,lon:128.5620},
+    {name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},
+    {name:'앞산양궁장',lat:35.8250,lon:128.5800},
+    {name:'안지랑골입구',lat:35.8320,lon:128.5930},
+    {name:'대덕문화전당',lat:35.8380,lon:128.5980},
+    {name:'대명중학교',lat:35.8420,lon:128.6000},
+    {name:'충혼탑',lat:35.8490,lon:128.6040},
+    {name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},
+    {name:'경일여자고등학교',lat:35.8550,lon:128.6070},
+    {name:'앞산빨래터공원',lat:35.8190,lon:128.5860}
+  ]
+};
+
+// ── 상태 변수 ────────────────────────────────
+var selectedRoute='';
 try{
   var saved=localStorage.getItem('kakao_test_key');
   if(saved) document.getElementById('apiKey').value=saved;
 }catch(e){}
 
-function saveKey(){
-  try{localStorage.setItem('kakao_test_key',document.getElementById('apiKey').value);}catch(e){}
+function saveKey(){try{localStorage.setItem('kakao_test_key',document.getElementById('apiKey').value);}catch(e){}}
+
+function selectRoute(btn,route){
+  selectedRoute=route;
+  var chips=document.querySelectorAll('.route-chip');
+  for(var i=0;i<chips.length;i++) chips[i].classList.remove('selected');
+  btn.classList.add('selected');
+  log('노선 선택: '+(route||'전체'),'info');
 }
 
 // ── 로그 ────────────────────────────────────
@@ -111,240 +309,290 @@ function log(msg,type){
   var logDiv=document.getElementById('log');
   var item=document.createElement('div');
   item.className='log-item '+type;
-  var time=new Date().toLocaleTimeString('ko-KR');
-  item.textContent='['+time+'] '+msg;
+  var t=new Date().toLocaleTimeString('ko-KR');
+  item.textContent='['+t+'] '+msg;
   logDiv.appendChild(item);
   logDiv.scrollTop=logDiv.scrollHeight;
 }
-function clearLog(){document.getElementById('log').innerHTML='';}
 
-// ── 상태 업데이트 ────────────────────────────
-function setStatus(n,ok,msg){
+function setSt(n,ok,msg){
   var dot=document.getElementById('dot'+n);
-  var status=document.getElementById('status'+n);
-  dot.className='status-dot '+(ok===true?'dot-ok':ok===false?'dot-err':'dot-wait');
-  status.textContent=msg;
+  var st=document.getElementById('st'+n);
+  dot.className='status-dot '+(ok===true?'dot-ok':ok===false?'dot-err':ok==='warn'?'dot-warn':'dot-wait');
+  st.textContent=msg;
 }
 
-// ── 메인 테스트 함수 ─────────────────────────
-function runTest(){
-  var key=document.getElementById('apiKey').value.trim();
-  if(!key){
-    alert('REST API 키를 입력해 주세요!');
-    return;
-  }
-  var btn=document.getElementById('btnGps');
-  btn.disabled=true;
-  btn.innerHTML='⏳ 위치 가져오는 중...';
-
-  document.getElementById('coords').textContent='GPS 신호 수신 중...';
-  document.getElementById('kakaoStop').textContent='-';
-  document.getElementById('kakaoAddr').textContent='-';
-  document.getElementById('resultBig').textContent='-';
-  document.getElementById('btnVoice').disabled=true;
-
-  setStatus(3,null,'GPS — 신호 수신 중...');
-  log('GPS 위치 요청 시작','info');
-
-  if(!navigator.geolocation){
-    log('이 기기는 GPS를 지원하지 않아요','err');
-    setStatus(3,false,'GPS — 미지원');
-    btn.disabled=false;btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    function(pos){
-      var lat=pos.coords.latitude;
-      var lon=pos.coords.longitude;
-      var acc=Math.round(pos.coords.accuracy);
-
-      document.getElementById('coords').textContent=
-        '위도: '+lat.toFixed(6)+'  경도: '+lon.toFixed(6)+'\n정확도: ±'+acc+'m';
-      setStatus(3,true,'GPS — 수신 완료 (정확도 ±'+acc+'m)');
-      log('GPS 수신 완료: '+lat.toFixed(5)+', '+lon.toFixed(5)+' (±'+acc+'m)','ok');
-
-      btn.innerHTML='⏳ 카카오 API 검색 중...';
-
-      // 정류장 검색 + 주소 변환 동시 실행
-      var stopDone=false, addrDone=false;
-      var stopResult=null, addrResult=null;
-
-      function checkDone(){
-        if(!stopDone||!addrDone) return;
-        // 최종 결과 표시
-        var final=stopResult||addrResult||'위치를 확인할 수 없어요';
-        document.getElementById('resultBig').textContent=final;
-        log('최종 결과: '+final,'ok');
-        document.getElementById('btnVoice').disabled=false;
-        btn.disabled=false;
-        btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
-      }
-
-      // ① 버스정류장 검색
-      searchBusStop(key,lat,lon,function(result,raw){
-        stopDone=true;
-        if(result){
-          stopResult=result;
-          document.getElementById('kakaoStop').className='value green';
-          document.getElementById('kakaoStop').textContent=result;
-          if(raw) log('정류장 검색: '+raw.place_name+' ('+raw.distance+'m)','ok');
-          setStatus(1,true,'정류장 검색 API — 성공');
-        } else {
-          document.getElementById('kakaoStop').className='value red';
-          document.getElementById('kakaoStop').textContent='300m 내 버스정류장 없음';
-          setStatus(1,null,'정류장 검색 API — 정류장 없음');
-          log('300m 내 버스정류장 없음','info');
-        }
-        checkDone();
-      });
-
-      // ② 주소 변환
-      convertAddress(key,lat,lon,function(result){
-        addrDone=true;
-        if(result){
-          addrResult=result;
-          document.getElementById('kakaoAddr').className='value orange';
-          document.getElementById('kakaoAddr').textContent=result;
-          setStatus(2,true,'주소 변환 API — 성공');
-          log('주소 변환: '+result,'ok');
-        } else {
-          document.getElementById('kakaoAddr').className='value red';
-          document.getElementById('kakaoAddr').textContent='주소 변환 실패';
-          setStatus(2,false,'주소 변환 API — 실패');
-          log('주소 변환 실패','err');
-        }
-        checkDone();
-      });
-    },
-    function(err){
-      setStatus(3,false,'GPS — 실패');
-      btn.disabled=false;
-      btn.innerHTML='📍 GPS 위치 가져오기 + 카카오 검색';
-      if(err.code===1){
-        log('위치 권한이 거부됐어요. 브라우저 설정에서 허용해 주세요.','err');
-        alert('위치 권한을 허용해 주세요!');
-      } else if(err.code===2){
-        log('GPS 신호를 받을 수 없어요. 실외에서 다시 시도해 주세요.','err');
-      } else {
-        log('GPS 시간 초과. 다시 시도해 주세요.','err');
-      }
-    },
-    {timeout:15000, enableHighAccuracy:true, maximumAge:0}
-  );
+// ── 거리 계산 ────────────────────────────────
+function calcDist(lat1,lon1,lat2,lon2){
+  var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ── 버스정류장 검색 ──────────────────────────
-function searchBusStop(key,lat,lon,cb){
-  var url='https://dapi.kakao.com/v2/local/search/category.json' +
-    '?category_group_code=SW8' +
-    '&x='+lon+'&y='+lat +
-    '&radius=300&sort=distance&size=5';
+// ── ★ 내장 데이터로 정류장/구간 찾기 ──────────
+function findInternal(route, lat, lon){
+  var routesToSearch=route?[route]:Object.keys(ROUTE_STOPS);
+  var bestDist=Infinity, bestStop=null, bestRoute=null, bestIdx=-1;
 
-  log('정류장 검색 API 호출 중...','info');
+  for(var r=0;r<routesToSearch.length;r++){
+    var rkey=routesToSearch[r];
+    var stops=ROUTE_STOPS[rkey];
+    if(!stops) continue;
+    for(var i=0;i<stops.length;i++){
+      var d=calcDist(lat,lon,stops[i].lat,stops[i].lon);
+      if(d<bestDist){bestDist=d;bestStop=stops[i];bestRoute=rkey;bestIdx=i;}
+    }
+  }
+  if(!bestStop) return null;
 
+  // 150m 이내 — 정류장 바로 앞
+  if(bestDist<=150){
+    return {text:bestStop.name+' 앞', type:'stop', dist:Math.round(bestDist), route:bestRoute};
+  }
+  // 500m 이내 — 정류장 부근
+  if(bestDist<=500){
+    return {text:bestStop.name+' 부근', type:'stop', dist:Math.round(bestDist), route:bestRoute};
+  }
+  // 500m~1.2km — 두 정류장 사이 구간
+  if(bestDist<=1200){
+    var stops2=ROUTE_STOPS[bestRoute];
+    // 두 번째로 가까운 정류장 찾기
+    var secondDist=Infinity, secondIdx=-1;
+    for(var i=0;i<stops2.length;i++){
+      if(i===bestIdx) continue;
+      var d2=calcDist(lat,lon,stops2[i].lat,stops2[i].lon);
+      if(d2<secondDist){secondDist=d2;secondIdx=i;}
+    }
+    if(secondIdx>=0&&secondDist<=1500){
+      var i1=bestIdx<secondIdx?bestIdx:secondIdx;
+      var i2=bestIdx<secondIdx?secondIdx:bestIdx;
+      var section=stops2[i1].name+' ~ '+stops2[i2].name+' 구간';
+      return {text:section, type:'section', dist:Math.round(bestDist), route:bestRoute};
+    }
+    return {text:bestStop.name+' 방향', type:'stop', dist:Math.round(bestDist), route:bestRoute};
+  }
+  return null;
+}
+
+// ── 카카오 정류장 검색 ───────────────────────
+function kakaoStop(key,lat,lon,route,cb){
+  var url='https://dapi.kakao.com/v2/local/search/category.json'+
+    '?category_group_code=SW8&x='+lon+'&y='+lat+'&radius=300&sort=distance&size=5';
   fetch(url,{headers:{'Authorization':'KakaoAK '+key}})
   .then(function(r){
-    if(r.status===401){
-      setStatus(1,false,'정류장 검색 API — 키 오류 (401)');
-      log('API 키 오류! REST API 키가 맞는지 확인하고 플랫폼에 도메인이 등록됐는지 확인해 주세요.','err');
-      cb(null,null);return Promise.reject('401');
-    }
-    if(!r.ok){
-      log('API 오류: HTTP '+r.status,'err');
-      cb(null,null);return Promise.reject(r.status);
-    }
+    if(r.status===401){log('카카오 키 오류(401) — 키 확인 및 도메인 등록 필요','err');cb(null);return Promise.reject();}
+    if(!r.ok){log('카카오 API 오류: HTTP '+r.status,'err');cb(null);return Promise.reject();}
     return r.json();
   })
   .then(function(data){
     var docs=data.documents;
-    if(!docs||docs.length===0){cb(null,null);return;}
-
-    // 가장 가까운 정류장
-    var stop=docs[0];
-    var dist=parseInt(stop.distance||0);
-    var name=stop.place_name
-      .replace('버스정류장','').replace('정류장','')
-      .replace('버스승강장','').replace('승강장','').trim();
+    if(!docs||docs.length===0){log('카카오: 300m 내 버스정류장 없음','warn');cb(null);return;}
 
     // 전체 결과 로그
-    for(var i=0;i<Math.min(docs.length,3);i++){
-      log('  '+(i+1)+'. '+docs[i].place_name+' ('+docs[i].distance+'m)','info');
+    for(var i=0;i<docs.length;i++){
+      log('  카카오 '+(i+1)+'. '+docs[i].place_name+' ('+docs[i].distance+'m)','info');
     }
 
-    var label='';
-    if(dist<=80) label=name+' 앞';
-    else if(dist<=200) label=name+' 부근';
-    else label=name+' 방향';
+    // 노선 정류장과 교차검증
+    if(route&&ROUTE_STOPS[route]){
+      var stops=ROUTE_STOPS[route];
+      for(var i=0;i<docs.length;i++){
+        var kname=docs[i].place_name.replace(/버스정류장|정류장|버스승강장|승강장/g,'').trim();
+        for(var j=0;j<stops.length;j++){
+          if(stops[j].name.indexOf(kname)>=0||kname.indexOf(stops[j].name)>=0){
+            var dist=parseInt(docs[i].distance||0);
+            var label=dist<=80?stops[j].name+' 앞':dist<=200?stops[j].name+' 부근':stops[j].name+' 방향';
+            log('카카오+내장 교차검증 성공: '+label,'ok');
+            cb({text:label,raw:docs[i]});return;
+          }
+        }
+      }
+    }
 
-    cb(label,stop);
+    // 교차검증 실패 — 가장 가까운 것
+    var s=docs[0];
+    var dist=parseInt(s.distance||0);
+    var name=s.place_name.replace(/버스정류장|정류장|버스승강장|승강장/g,'').trim();
+    var label=dist<=80?name+' 앞':dist<=200?name+' 부근':name+' 방향';
+    cb({text:label,raw:s});
   })
-  .catch(function(e){
-    if(e!=='401') log('정류장 검색 오류: '+e,'err');
-    cb(null,null);
-  });
+  .catch(function(){cb(null);});
 }
 
-// ── 주소 변환 ────────────────────────────────
-function convertAddress(key,lat,lon,cb){
+// ── 카카오 주소 변환 ─────────────────────────
+function kakaoAddr(key,lat,lon,cb){
   var url='https://dapi.kakao.com/v2/local/geo/coord2address.json?x='+lon+'&y='+lat;
-
-  log('주소 변환 API 호출 중...','info');
-
   fetch(url,{headers:{'Authorization':'KakaoAK '+key}})
-  .then(function(r){
-    if(r.status===401){
-      log('주소 변환 API 키 오류 (401)','err');
-      cb(null);return Promise.reject('401');
-    }
-    if(!r.ok){cb(null);return Promise.reject(r.status);}
-    return r.json();
-  })
+  .then(function(r){if(!r.ok){cb(null);return Promise.reject();}return r.json();})
   .then(function(data){
     var docs=data.documents;
     if(!docs||docs.length===0){cb(null);return;}
-    var addr=docs[0];
-    if(addr.road_address&&addr.road_address.road_name){
-      cb(addr.road_address.road_name+' 부근');
-    } else if(addr.address){
-      cb(addr.address.region_3depth_name+' 부근');
-    } else {
-      cb(null);
-    }
+    var a=docs[0];
+    if(a.road_address&&a.road_address.road_name) cb(a.road_address.road_name+' 부근');
+    else if(a.address) cb(a.address.region_3depth_name+' 부근');
+    else cb(null);
   })
-  .catch(function(e){
-    if(e!=='401') log('주소 변환 오류: '+e,'err');
-    cb(null);
+  .catch(function(){cb(null);});
+}
+
+// ── 최종 결과 표시 ───────────────────────────
+function showFinal(text, type, source){
+  var box=document.getElementById('finalBox');
+  var label=document.getElementById('finalLabel');
+  var textEl=document.getElementById('finalText');
+  var badge=document.getElementById('sourceBadge');
+  box.className='result-box '+type;
+  var labelMap={stop:'🚏 정류장 매칭',section:'📍 구간 매칭',addr:'🏠 주소 변환',none:'결과 없음'};
+  label.className='result-label '+type;
+  label.textContent=labelMap[type]||'결과';
+  textEl.className='result-text '+type;
+  textEl.textContent=text;
+  var badgeMap={kakao:'badge-kakao',internal:'badge-internal',addr:'badge-addr'};
+  var badgeText={kakao:'카카오 DB',internal:'내장 데이터',addr:'카카오 주소'};
+  if(source){
+    badge.innerHTML='<span class="source-badge '+badgeMap[source]+'">'+badgeText[source]+'</span>';
+  }
+  document.getElementById('btnVoice').disabled=false;
+}
+
+// ── 메인 테스트 ──────────────────────────────
+function runTest(){
+  var key=document.getElementById('apiKey').value.trim();
+  if(!key){alert('REST API 키를 입력해 주세요!');return;}
+
+  var btn=document.getElementById('btnGps');
+  btn.disabled=true;btn.innerHTML='⏳ 위치 가져오는 중...';
+
+  // 초기화
+  ['kakaoResult','internalResult','addrResult'].forEach(function(id){
+    document.getElementById(id).textContent='-';
+    document.getElementById(id).className='value';
   });
+  document.getElementById('finalText').textContent='-';
+  document.getElementById('finalBox').className='result-box none';
+  document.getElementById('sourceBadge').innerHTML='';
+  document.getElementById('btnVoice').disabled=true;
+  setSt(1,null,'카카오 정류장 검색 — 대기');
+  setSt(2,null,'내장 데이터 매칭 — 대기');
+  setSt(3,null,'카카오 주소 변환 — 대기');
+  setSt(4,null,'GPS — 수신 중...');
+  log('═══ 테스트 시작 (노선: '+(selectedRoute||'전체')+') ═══','info');
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude, lon=pos.coords.longitude;
+    var acc=Math.round(pos.coords.accuracy);
+    document.getElementById('coords').textContent='위도 '+lat.toFixed(6)+'  경도 '+lon.toFixed(6)+'  (±'+acc+'m)';
+    setSt(4,true,'GPS — 완료 (±'+acc+'m)');
+    log('GPS: '+lat.toFixed(5)+', '+lon.toFixed(5)+' ±'+acc+'m','ok');
+    btn.innerHTML='⏳ API 검색 중...';
+
+    var kakaoResult=undefined, internalResult=undefined, addrResult=undefined;
+
+    function tryFinalize(){
+      if(kakaoResult===undefined||internalResult===undefined||addrResult===undefined) return;
+
+      // ★ 우선순위 결정
+      // 1순위: 카카오 정류장 (교차검증 성공)
+      // 2순위: 내장 데이터 (구간 표시 포함)
+      // 3순위: 카카오 주소 변환
+      if(kakaoResult){
+        showFinal(kakaoResult,'stop','kakao');
+        log('✅ 최종: 카카오 정류장 → '+kakaoResult,'ok');
+      } else if(internalResult){
+        var type=internalResult.type==='section'?'section':'stop';
+        showFinal(internalResult.text,type,'internal');
+        log('✅ 최종: 내장 데이터 → '+internalResult.text,'ok');
+      } else if(addrResult){
+        showFinal(addrResult,'addr','addr');
+        log('✅ 최종: 주소 변환 → '+addrResult,'ok');
+      } else {
+        showFinal('위치를 확인할 수 없어요','none','');
+        log('❌ 최종: 모든 방법 실패','err');
+      }
+      btn.disabled=false;btn.innerHTML='📍 GPS 위치 가져오기';
+    }
+
+    // ① 카카오 정류장 검색
+    setSt(1,null,'카카오 정류장 검색 중...');
+    kakaoStop(key,lat,lon,selectedRoute,function(result){
+      if(result){
+        kakaoResult=result.text;
+        document.getElementById('kakaoResult').className='value yellow';
+        document.getElementById('kakaoResult').textContent=result.text+(result.raw?' ('+result.raw.distance+'m)':'');
+        setSt(1,true,'카카오 정류장 — 성공: '+result.text);
+      } else {
+        kakaoResult=null;
+        document.getElementById('kakaoResult').className='value red';
+        document.getElementById('kakaoResult').textContent='정류장 없음 (300m 초과)';
+        setSt(1,'warn','카카오 정류장 — 결과 없음');
+      }
+      tryFinalize();
+    });
+
+    // ② 내장 데이터 매칭 (즉시)
+    setSt(2,null,'내장 데이터 매칭 중...');
+    var intResult=findInternal(selectedRoute,lat,lon);
+    internalResult=intResult;
+    if(intResult){
+      var color=intResult.type==='section'?'orange':'green';
+      document.getElementById('internalResult').className='value '+color;
+      document.getElementById('internalResult').textContent=intResult.text+' ('+intResult.dist+'m, '+intResult.route+'번)';
+      setSt(2,true,'내장 데이터 — 성공: '+intResult.text);
+      log('내장: '+intResult.text+' ('+intResult.dist+'m)','ok');
+    } else {
+      document.getElementById('internalResult').className='value red';
+      document.getElementById('internalResult').textContent='1.2km 내 정류장 없음';
+      setSt(2,'warn','내장 데이터 — 범위 초과');
+      log('내장: 1.2km 내 정류장 없음','warn');
+    }
+    tryFinalize();
+
+    // ③ 카카오 주소 변환
+    setSt(3,null,'카카오 주소 변환 중...');
+    kakaoAddr(key,lat,lon,function(result){
+      addrResult=result;
+      if(result){
+        document.getElementById('addrResult').className='value blue';
+        document.getElementById('addrResult').textContent=result;
+        setSt(3,true,'주소 변환 — 성공: '+result);
+        log('주소: '+result,'ok');
+      } else {
+        document.getElementById('addrResult').className='value red';
+        document.getElementById('addrResult').textContent='주소 변환 실패';
+        setSt(3,false,'주소 변환 — 실패');
+        log('주소 변환 실패','err');
+      }
+      tryFinalize();
+    });
+
+  },function(err){
+    setSt(4,false,'GPS — 실패');
+    btn.disabled=false;btn.innerHTML='📍 GPS 위치 가져오기';
+    if(err.code===1){log('위치 권한 거부. 브라우저 설정에서 허용해 주세요.','err');alert('위치 권한을 허용해 주세요!');}
+    else if(err.code===2){log('GPS 신호 없음. 실외에서 다시 시도해 주세요.','err');}
+    else{log('GPS 시간 초과.','err');}
+  },{timeout:15000,enableHighAccuracy:true,maximumAge:0});
 }
 
 // ── 음성 ────────────────────────────────────
 function speakResult(){
-  var result=document.getElementById('resultBig').textContent;
-  if(!result||result==='-'){alert('먼저 GPS 테스트를 해주세요!');return;}
-  if(!window.speechSynthesis){alert('이 브라우저는 음성을 지원하지 않아요');return;}
-
+  var text=document.getElementById('finalText').textContent;
+  if(!text||text==='-'){return;}
+  if(!window.speechSynthesis){alert('음성 미지원');return;}
   window.speechSynthesis.cancel();
-  var text='현재 위치는 '+result+' 입니다.';
-  var u=new SpeechSynthesisUtterance(text);
-  u.lang='ko-KR';u.rate=0.9;u.volume=1.0;
-
-  var voices=window.speechSynthesis.getVoices();
-  for(var i=0;i<voices.length;i++){
-    if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}
-  }
-  window.speechSynthesis.speak(u);
-  log('음성 재생: '+text,'ok');
+  setTimeout(function(){
+    var u=new SpeechSynthesisUtterance('현재 위치는 '+text+' 입니다.');
+    u.lang='ko-KR';u.rate=0.92;u.volume=1.0;
+    var voices=window.speechSynthesis.getVoices();
+    for(var i=0;i<voices.length;i++){if(voices[i].lang==='ko-KR'||voices[i].lang==='ko'){u.voice=voices[i];break;}}
+    window.speechSynthesis.speak(u);
+    log('음성: 현재 위치는 '+text+' 입니다.','ok');
+  },150);
 }
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
 
-function stopVoice(){
-  if(window.speechSynthesis) window.speechSynthesis.cancel();
-  log('음성 중지','info');
-}
-
-if(window.speechSynthesis){
-  window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};
-}
+// 첫 번째 버튼 선택
+document.querySelector('.route-chip').classList.add('selected');
 </script>
 </body>
 </html>

@@ -193,7 +193,15 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
-        let map, geocoder, ps, wakeLock = null;
+        const ROUTE_STOPS = {
+            '204':[{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},{name:'범물청구타운',lat:35.8258,lon:128.6460},{name:'지산우방아파트',lat:35.8310,lon:128.6420},{name:'지산동서맨션',lat:35.8340,lon:128.6390},{name:'대구경찰청',lat:35.8380,lon:128.6350},{name:'황금네거리',lat:35.8450,lon:128.6280},{name:'황금시장',lat:35.8470,lon:128.6230},{name:'중동행정복지센터',lat:35.8500,lon:128.6180},{name:'희망교',lat:35.8530,lon:128.6120},{name:'봉명네거리',lat:35.8560,lon:128.6050},{name:'명덕역',lat:35.8600,lon:128.5980},{name:'남문시장',lat:35.8630,lon:128.5960},{name:'반월당역',lat:35.8659,lon:128.5966},{name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},{name:'경상감영공원',lat:35.8700,lon:128.5920},{name:'대구콘서트하우스',lat:35.8730,lon:128.5900},{name:'중구보건소',lat:35.8750,lon:128.5880},{name:'북비산네거리',lat:35.8800,lon:128.5820},{name:'비산초등학교',lat:35.8820,lon:128.5790},{name:'대평중학교',lat:35.8840,lon:128.5760},{name:'서대구중학교',lat:35.8860,lon:128.5730},{name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},{name:'서구문화회관',lat:35.8880,lon:128.5640},{name:'서대구공단네거리',lat:35.8900,lon:128.5600},{name:'서대구역',lat:35.8840,lon:128.5560},{name:'사수초등학교',lat:35.9060,lon:128.5670},{name:'e편한세상대구금호',lat:35.9100,lon:128.5680},{name:'금호지구종점',lat:35.9140,lon:128.5700}],
+            '609':[{name:'대천동공영차고지',lat:35.8092,lon:128.5148},{name:'진천역',lat:35.8180,lon:128.5260},{name:'이마트월배점',lat:35.8200,lon:128.5300},{name:'조암초등학교',lat:35.8250,lon:128.5350},{name:'월성2동행정복지센터',lat:35.8280,lon:128.5380},{name:'올림픽기념관',lat:35.8320,lon:128.5420},{name:'남부교육지원청',lat:35.8360,lon:128.5480},{name:'서부정류장(관문시장앞)',lat:35.8550,lon:128.5700},{name:'두류공원네거리',lat:35.8590,lon:128.5780},{name:'문화예술회관',lat:35.8600,lon:128.5820},{name:'성당시장',lat:35.8620,lon:128.5870},{name:'대명사회복지관',lat:35.8630,lon:128.5900},{name:'경북공고',lat:35.8640,lon:128.5930},{name:'남산초등학교',lat:35.8650,lon:128.5940},{name:'청라언덕(신남)역',lat:35.8660,lon:128.5950},{name:'반월당역',lat:35.8659,lon:128.5966},{name:'수성교',lat:35.8660,lon:128.6050},{name:'대구은행역',lat:35.8670,lon:128.6100},{name:'수성네거리',lat:35.8680,lon:128.6150},{name:'범어역',lat:35.8710,lon:128.6220},{name:'수성구청',lat:35.8680,lon:128.6270},{name:'경신고등학교',lat:35.8660,lon:128.6300},{name:'만촌역',lat:35.8650,lon:128.6340},{name:'수성대학교',lat:35.8580,lon:128.6420},{name:'담티역',lat:35.8550,lon:128.6480},{name:'대륜중고등학교',lat:35.8520,lon:128.6560},{name:'방공포병학교',lat:35.8490,lon:128.6640},{name:'연호동화훼단지',lat:35.8470,lon:128.6720},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'경기장네거리',lat:35.8440,lon:128.6950},{name:'대구스타디움',lat:35.8430,lon:128.7020},{name:'덕원고등학교',lat:35.8350,lon:128.6850},{name:'시지중학교',lat:35.8320,lon:128.6780},{name:'신매시장',lat:35.8290,lon:128.7020},{name:'사월역',lat:35.8240,lon:128.7100},{name:'영남대앞',lat:35.8280,lon:128.7460},{name:'임당역',lat:35.8240,lon:128.7340},{name:'경산시장',lat:35.8210,lon:128.7400},{name:'경산시외버스정류장',lat:35.8200,lon:128.7420},{name:'중방네거리',lat:35.8180,lon:128.7450},{name:'금구동종점',lat:35.8050,lon:128.7580}],
+            '937':[{name:'덕원고등학교',lat:35.8350,lon:128.6850},{name:'시지중학교',lat:35.8320,lon:128.6780},{name:'신매역',lat:35.8290,lon:128.7020},{name:'고산역화성파크드림',lat:35.8430,lon:128.6950},{name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'연호동화훼단지',lat:35.8470,lon:128.6720},{name:'방공포병학교',lat:35.8490,lon:128.6640},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'담티역',lat:35.8550,lon:128.6480},{name:'수성대학교',lat:35.8580,lon:128.6420},{name:'구남부정류장',lat:35.8600,lon:128.6360},{name:'만촌2동행정복지센터',lat:35.8630,lon:128.6320},{name:'만촌태왕리더스',lat:35.8640,lon:128.6280},{name:'범어역',lat:35.8710,lon:128.6220},{name:'동대구역',lat:35.8790,lon:128.6280},{name:'평화시장(닭똥집골목)',lat:35.8800,lon:128.6200},{name:'공고네거리',lat:35.8820,lon:128.6150},{name:'경북대학교정문',lat:35.8880,lon:128.6060},{name:'영진전문대학교후문',lat:35.8920,lon:128.5980},{name:'복현오거리',lat:35.8930,lon:128.5950},{name:'엑스코',lat:35.9000,lon:128.6080},{name:'전자상가',lat:35.9020,lon:128.6020},{name:'무태네거리',lat:35.9080,lon:128.5780},{name:'북구구민운동장',lat:35.9180,lon:128.5720},{name:'칠곡그린빌',lat:35.9220,lon:128.5710},{name:'강북경찰서',lat:35.9250,lon:128.5690},{name:'칠곡운암역',lat:35.9280,lon:128.5680},{name:'칠곡우방타운(종점)',lat:35.9390,lon:128.5600}],
+            '894':[{name:'경일대학교',lat:35.7950,lon:128.7980},{name:'대구가톨릭대학교',lat:35.8020,lon:128.7820},{name:'하양역',lat:35.8080,lon:128.7750},{name:'대구대정문',lat:35.8180,lon:128.7520},{name:'압량읍사무소',lat:35.8120,lon:128.7550},{name:'영남대앞',lat:35.8280,lon:128.7460},{name:'임당역',lat:35.8240,lon:128.7340},{name:'경산시장',lat:35.8210,lon:128.7400},{name:'옥산네거리',lat:35.8180,lon:128.7300},{name:'대구스타디움',lat:35.8430,lon:128.7020},{name:'경기장네거리',lat:35.8440,lon:128.6950},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'만촌우방1차',lat:35.8620,lon:128.6360},{name:'만촌자이르네',lat:35.8650,lon:128.6290},{name:'수성소방서',lat:35.8460,lon:128.6350},{name:'지산타운',lat:35.8380,lon:128.6440},{name:'범물청구타운',lat:35.8260,lon:128.6480},{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487}],
+            'dalseo6':[{name:'남도버스',lat:35.8280,lon:128.5180},{name:'진월초등학교',lat:35.8270,lon:128.5200},{name:'월배역',lat:35.8220,lon:128.5330},{name:'상인초등학교',lat:35.8260,lon:128.5420},{name:'월촌역',lat:35.8330,lon:128.5520},{name:'앞산청구제네스',lat:35.8370,lon:128.5560},{name:'송현역',lat:35.8430,lon:128.5620},{name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},{name:'앞산양궁장',lat:35.8250,lon:128.5800},{name:'안지랑골입구',lat:35.8320,lon:128.5930},{name:'대덕문화전당',lat:35.8380,lon:128.5980},{name:'대명중학교',lat:35.8420,lon:128.6000},{name:'충혼탑',lat:35.8490,lon:128.6040},{name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},{name:'경일여자고등학교',lat:35.8550,lon:128.6070},{name:'앞산빨래터공원',lat:35.8190,lon:128.5860}]
+        };
+
+        let map, geocoder, wakeLock = null;
         let watchId = null, serverTimer = null;
         let myRoute = "", myVehicle = "", myBusId = "";
         let currentLat = 0, currentLon = 0, currentSpeed = 0, manualStatus = "운행 중";
@@ -221,6 +229,9 @@
 
         let adminClickCount = 0;
         let adminClickTimer = null;
+
+        // 💡 GPS 알림 변수는 가장 바깥에 안전하게 둡니다!
+        let gpsAlerted = false; 
 
         const liveConnectionsRef = database.ref('live_connections');
         const connectedRef = database.ref('.info/connected');
@@ -298,7 +309,6 @@
             requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
             
-            // 💡 1분마다 서버를 검사해서 30분이 지난 돌발상황을 '완전히 삭제'하는 로봇 가동!
             setInterval(function() {
                 let thirtyMinsAgo = Date.now() - 1800000;
                 database.ref('live_incidents').orderByChild('timestamp_ms').endAt(thirtyMinsAgo).once('value', snapshot => {
@@ -321,7 +331,6 @@
             });
             
             geocoder = new kakao.maps.services.Geocoder(); 
-            ps = new kakao.maps.services.Places(); 
         }
 
         function resumeTrackingMe() {
@@ -391,29 +400,56 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
-        // 💡 정류장 검색 능력 향상! (좌표 정확히 입력 & 반경 500m로 확대)
+        function getInternalLocation(routeStr, lat, lon) {
+            let stops = ROUTE_STOPS[routeStr];
+            if (!stops) return null; 
+
+            let bestDist = Infinity, bestStop = null, bestIdx = -1;
+            
+            for (let i = 0; i < stops.length; i++) {
+                let d = getDistance(lat, lon, stops[i].lat, stops[i].lon);
+                if (d < bestDist) { bestDist = d; bestStop = stops[i]; bestIdx = i; }
+            }
+
+            if (!bestStop) return null;
+
+            if (bestDist <= 150) return bestStop.name + ' 앞';
+            if (bestDist <= 500) return bestStop.name + ' 부근';
+            
+            if (bestDist <= 1200) {
+                let secondDist = Infinity, secondIdx = -1;
+                for (let i = 0; i < stops.length; i++) {
+                    if (i === bestIdx) continue;
+                    let d2 = getDistance(lat, lon, stops[i].lat, stops[i].lon);
+                    if (d2 < secondDist) { secondDist = d2; secondIdx = i; }
+                }
+                
+                if (secondIdx >= 0 && secondDist <= 1500) {
+                    let i1 = bestIdx < secondIdx ? bestIdx : secondIdx;
+                    let i2 = bestIdx < secondIdx ? secondIdx : bestIdx;
+                    return stops[i1].name + ' ~ ' + stops[i2].name + ' 구간';
+                }
+                return bestStop.name + ' 방향';
+            }
+            return null;
+        }
+
         function submitIncident(incidentType) {
             if (currentLat === 0) return;
             
-            ps.keywordSearch('버스정류장', function(data, status) {
-                if (status === kakao.maps.services.Status.OK && data.length > 0) {
-                    let stationName = data[0].place_name.replace(/ 버스정류장| 정류장|버스정류장|정류장/g, '').trim();
-                    finalizeIncident(incidentType, stationName + " 부근");
-                } else {
-                    geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
-                        if (status === kakao.maps.services.Status.OK) {
-                            finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
-                        } else {
-                            finalizeIncident(incidentType, "현재 위치"); 
-                        }
-                    });
-                }
-            }, {
-                x: currentLon,  // 경도를 명확하게 입력
-                y: currentLat,  // 위도를 명확하게 입력
-                radius: 500,    // 검색 반경을 300m에서 500m로 더 넓게!
-                sort: kakao.maps.services.SortBy.DISTANCE 
-            });
+            let internalLoc = getInternalLocation(myRoute, currentLat, currentLon);
+
+            if (internalLoc) {
+                finalizeIncident(incidentType, internalLoc);
+            } else {
+                geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
+                    } else {
+                        finalizeIncident(incidentType, "현재 위치"); 
+                    }
+                });
+            }
         }
 
         function finalizeIncident(incidentType, locationText) {
@@ -429,12 +465,16 @@
             });
             
             closeIncidentModal(); 
-            // 💡 "수송교회앞 부근, 정체 제보가 완료되었습니다." 처럼 자연스럽게 말해줍니다!
             speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
+        // 💡 꼬여있던 GPS 함수를 하나로 완벽하게 합치고 고쳤습니다!
         function startGPS() {
-            if (!("geolocation" in navigator)) return;
+            if (!("geolocation" in navigator)) {
+                document.getElementById('topStatus').innerText = "GPS 미지원 기기 ❌";
+                return;
+            }
+            
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
                     currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
@@ -466,7 +506,22 @@
                         map.setCenter(new kakao.maps.LatLng(currentLat, currentLon));
                     }
                 }, 
-                function(error) {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+                function(error) {
+                    let statusText = "GPS 오류 📡";
+                    if (error.code === 1) {
+                        statusText = "GPS 권한 거부됨 🚨 (설정 확인)";
+                        if (!gpsAlerted) {
+                            alert("⚠️ [위치 권한이 차단되어 있습니다]\n\n앱을 사용하시려면 위치 권한이 꼭 필요합니다.\n\n▶ 아이폰: [설정] ➔ [Safari] ➔ [위치] ➔ '허용'으로 변경\n▶ 안드로이드: 화면 맨 위를 쓸어내려 [위치(GPS)] 켜기\n\n설정 변경 후 인터넷 창을 새로고침 해주세요!");
+                            gpsAlerted = true;
+                        }
+                    } else if (error.code === 2) {
+                        statusText = "GPS 신호 없음 ☁️ (야외로 이동)";
+                    } else if (error.code === 3) {
+                        statusText = "GPS 연결 지연 ⏳";
+                    }
+                    document.getElementById('topStatus').innerText = statusText;
+                }, 
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 } 
             );
         }
 
@@ -592,7 +647,6 @@
 
                         if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
                             announcedIncidents.add(key); 
-                            // 💡 "전방에, 정체 (수송교회앞 부근) 제보가 있습니다." 로 완벽하게 읽어줍니다.
                             speakText("전방에, " + inc.type + " 제보가 있습니다."); 
                         }
 
