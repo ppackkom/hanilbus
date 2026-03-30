@@ -26,36 +26,42 @@
         
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 22px; }
         
+        /* 💡 1. 첫 화면 글자 크기 대폭 확대! */
+        .login-box h2 { color: #ff7f50; margin-top: 0; margin-bottom: 30px; font-size: 26px; } /* 제목 크기 키움 */
         .input-group { margin-bottom: 25px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
-        .input-group select, .input-group input { width: 100%; padding: 15px; font-size: 16px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; }
+        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } /* 라벨 크기 키움 */
+        .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-weight: bold; } /* 입력창 크기 키움 */
         .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 10px rgba(255, 127, 80, 0.4); background-color: #3a3a3c; }
         
-        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 18px; font-size: 18px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; }
+        .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; } /* 시작 버튼 크기 키움 */
         .start-btn:active { transform: scale(0.97); }
         
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
         .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
         #mapScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        #map { width: 100%; height: 100%; z-index: 1; }
         
-        .header-overlay { position: absolute; top: 5px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 5px 10px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 3px; }
+        /* 💡 5. 카카오 맵 야간 모드(다크 모드) 마법 필터! */
+        #map { width: 100%; height: 100%; z-index: 1; transition: filter 1s ease; }
+        .dark-map { filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%) grayscale(20%); }
+        
+        .header-overlay { position: absolute; top: 5px; left: 10px; right: 10px; z-index: 2; background-color: rgba(44, 44, 46, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255, 127, 80, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 5px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-bottom { display: flex; justify-content: space-between; align-items: center; }
         
-        .header-info h2 { margin: 0; font-size: 17px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } 
-        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 12px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
-        .status-text { font-size: 12px; color: #ccc; white-space: nowrap; line-height: 1.1; }
+        /* 💡 4. 상단 메뉴판 글자 큼직하게 확대! */
+        .header-info h2 { margin: 0; font-size: 22px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } /* 609번 글씨 커짐 */
+        .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 15px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
+        .status-text { font-size: 15px; color: #ccc; white-space: nowrap; line-height: 1.1; font-weight: bold; } /* 내 속도 글씨 커짐 */
         
-        .btn-group { display: flex; gap: 6px; }
-        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 4px 8px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; }
+        .btn-group { display: flex; gap: 8px; }
+        .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } /* 버튼 글씨 커짐 */
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
 
-        .marquee-wrapper { position: absolute; top: 115px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        /* 💡 상단 메뉴가 뚱뚱해졌으니 전광판 위치를 115px -> 135px 로 조정! */
+        .marquee-wrapper { position: absolute; top: 135px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         @keyframes scroll-left { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         
@@ -65,8 +71,11 @@
         .report-btn:active { transform: scale(0.95); }
 
         #incidentModal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-        .modal-content { background: #2c2c2e; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-btn { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; border: none; color: white; margin-bottom: 10px; cursor: pointer; }
+        .modal-content { background: #2c2c2e; padding: 30px 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 360px; border: 1px solid #ff7f50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 💡 2. 제보 버튼 메뉴 글씨 크고 진하게! */
+        .modal-content h3 { color:#ff7f50; margin-top:0; margin-bottom:25px; font-size: 24px; font-weight: 900; }
+        .modal-btn { width: 100%; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; border: none; color: white; margin-bottom: 15px; cursor: pointer; }
 
         #trackAlert { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 2; background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(0, 70, 200, 0.95)); backdrop-filter: blur(5px); padding: 10px 20px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.3); min-width: 160px; }
         .dist-text { font-size: 22px; font-weight: bold; color: #ffe600; margin: 3px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
@@ -152,11 +161,11 @@
 
     <div id="incidentModal">
         <div class="modal-content">
-            <h3 style="color:#ff7f50; margin-top:0; margin-bottom:20px;">🚨 상황을 선택해주세요</h3>
+            <h3>🚨 상황을 선택해주세요</h3>
             <button class="modal-btn" style="background:#ff9900;" onclick="submitIncident('정체')">🚗 정체</button>
             <button class="modal-btn" style="background:#ff4d4d;" onclick="submitIncident('공사중')">🚧 공사중</button>
             <button class="modal-btn" style="background:#cc0000;" onclick="submitIncident('사고')">💥 사고</button>
-            <button class="stop-btn" style="width:100%; padding:15px; margin-top:5px; font-size:16px;" onclick="closeIncidentModal()">취소</button>
+            <button class="stop-btn" style="width:100%; padding:20px; margin-top:5px; font-size:20px; font-weight:900; border-radius:12px;" onclick="closeIncidentModal()">취소</button>
         </div>
     </div>
 
@@ -207,6 +216,11 @@
         let currentLat = 0, currentLon = 0, currentSpeed = 0, manualStatus = "운행 중";
         let currentStatusText = "대기중";
         
+        // 💡 3. 평균 속도 계산을 위한 변수 추가!
+        let totalSpeed = 0;
+        let speedCount = 0;
+        let avgSpeed = 0;
+        
         let busMarkers = {};
         let incidentMarkers = {}; 
         let tailPolylines = []; 
@@ -230,7 +244,6 @@
         let adminClickCount = 0;
         let adminClickTimer = null;
 
-        // 💡 GPS 알림 변수는 가장 바깥에 안전하게 둡니다!
         let gpsAlerted = false; 
 
         const liveConnectionsRef = database.ref('live_connections');
@@ -286,6 +299,17 @@
             }
         }
 
+        // 💡 5. 다크 모드 (야간 모드) 체크 함수! (저녁 6시 ~ 아침 7시)
+        function checkDarkMode() {
+            const hour = new Date().getHours();
+            const mapEl = document.getElementById('map');
+            if (hour >= 18 || hour < 7) {
+                mapEl.classList.add('dark-map');
+            } else {
+                mapEl.classList.remove('dark-map');
+            }
+        }
+
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
@@ -305,6 +329,10 @@
             database.ref('live_tails/' + myBusId).onDisconnect().remove();
 
             if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+
+            // 다크 모드 실행 및 1분마다 체크!
+            checkDarkMode();
+            setInterval(checkDarkMode, 60000);
 
             requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
             serverTimer = setInterval(sendMyLocation, 5000);
@@ -468,7 +496,6 @@
             speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
-        // 💡 꼬여있던 GPS 함수를 하나로 완벽하게 합치고 고쳤습니다!
         function startGPS() {
             if (!("geolocation" in navigator)) {
                 document.getElementById('topStatus').innerText = "GPS 미지원 기기 ❌";
@@ -479,6 +506,13 @@
                 function(position) {
                     currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
                     
+                    // 💡 평균 속도 누적 계산 (운행 중일 때만 계산해서 평균을 안 깎아 먹게!)
+                    if (manualStatus === "운행 중") {
+                        totalSpeed += currentSpeed;
+                        speedCount++;
+                        avgSpeed = Math.round(totalSpeed / speedCount);
+                    }
+
                     if (currentSpeed > 15) {
                         slowStartTime = 0; 
                         currentTrafficState = "good"; 
@@ -500,7 +534,8 @@
                         currentStatusText = manualStatus; 
                     }
 
-                    document.getElementById('topStatus').innerText = `내 속도: ${currentSpeed}km/h`;
+                    // 💡 상단 메뉴바에 현재 속도와 평균 속도를 함께 띄워줍니다!
+                    document.getElementById('topStatus').innerText = `속도: ${currentSpeed}km/h (평균: ${avgSpeed})`;
                     
                     if (isTrackingMe && trackingBusId === null) {
                         map.setCenter(new kakao.maps.LatLng(currentLat, currentLon));
