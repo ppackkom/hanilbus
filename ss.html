@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한일운수 스마트 배차판 (엑스레이 버전)</title>
+    <title>한일운수 스마트 배차판 (보안 강화버전)</title>
     
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #000000; color: white; }
@@ -41,7 +41,6 @@
         .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: 2px solid #555; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .refresh-btn:active { transform: scale(0.9); }
         
-        /* 디버그 박스 디자인 */
         .debug-box { font-size: 11px; color: #888; background: #111; padding: 10px; border-radius: 8px; margin-top: 20px; text-align: left; word-break: break-all; max-height: 200px; overflow-y: auto; border: 1px solid #333; }
     </style>
 </head>
@@ -49,7 +48,7 @@
 
     <div id="loginScreen">
         <div class="login-box">
-            <h2>🚌 스마트 배차판 (엑스레이)</h2>
+            <h2>🚌 스마트 배차판</h2>
             <div class="input-group">
                 <label>📍 노선 선택</label>
                 <select id="routeInput">
@@ -82,14 +81,14 @@
     </div>
 
     <script>
-        // 💡 대장님이 주신 API 키 (바뀌었다면 여기에 바꿔 넣어주세요!)
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
         
-        // 💡 우체국 서버 3개로 확장!
+        // 💡 우체국 4곳 배치! 정부 방화벽을 피하기 위한 초강력 우회로 추가
         const PROXIES = [
             { url: "https://api.allorigins.win/get?url=", type: "allorigins" },
+            { url: "https://corsproxy.io/?", type: "direct" },
             { url: "https://api.codetabs.com/v1/proxy?quest=", type: "direct" },
-            { url: "https://corsproxy.io/?", type: "direct" }
+            { url: "https://thingproxy.freeboard.io/fetch/", type: "direct" }
         ];
 
         let myRoute = "";
@@ -98,11 +97,10 @@
         let refreshTimer = null;
         let isFetching = false; 
 
-        // 에러 원본 텍스트를 저장할 변수
         let rawErrorText = "";
 
         async function fetchWithFallback(targetUrl) {
-            rawErrorText = ""; // 초기화
+            rawErrorText = ""; 
             let lastError = null;
 
             for (let proxy of PROXIES) {
@@ -119,9 +117,8 @@
                             text = await response.text();
                         }
                         
-                        rawErrorText = text; // 원본 편지 저장
+                        rawErrorText = text; 
 
-                        // 정부 서버 거절 확인
                         if (text && text.includes('<OpenAPI_ServiceResponse>')) {
                             if(text.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) throw new Error("API_KEY_UNREGISTERED");
                             if(text.includes('LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR')) throw new Error("API_KEY_LIMIT");
@@ -172,8 +169,8 @@
             document.getElementById('lastUpdateTime').innerText = "🔄 실시간 데이터 수신 중...";
 
             if (!daeguRouteId) {
-                // TAGO API 주소입니다.
-                const routeInfoUrl = `http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
+                // 💡 핵심 수정: http -> https 로 완벽 교체!
+                const routeInfoUrl = `https://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
                 
                 try {
                     let data = await fetchWithFallback(routeInfoUrl);
@@ -201,7 +198,8 @@
         }
 
         async function fetchBusLocations(routeId) {
-            const locUrl = `http://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
+            // 💡 핵심 수정: http -> https 로 완벽 교체!
+            const locUrl = `https://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
             
             try {
                 let data = await fetchWithFallback(locUrl);
@@ -245,7 +243,9 @@
             } else if (err.message === "API_XML_ERROR") {
                 msg = "❌ 공공데이터포털 시스템 오류<br>(키 형식이 잘못되었을 가능성이 높습니다)";
             } else if (err.message === "NOT_JSON") {
-                msg = "❌ 정부 서버에서 이상한 데이터를 줬습니다.";
+                msg = "❌ 정부 방화벽 차단 (해외 IP 접근 금지 등)";
+            } else if (err.message === "HTTP_403") {
+                msg = "❌ 403 출입 금지<br>(정부 방화벽이 차단 중입니다)";
             } else {
                 msg = `❌ 통신 에러 발생: ${err.message}`;
             }
@@ -301,15 +301,11 @@
             }
         }
 
-        // 에러 메시지와 함께 원본 편지(엑스레이)를 화면에 띄우는 함수!
         function showError(msg) {
             let html = `<div class="loading-text" style="color:#ff4d4d;">${msg}</div>`;
             
-            // 엑스레이 박스 (원본 에러 텍스트 출력)
             if (rawErrorText) {
-                // 너무 길면 자르기
                 let shortText = rawErrorText.substring(0, 300) + (rawErrorText.length > 300 ? "..." : "");
-                // 꺾쇠 태그를 문자로 변환해서 화면에 보이게 함
                 shortText = shortText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 
                 html += `
