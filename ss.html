@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한일운수 스마트 배차판</title>
+    <title>한일운수 스마트 배차판 (엑스레이 버전)</title>
     
     <style>
-        /* 기본 바탕을 완벽한 까만색으로 세팅 */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #000000; color: white; }
         
-        /* 1. 로그인 화면 스타일 (큼직하고 직관적으로!) */
         #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #111; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .login-box { background-color: #222; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #00cc44; box-shadow: 0 10px 30px rgba(0,204,68,0.2); }
         .login-box h2 { color: #00cc44; margin-top: 0; margin-bottom: 30px; font-size: 26px; } 
@@ -20,19 +18,17 @@
         .start-btn { background: linear-gradient(135deg, #00cc44, #009933); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; } 
         .start-btn:active { transform: scale(0.97); }
 
-        /* 2. 순수한 검은색 배차판 메인 화면 */
         #mainScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; display: none; flex-direction: column; align-items: center; padding-top: 30px; box-sizing: border-box; overflow-y: auto; }
         
         .header-title { font-size: 28px; color: #00cc44; font-weight: bold; margin-bottom: 10px; }
         .update-time { font-size: 14px; color: #888; margin-bottom: 25px; }
         
-        /* 배차 리스트 디자인 (앞2, 나, 뒤2) */
         #headwayContainer { width: 95%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
         .bus-card { background: #1a1a1c; padding: 20px; border-radius: 16px; text-align: left; border: 1px solid #333; }
         
-        .bus-card.ahead { border-left: 8px solid #ff9900; }  /* 앞차 라인: 주황색 */
-        .bus-card.mine { border-left: 8px solid #00cc44; background: #1a2a1a; border-color: #00cc44; }   /* 내차 라인: 초록색 */
-        .bus-card.behind { border-left: 8px solid #3b82f6; } /* 뒷차 라인: 파란색 */
+        .bus-card.ahead { border-left: 8px solid #ff9900; }  
+        .bus-card.mine { border-left: 8px solid #00cc44; background: #1a2a1a; border-color: #00cc44; }   
+        .bus-card.behind { border-left: 8px solid #3b82f6; } 
 
         .card-header { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center; }
         .card-role { font-size: 18px; font-weight: bold; }
@@ -41,16 +37,19 @@
         .card-main { font-size: 24px; font-weight: bold; color: #fff; margin-bottom: 8px; }
         .card-sub { font-size: 16px; color: #aaa; }
 
-        .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 50px; line-height: 1.6; font-weight: bold; word-break: keep-all; }
+        .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 30px; line-height: 1.6; font-weight: bold; word-break: keep-all; }
         .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: 2px solid #555; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .refresh-btn:active { transform: scale(0.9); }
+        
+        /* 디버그 박스 디자인 */
+        .debug-box { font-size: 11px; color: #888; background: #111; padding: 10px; border-radius: 8px; margin-top: 20px; text-align: left; word-break: break-all; max-height: 200px; overflow-y: auto; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
     <div id="loginScreen">
         <div class="login-box">
-            <h2>🚌 스마트 배차판 (초기화)</h2>
+            <h2>🚌 스마트 배차판 (엑스레이)</h2>
             <div class="input-group">
                 <label>📍 노선 선택</label>
                 <select id="routeInput">
@@ -83,12 +82,13 @@
     </div>
 
     <script>
-        // 💡 대장님의 갱신된 만능 마스터 키!
+        // 💡 대장님이 주신 API 키 (바뀌었다면 여기에 바꿔 넣어주세요!)
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
         
-        // 💡 우체국 서버 2개 세팅 (절대 뻗지 않도록!)
+        // 💡 우체국 서버 3개로 확장!
         const PROXIES = [
             { url: "https://api.allorigins.win/get?url=", type: "allorigins" },
+            { url: "https://api.codetabs.com/v1/proxy?quest=", type: "direct" },
             { url: "https://corsproxy.io/?", type: "direct" }
         ];
 
@@ -96,14 +96,20 @@
         let myVehicle = "";
         let daeguRouteId = ""; 
         let refreshTimer = null;
-        let isFetching = false; // 중복 통신 방지용
+        let isFetching = false; 
 
-        // 💡 지능형 우회 시스템 (에러 원인까지 완벽 분석)
+        // 에러 원본 텍스트를 저장할 변수
+        let rawErrorText = "";
+
         async function fetchWithFallback(targetUrl) {
+            rawErrorText = ""; // 초기화
+            let lastError = null;
+
             for (let proxy of PROXIES) {
                 try {
                     let fetchUrl = proxy.url + encodeURIComponent(targetUrl);
                     let response = await fetch(fetchUrl);
+                    
                     if (response.ok) {
                         let text = "";
                         if (proxy.type === "allorigins") {
@@ -112,25 +118,34 @@
                         } else {
                             text = await response.text();
                         }
+                        
+                        rawErrorText = text; // 원본 편지 저장
 
-                        // 정부 서버에서 튕겨냈는지 검사
+                        // 정부 서버 거절 확인
                         if (text && text.includes('<OpenAPI_ServiceResponse>')) {
                             if(text.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) throw new Error("API_KEY_UNREGISTERED");
                             if(text.includes('LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR')) throw new Error("API_KEY_LIMIT");
                             throw new Error("API_XML_ERROR");
                         }
 
-                        return JSON.parse(text);
+                        let jsonData;
+                        try {
+                            jsonData = JSON.parse(text);
+                        } catch(e) {
+                            throw new Error("NOT_JSON");
+                        }
+                        return jsonData;
+                    } else {
+                        throw new Error(`HTTP_${response.status}`);
                     }
                 } catch (e) {
+                    lastError = e;
                     if (e.message && e.message.startsWith("API_")) throw e; 
-                    console.log(proxy.type + " 통신 실패, 다음 우체국 시도...");
                 }
             }
-            throw new Error("NETWORK_FAIL"); 
+            throw lastError || new Error("NETWORK_FAIL"); 
         }
 
-        // 앱 시작 버튼 눌렀을 때
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
@@ -140,7 +155,6 @@
                 return; 
             }
 
-            // 폰 화면 안 꺼지게 꽉 채우기 (선택)
             let elem = document.documentElement;
             if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
 
@@ -149,18 +163,16 @@
             document.getElementById('routeTitle').innerText = `${myRoute}번 배차 현황`;
 
             fetchRouteIdAndBuses();
-            
-            // 20초마다 자동으로 앞뒤 차 간격 갱신
             refreshTimer = setInterval(fetchRouteIdAndBuses, 20000);
         }
 
-        // 1단계: 609번의 고유 암호(RouteId) 알아내기
         async function fetchRouteIdAndBuses() {
-            if(isFetching) return; // 통신 중이면 또 누르지 않게 막기
+            if(isFetching) return; 
             isFetching = true;
             document.getElementById('lastUpdateTime').innerText = "🔄 실시간 데이터 수신 중...";
 
             if (!daeguRouteId) {
+                // TAGO API 주소입니다.
                 const routeInfoUrl = `http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
                 
                 try {
@@ -174,7 +186,7 @@
                         } else {
                             daeguRouteId = items.routeid || items.routeId;
                         }
-                        fetchBusLocations(daeguRouteId); // 암호 찾았으니 2단계로!
+                        fetchBusLocations(daeguRouteId); 
                     } else {
                         showError("❌ 노선 정보를 찾을 수 없습니다.");
                         isFetching = false;
@@ -188,7 +200,6 @@
             }
         }
 
-        // 2단계: 암호로 현재 도로 위 모든 버스 위치 가져오기
         async function fetchBusLocations(routeId) {
             const locUrl = `http://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
             
@@ -203,12 +214,12 @@
                     items.forEach(item => {
                         buses.push({
                             vehicle: (item.vehicleno || item.vehicleNo || "").replace(/[^0-9]/g, ""),
-                            nodeOrd: parseInt(item.nodeord || item.nodeOrd), // 정류장 순번!
+                            nodeOrd: parseInt(item.nodeord || item.nodeOrd),
                             stopName: item.nodenm || item.nodeNm 
                         });
                     });
                     
-                    processHeadway(buses); // 3단계로!
+                    processHeadway(buses); 
                     
                     let now = new Date();
                     let hh = String(now.getHours()).padStart(2, '0');
@@ -224,24 +235,25 @@
             isFetching = false;
         }
 
-        // 친절한 에러 통역기
         function handleApiError(err) {
             let msg = "❌ 대구시 서버 통신 실패 (네트워크 지연)";
             
             if (err.message === "API_KEY_UNREGISTERED") {
-                msg = "❌ API 키가 아직 정부 서버에 등록되지 않았습니다.<br><br><span style='font-size:15px; color:#ffcc00;'>새로 발급받으신 직후라면 서버 동기화에 최소 1~2시간, 최대 하루가 걸릴 수 있습니다. 잠시 후에 다시 시도해 주세요!</span>";
+                msg = "❌ API 키가 등록되지 않았습니다.<br><br><span style='font-size:15px; color:#ffcc00;'>새로 발급받으신 직후라면 서버 등록에 최대 1~2시간이 걸립니다!</span>";
             } else if (err.message === "API_KEY_LIMIT") {
                 msg = "❌ 일일 데이터 조회 한도 초과";
             } else if (err.message === "API_XML_ERROR") {
-                msg = "❌ 공공데이터포털 시스템 거절 오류";
+                msg = "❌ 공공데이터포털 시스템 오류<br>(키 형식이 잘못되었을 가능성이 높습니다)";
+            } else if (err.message === "NOT_JSON") {
+                msg = "❌ 정부 서버에서 이상한 데이터를 줬습니다.";
+            } else {
+                msg = `❌ 통신 에러 발생: ${err.message}`;
             }
             
             showError(msg);
         }
 
-        // 3단계: 내 차를 기준으로 앞 2대, 뒤 2대만 뽑아내기!
         function processHeadway(buses) {
-            // 순번(nodeOrd) 기준으로 내림차순 정렬 (큰 숫자가 앞차)
             buses.sort((a, b) => b.nodeOrd - a.nodeOrd);
 
             let myIndex = buses.findIndex(b => b.vehicle.includes(myVehicle));
@@ -252,18 +264,16 @@
                 container.innerHTML = `
                     <div class="loading-text" style="color:#ffcc00;">
                         ⏳ 대장님의 차량(${myVehicle}호)이<br>대구시 서버에 아직 잡히지 않았습니다.<br><br>
-                        <span style="font-size:15px; color:#aaa;">운행 시작 전이거나 통신 지연일 수 있습니다.<br>우측 하단의 🔄 버튼을 눌러 다시 찾아보세요!</span>
+                        <span style="font-size:15px; color:#aaa;">우측 하단의 🔄 버튼을 눌러 다시 찾아보세요!</span>
                     </div>`;
                 return;
             }
 
-            // 나를 기준으로 앞 2대, 나, 뒤 2대 그리기
             for (let i = myIndex - 2; i <= myIndex + 2; i++) {
                 if (i < 0 || i >= buses.length) continue; 
                 
                 let b = buses[i];
                 let typeClass = ""; let title = ""; let titleColor = ""; let diffText = "";
-
                 let diffNodes = Math.abs(buses[myIndex].nodeOrd - b.nodeOrd);
 
                 if (i === myIndex - 2 || i === myIndex - 1) {
@@ -291,10 +301,26 @@
             }
         }
 
+        // 에러 메시지와 함께 원본 편지(엑스레이)를 화면에 띄우는 함수!
         function showError(msg) {
-            document.getElementById('headwayContainer').innerHTML = `
-                <div class="loading-text" style="color:#ff4d4d;">${msg}</div>
-            `;
+            let html = `<div class="loading-text" style="color:#ff4d4d;">${msg}</div>`;
+            
+            // 엑스레이 박스 (원본 에러 텍스트 출력)
+            if (rawErrorText) {
+                // 너무 길면 자르기
+                let shortText = rawErrorText.substring(0, 300) + (rawErrorText.length > 300 ? "..." : "");
+                // 꺾쇠 태그를 문자로 변환해서 화면에 보이게 함
+                shortText = shortText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                
+                html += `
+                    <div class="debug-box">
+                        <strong>[서버 응답 원본 (엑스레이)]</strong><br>
+                        ${shortText}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('headwayContainer').innerHTML = html;
         }
     </script>
 </body>
