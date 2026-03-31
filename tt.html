@@ -32,8 +32,10 @@
         .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } 
         .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-weight: bold; } 
         .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 10px rgba(255, 127, 80, 0.4); background-color: #3a3a3c; }
+        
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; } 
         .start-btn:active { transform: scale(0.97); }
+        
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
         .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
@@ -49,6 +51,7 @@
         .header-info h2 { margin: 0; font-size: 22px; color: #ff7f50; cursor: pointer; white-space: nowrap; line-height: 1.1; } 
         .user-count { background-color: rgba(0, 204, 68, 0.2); color: #00cc44; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 15px; border: 1px solid #00cc44; white-space: nowrap; line-height: 1.1; }
         .status-text { font-size: 15px; color: #ccc; white-space: nowrap; line-height: 1.1; font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; min-width: 0; } 
+        
         .btn-group { display: flex; gap: 6px; flex-shrink: 0; }
         .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } 
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
@@ -245,8 +248,6 @@
         const database = firebase.database();
 
         const ROUTE_STOPS = {
-        // 💡  대구 609번 정밀 좌표 데이터!
-        const ROUTE_STOPS = {
             '204':[{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},{name:'범물청구타운',lat:35.8258,lon:128.6460},{name:'지산우방아파트',lat:35.8310,lon:128.6420},{name:'지산동서맨션',lat:35.8340,lon:128.6390},{name:'대구경찰청',lat:35.8380,lon:128.6350},{name:'황금네거리',lat:35.8450,lon:128.6280},{name:'황금시장',lat:35.8470,lon:128.6230},{name:'중동행정복지센터',lat:35.8500,lon:128.6180},{name:'희망교',lat:35.8530,lon:128.6120},{name:'봉명네거리',lat:35.8560,lon:128.6050},{name:'명덕역',lat:35.8600,lon:128.5980},{name:'남문시장',lat:35.8630,lon:128.5960},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},{name:'경상감영공원',lat:35.8700,lon:128.5920},{name:'대구콘서트하우스',lat:35.8730,lon:128.5900},{name:'중구보건소',lat:35.8750,lon:128.5880},{name:'북비산네거리',lat:35.8800,lon:128.5820},{name:'비산초등학교',lat:35.8820,lon:128.5790},{name:'대평중학교',lat:35.8840,lon:128.5760},{name:'서대구중학교',lat:35.8860,lon:128.5730},{name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},{name:'서구문화회관',lat:35.8880,lon:128.5640},{name:'서대구공단네거리',lat:35.8900,lon:128.5600},{name:'서대구역',lat:35.8840,lon:128.5560},{name:'사수초등학교',lat:35.9060,lon:128.5670},{name:'e편한세상대구금호',lat:35.9100,lon:128.5680},{name:'금호지구종점',lat:35.9140,lon:128.5700}],
             '609':[
                 {name:'대천동공영차고지',lat:35.8115,lon:128.5140},
@@ -285,8 +286,6 @@
             'dalseo6':[{name:'남도버스',lat:35.8280,lon:128.5180},{name:'진월초등학교',lat:35.8270,lon:128.5200},{name:'월배역',lat:35.8220,lon:128.5330},{name:'상인초등학교',lat:35.8260,lon:128.5420},{name:'월촌역',lat:35.8330,lon:128.5520},{name:'앞산청구제네스',lat:35.8370,lon:128.5560},{name:'송현역',lat:35.8430,lon:128.5620},{name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},{name:'앞산양궁장',lat:35.8250,lon:128.5800},{name:'안지랑골입구',lat:35.8320,lon:128.5930},{name:'대덕문화전당',lat:35.8380,lon:128.5980},{name:'대명중학교',lat:35.8420,lon:128.6000},{name:'충혼탑',lat:35.8490,lon:128.6040},{name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},{name:'경일여자고등학교',lat:35.8550,lon:128.6070},{name:'앞산빨래터공원',lat:35.8190,lon:128.5860}]
         };
 
-        };
-
         let map, geocoder, wakeLock = null;
         let watchId = null, serverTimer = null;
         let myRoute = "", myVehicle = "", myBusId = "";
@@ -319,8 +318,6 @@
 
         let adminClickCount = 0;
         let adminClickTimer = null;
-        
-        // 💡 밖으로 빼서 얌전하게 둔 GPS 알림 변수
         let gpsAlerted = false; 
 
         const todayObj = new Date();
@@ -389,52 +386,64 @@
             }
         }
 
-        // 💡 버튼 누르면 이 함수가 정상적으로 실행됩니다!
+        // 💡 [핵심 해결책] 멈춤/얼어붙는 현상을 막기 위한 비동기 처리(setTimeout) 마법!
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
             if (myVehicle === "") { alert("차량 번호를 입력해주세요!"); return; }
             
-            let elem = document.documentElement;
-            if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
-            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
-            
-            myBusId = myRoute + "_" + myVehicle;
-            
+            // 1. 답답하지 않게 로그인 화면부터 즉시 지워버리고 지도 화면을 띄워줍니다!
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mapScreen').style.display = 'block';
             document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 [${myVehicle}]`;
 
-            database.ref('live_buses/' + myBusId).onDisconnect().remove();
-            database.ref('live_tails/' + myBusId).onDisconnect().remove();
+            // 2. 스마트폰이 화면을 바꿀 시간을 딱 0.1초(100ms)만 준 다음, 무거운 기능들을 부드럽게 켭니다.
+            setTimeout(() => {
+                let elem = document.documentElement;
+                if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+                
+                myBusId = myRoute + "_" + myVehicle;
 
-            database.ref('daily_logs/' + dateKey + '/' + myBusId).set({
-                route: myRoute,
-                vehicle: myVehicle,
-                time: new Date().toLocaleTimeString()
-            });
+                database.ref('live_buses/' + myBusId).onDisconnect().remove();
+                database.ref('live_tails/' + myBusId).onDisconnect().remove();
 
-            database.ref('admin_settings/marquee_text').on('value', snap => {
-                const text = snap.val();
-                if (text) { document.getElementById('mainMarqueeText').innerText = text; }
-            });
-
-            if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-
-            checkDarkMode();
-            setInterval(checkDarkMode, 60000);
-
-            requestWakeLock(); initMap(); startGPS(); startReceivingData(); loadIncidents(); loadTails(); 
-            serverTimer = setInterval(sendMyLocation, 5000);
-            
-            setInterval(function() {
-                let thirtyMinsAgo = Date.now() - 1800000;
-                database.ref('live_incidents').orderByChild('timestamp_ms').endAt(thirtyMinsAgo).once('value', snapshot => {
-                    snapshot.forEach(child => child.ref.remove());
+                database.ref('daily_logs/' + dateKey + '/' + myBusId).set({
+                    route: myRoute,
+                    vehicle: myVehicle,
+                    time: new Date().toLocaleTimeString()
                 });
-            }, 60000);
 
-            setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!",1); }, 1000);
+                database.ref('admin_settings/marquee_text').on('value', snap => {
+                    const text = snap.val();
+                    if (text) { document.getElementById('mainMarqueeText').innerText = text; }
+                });
+
+                // 💡 안드로이드 폰을 종종 얼어붙게 만드는 주범(음성 비서)도 화면이 넘어가고 0.5초 뒤에 조용히 깨웁니다!
+                if (window.speechSynthesis) {
+                    setTimeout(() => { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); }, 500);
+                }
+
+                checkDarkMode();
+                setInterval(checkDarkMode, 60000);
+
+                requestWakeLock(); 
+                initMap(); 
+                startGPS(); 
+                startReceivingData(); 
+                loadIncidents(); 
+                loadTails(); 
+                serverTimer = setInterval(sendMyLocation, 5000);
+                
+                setInterval(function() {
+                    let thirtyMinsAgo = Date.now() - 1800000;
+                    database.ref('live_incidents').orderByChild('timestamp_ms').endAt(thirtyMinsAgo).once('value', snapshot => {
+                        snapshot.forEach(child => child.ref.remove());
+                    });
+                }, 60000);
+
+                setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!", 1); }, 1500);
+            }, 100);
         }
 
         function initMap() {
@@ -620,7 +629,6 @@
             speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
         }
 
-        // 💡 오타를 완벽하게 제거한 진짜 정상 작동 GPS 함수!
         function startGPS() {
             if (!("geolocation" in navigator)) {
                 document.getElementById('topStatus').innerText = "GPS 미지원 기기 ❌";
