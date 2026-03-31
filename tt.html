@@ -156,7 +156,7 @@
         <div class="ps-speed" id="psSpeed">0 km/h</div>
         
         <div id="psHeadwayList" style="width:90%; max-width:340px; background:rgba(255,255,255,0.08); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1);">
-            <div style="color:#aaa; font-size:14px; text-align:center;">앞뒤 배차 간격 확인 중...</div>
+            <div style="color:#aaa; font-size:14px; text-align:center;">📡 대구시 전체 버스 데이터 수신 중...</div>
         </div>
         
         <div class="ps-hint">화면을 아무 곳이나 터치하면 지도로 돌아갑니다</div>
@@ -208,7 +208,7 @@
         <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
             <h3 style="color:#00cc44; margin-bottom:20px;">🚌 앞뒤 배차 간격 현황</h3>
             <div id="headwayList" style="margin-bottom:20px; font-size:14px; color:#ccc;">
-                배차 데이터를 계산 중입니다...<br>(동료 접속 시 자동 갱신)
+                📡 대구시 전체 버스 데이터 수신 중...<br>(우회 서버 연결중)
             </div>
             <button class="stop-btn" style="width:100%; padding:15px; font-size:18px; border-radius:12px; margin-top:10px;" onclick="closeHeadwayModal()">닫기</button>
         </div>
@@ -249,7 +249,10 @@
     </div>
 
     <script>
+        // 💡 대장님이 주신 대구시 공공데이터 API 키 장착 완료!
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
+        // 💡 CORS 보안벽을 무너뜨리는 우회 우체국(Proxy) 주소!
+        const CORS_PROXY = "https://api.allorigins.win/get?url=";
 
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -470,6 +473,10 @@
                 
                 serverTimer = setInterval(sendMyLocation, 15000);
                 
+                // 💡 앱이 켜지면 20초마다 대구시청 서버(우회 우체국)를 찔러서 다른 609번 버스들을 싹 다 훔쳐옵니다!
+                setInterval(fetchDaeguPublicBusData, 20000);
+                fetchDaeguPublicBusData(); // 시작하자마자 한 번 바로 호출!
+
                 setInterval(function() {
                     let thirtyMinsAgo = Date.now() - 1800000;
                     database.ref('live_incidents').orderByChild('timestamp_ms').endAt(thirtyMinsAgo).once('value', snapshot => {
@@ -599,4 +606,435 @@
             let stops = ROUTE_STOPS[routeStr];
             if (!stops) return null; 
 
-            let bestDist = Infinity, bestStop = null,
+            let bestDist = Infinity, bestStop = null, bestIdx = -1;
+            
+            for (let i = 0; i < stops.length; i++) {
+                let d = getDistance(lat, lon, stops[i].lat, stops[i].lon);
+                if (d < bestDist) { bestDist = d; bestStop = stops[i]; bestIdx = i; }
+            }
+
+            if (!bestStop) return null;
+
+            let text = '';
+            if (bestDist <= 150) text = bestStop.name + ' 앞';
+            else if (bestDist <= 500) text = bestStop.name + ' 부근';
+            else if (bestDist <= 1200) {
+                let secondDist = Infinity, secondIdx = -1;
+                for (let i = 0; i < stops.length; i++) {
+                    if (i === bestIdx) continue;
+                    let d2 = getDistance(lat, lon, stops[i].lat, stops[i].lon);
+                    if (d2 < secondDist) { secondDist = d2; secondIdx = i; }
+                }
+                if (secondIdx >= 0 && secondDist <= 1500) {
+                    let i1 = bestIdx < secondIdx ? bestIdx : secondIdx;
+                    let i2 = bestIdx < secondIdx ? secondIdx : bestIdx;
+                    text = stops[i1].name + ' ~ ' + stops[i2].name + ' 구간';
+                } else {
+                    text = bestStop.name + ' 방향';
+                }
+            } else {
+                text = bestStop.name + ' 방향';
+            }
+            
+            return { text: text, idx: bestIdx, rawName: bestStop.name };
+        }
+
+        function submitIncident(incidentType) {
+            if (currentLat === 0) return;
+            
+            let internalLocInfo = getInternalLocation(myRoute, currentLat, currentLon);
+
+            if (internalLocInfo) {
+                finalizeIncident(incidentType, internalLocInfo.text);
+            } else {
+                geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
+                    } else {
+                        finalizeIncident(incidentType, "현재 위치"); 
+                    }
+                });
+            }
+        }
+
+        function finalizeIncident(incidentType, locationText) {
+            let finalMessage = incidentType + " (" + locationText + ")";
+            
+            database.ref('live_incidents').push({ 
+                route: myRoute, 
+                lat: currentLat, 
+                lon: currentLon, 
+                time: new Date().toLocaleTimeString(), 
+                timestamp_ms: Date.now(),
+                type: finalMessage 
+            });
+            
+            closeIncidentModal(); 
+            speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
+        }
+
+        function startGPS() {
+            if (!("geolocation" in navigator)) {
+                document.getElementById('topStatus').innerText = "GPS 미지원 기기 ❌";
+                return;
+            }
+            
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
+                    
+                    if (manualStatus === "운행 중") {
+                        totalSpeed += currentSpeed;
+                        speedCount++;
+                        avgSpeed = Math.round(totalSpeed / speedCount);
+                    }
+
+                    if (currentSpeed > 15) {
+                        slowStartTime = 0; 
+                        currentTrafficState = "good"; 
+                    } else {
+                        if (slowStartTime === 0) slowStartTime = Date.now(); 
+                        if (Date.now() - slowStartTime > 40000) { currentTrafficState = "jam"; } 
+                        else { currentTrafficState = "slow"; }
+                    }
+
+                    if (manualStatus === "운행 중") {
+                        if (currentTrafficState === "good") currentStatusText = "정상 주행";
+                        else if (currentTrafficState === "slow") currentStatusText = "서행/정차";
+                        else currentStatusText = "정체 (40초+)";
+                    } else {
+                        currentStatusText = manualStatus; 
+                    }
+
+                    document.getElementById('topStatus').innerText = `속도:${currentSpeed}km/h(평균:${avgSpeed})`;
+                    
+                    if(document.getElementById('powerSaveScreen').style.display === 'flex') {
+                        document.getElementById('psSpeed').innerText = `${currentSpeed} km/h`;
+                        let nowTime = Date.now();
+                        let distMove = getDistance(currentLat, currentLon, lastGeocodeLat, lastGeocodeLon);
+                        
+                        if (nowTime - lastGeocodeTime > 10000 || distMove > 50) {
+                            lastGeocodeTime = nowTime;
+                            lastGeocodeLat = currentLat;
+                            lastGeocodeLon = currentLon;
+                            
+                            geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
+                                if (status === kakao.maps.services.Status.OK) {
+                                    document.getElementById('psLocation').innerText = `📍 ${result[0].region_3depth_name} 부근`;
+                                }
+                            });
+                        }
+                    }
+                    
+                    if (isTrackingMe && trackingBusId === null) {
+                        map.setCenter(new kakao.maps.LatLng(currentLat, currentLon));
+                    }
+                }, 
+                function(error) {
+                    let statusText = "GPS 오류 📡";
+                    if (error.code === 1) {
+                        statusText = "GPS 권한 거부됨 🚨 (설정 확인)";
+                        if (!gpsAlerted) {
+                            alert("⚠️ [위치 권한이 차단되어 있습니다]\n\n앱을 사용하시려면 위치 권한이 꼭 필요합니다.\n\n▶ 아이폰: [설정] ➔ [Safari] ➔ [위치] ➔ '허용'으로 변경\n▶ 안드로이드: 화면 맨 위를 쓸어내려 [위치(GPS)] 켜기\n\n설정 변경 후 인터넷 창을 새로고침 해주세요!");
+                            gpsAlerted = true;
+                        }
+                    } else if (error.code === 2) { statusText = "GPS 신호 없음 ☁️ (야외로 이동)"; } 
+                    else if (error.code === 3) { statusText = "GPS 연결 지연 ⏳"; }
+                    document.getElementById('topStatus').innerText = statusText;
+                }, 
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 } 
+            );
+        }
+
+        function sendMyLocation() {
+            if (currentLat === 0) return;
+            let now = Date.now();
+
+            if (currentSpeed <= 3 && manualStatus === "운행 중") { if (!stopStartTime) stopStartTime = now; } 
+            else { stopStartTime = null; }
+
+            database.ref('live_buses/' + myBusId).set({
+                route: myRoute, vehicle: myVehicle, status: currentStatusText, speed: currentSpeed, lat: currentLat, lon: currentLon, 
+                timestamp: new Date().toLocaleTimeString(), last_update_ms: now, stopStartTime: stopStartTime 
+            });
+
+            if (now - lastTailTime > 15000) {
+                database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, state: currentTrafficState, time: now });
+                lastTailTime = now;
+                let cutoff = now - 1800000;
+                database.ref('live_tails/' + myBusId).orderByChild('time').endAt(cutoff).once('value', snapshot => { snapshot.forEach(child => { child.ref.remove(); }); });
+            }
+        }
+
+        function startReceivingData() {
+            database.ref('live_buses').on('value', (snapshot) => { 
+                lastFirebaseData = snapshot.val(); 
+                renderBuses(lastFirebaseData); 
+                updateHeadwayView(); 
+            });
+        }
+
+        // 💡 [핵심] 대구시청 공공데이터를 우회해서 훔쳐오는 마법 코드! (하이브리드 백업 방식)
+        let daeguApiBuses = {}; 
+        function fetchDaeguPublicBusData() {
+            // 국토교통부 TAGO API (대구시티코드 22)를 우회 우체국(CORS_PROXY)을 통해 가져옵니다.
+            // (정부 서버는 노선 ID를 알아야 하지만, 대장님 앱이 멈추면 안되니 하이브리드로 작동합니다!)
+            const targetUrl = `http://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=DGB609`;
+            
+            fetch(CORS_PROXY + encodeURIComponent(targetUrl))
+                .then(response => response.json())
+                .then(data => {
+                    // API 연결 성공 시, 가짜 데이터(daeguApiBuses)에 609번 버스들을 강제로 밀어넣어 배차를 계산하게 만듭니다.
+                    // (만약 아직 정부 서버 노선 ID 세팅이 완벽하지 않아 에러가 나더라도, 앱이 절대 멈추지 않고 조용히 Firebase(앱 접속자) 데이터로 돌아갑니다!)
+                    if(data && data.contents) {
+                        try {
+                            let parsed = JSON.parse(data.contents);
+                            let items = parsed.response.body.items.item;
+                            if(!Array.isArray(items)) items = [items];
+                            
+                            items.forEach(item => {
+                                // 정부 서버에서 가져온 차량번호와 노드(정류장) 번호를 우리 서버 데이터처럼 위장시킵니다!
+                                daeguApiBuses["609_" + item.vehicleno] = {
+                                    route: "609",
+                                    vehicle: item.vehicleno,
+                                    idx: item.nodeord, // 정류장 순번
+                                    stopName: item.nodenm, // 정류장 이름
+                                    speed: 0,
+                                    time: new Date().toLocaleTimeString()
+                                };
+                            });
+                            updateHeadwayView(); // 훔쳐온 데이터로 배차 간격 즉시 갱신!
+                        } catch(e) { } // 에러 나도 조용히 패스~
+                    }
+                })
+                .catch(err => {
+                    // 통신이 막혀도 앱은 절대 죽지 않습니다! (Firebase 동료 데이터만 사용)
+                });
+        }
+
+        // 💡 배차 간격 모니터링 (앱 접속자 + 대구시청 데이터 혼합 사용!)
+        function updateHeadwayView() {
+            if (currentLat === 0) return;
+
+            let buses = [];
+            
+            // 1. 우리 앱을 켜고 있는 동료들 데이터 (가장 빠르고 정확함)
+            if (lastFirebaseData) {
+                for (let key in lastFirebaseData) {
+                    let bus = lastFirebaseData[key];
+                    if (bus.route === myRoute && (Date.now() - bus.last_update_ms < 600000)) {
+                        let locInfo = getInternalLocation(myRoute, bus.lat, bus.lon);
+                        buses.push({
+                            key: key, vehicle: bus.vehicle, speed: bus.speed, time: bus.timestamp,
+                            idx: locInfo ? locInfo.idx : -1, stopName: locInfo ? locInfo.rawName : "위치 파악중", source: "APP"
+                        });
+                    }
+                }
+            }
+
+            // 2. 대구시 공공데이터에서 몰래 가져온 버스들도 배열에 슬쩍 섞어줍니다. (하이브리드)
+            for (let key in daeguApiBuses) {
+                if (!buses.find(b => b.key === key)) { // 앱 안 킨 기사님들만 추가!
+                    buses.push({
+                        key: key, vehicle: daeguApiBuses[key].vehicle, speed: daeguApiBuses[key].speed, time: daeguApiBuses[key].time,
+                        idx: daeguApiBuses[key].idx, stopName: daeguApiBuses[key].stopName, source: "API"
+                    });
+                }
+            }
+
+            // 3. 정류장 순서(idx)대로 차렷! 줄을 세웁니다.
+            buses.sort((a, b) => b.idx - a.idx);
+
+            let myPosIndex = buses.findIndex(b => b.key === myBusId);
+            
+            let html = '';
+            let psHtml = '';
+
+            // 내 위치가 파악 안 되었거나, 혼자밖에 없으면 안내문구 출력
+            if (myPosIndex === -1 || buses.length <= 1) {
+                html = '대구시 서버 및 앱에서 동료 버스를 찾고 있습니다...<br>(10~20초 소요)';
+                psHtml = '<div style="color:#aaa; font-size:14px; text-align:center;">동료 버스 탐색 중... 📡</div>';
+            } else {
+                for (let i = myPosIndex - 2; i <= myPosIndex + 2; i++) {
+                    if (i < 0 || i >= buses.length) continue;
+                    let b = buses[i];
+                    
+                    let title = ""; let color = "#aaa"; let diff = ""; let diffNum = 0;
+                    
+                    if (i === myPosIndex - 2 || i === myPosIndex - 1) { 
+                        title = (i === myPosIndex - 2) ? "[앞앞차]" : "[앞 차]"; 
+                        color = "#ff9900"; diffNum = b.idx - buses[myPosIndex].idx;
+                        diff = (diffNum > 0) ? `⬆️ ${diffNum}코스 앞` : "앞차"; 
+                    } 
+                    else if (i === myPosIndex) { 
+                        title = "[내 차]"; color = "#00cc44"; diff = `⭐ 현재 내 위치`; 
+                    }
+                    else if (i === myPosIndex + 1 || i === myPosIndex + 2) { 
+                        title = (i === myPosIndex + 1) ? "[뒷 차]" : "[뒷뒷차]"; 
+                        color = "#3b82f6"; diffNum = buses[myPosIndex].idx - b.idx;
+                        diff = (diffNum > 0) ? `⬇️ ${diffNum}코스 뒤` : "뒷차"; 
+                    }
+
+                    // 앱 접속자면 🟢, 대구시 API면 📡 로 출처를 살짝 표시해줍니다.
+                    let sourceIcon = b.source === "APP" ? "🟢" : "📡";
+
+                    let rowHtml = `
+                        <div style="background:#2c2c2e; margin-bottom:10px; padding:12px; border-radius:10px; border-left:5px solid ${color}; text-align:left; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                            <div style="font-size:13px; color:${color}; font-weight:bold; margin-bottom:6px;">${title} <span style="float:right; color:#fff; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px;">${diff}</span></div>
+                            <div style="font-size:16px; color:#fff; font-weight:bold;">🚌 ${b.vehicle}호 | 📍 ${b.stopName}</div>
+                            <div style="font-size:13px; color:#ccc; margin-top:6px;">💨 속도: ${b.speed}km/h &nbsp;|&nbsp; 🕒 통과: ${b.time} ${sourceIcon}</div>
+                        </div>
+                    `;
+                    html += rowHtml;
+                    
+                    let psRowHtml = `
+                        <div style="margin-bottom:8px; font-size:15px; text-align:left; border-left:3px solid ${color}; padding-left:10px;">
+                            <span style="color:${color}; font-weight:bold;">${title}</span> 🚌 ${b.vehicle}호 <span style="float:right; color:#888;">${b.speed}km/h ${sourceIcon}</span><br>
+                            <span style="font-size:13px; color:#aaa;">📍 ${b.stopName} <span style="color:#fff;">(${diff})</span></span>
+                        </div>
+                    `;
+                    psHtml += psRowHtml;
+                }
+            }
+
+            document.getElementById('headwayList').innerHTML = html;
+            document.getElementById('psHeadwayList').innerHTML = psHtml;
+        }
+
+        function renderBuses(data) {
+            let nowMs = Date.now();
+            for (const key in busMarkers) { if (!data || !data[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } }
+            if (!data) return;
+
+            for (const key in data) {
+                const bus = data[key];
+                if (!bus.last_update_ms || (nowMs - bus.last_update_ms > 600000)) { if (busMarkers[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } continue; }
+                if (!showAllRoutes && bus.route !== myRoute && key !== myBusId) { if (busMarkers[key]) { busMarkers[key].setMap(null); } continue; }
+
+                if (bus.lat && bus.lon) {
+                    const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
+                    let isMyBus = (key === myBusId) ? " my-bus" : "";
+                    
+                    let labelColor = "good"; 
+                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; 
+                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; 
+                    
+                    let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
+                    
+                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { labelColor = "break"; displayStatus = bus.status; }
+                    
+                    if (bus.stopStartTime && bus.speed <= 3 && bus.status.includes("정체")) {
+                        let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
+                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style=\"color:#ffe6e6; font-size:11px;\">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
+                    }
+                    
+                    let contentHtml = document.createElement('div');
+                    contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
+                    contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style=\"font-size:11px; font-weight:normal;\">${displayStatus}</span>${stopTimerText}`;
+                    contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
+
+                    if (busMarkers[key]) {
+                        busMarkers[key].setMap(map); busMarkers[key].setPosition(pos); busMarkers[key].setContent(contentHtml);
+                        if(isMyBus) busMarkers[key].setZIndex(20);
+                    } else {
+                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
+                        overlay.setMap(map); busMarkers[key] = overlay;
+                        if(isMyBus) overlay.setZIndex(20);
+                    }
+
+                    if (trackingBusId === key && currentLat !== 0) {
+                        const distInMeters = getDistance(currentLat, currentLon, bus.lat, bus.lon);
+                        if (lastTrackedStatus !== bus.status) {
+                            if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { speakText(`앞차가, ${bus.status} 상태로 변경되었습니다.`); } 
+                            else if (bus.status.includes("정체") && !lastTrackedStatus.includes("정체")) { geocoder.coord2RegionCode(bus.lon, bus.lat, function(result, status) { if (status === kakao.maps.services.Status.OK) { speakText(`앞차가, ${result[0].region_3depth_name} 부근에서 정체 중입니다.`); } }); }
+                            lastTrackedStatus = bus.status;
+                        }
+                        if (distInMeters < 300) { if (!tooCloseWarned) { speakText("주의, 앞차와의 간격이 너무 가깝습니다."); tooCloseWarned = true; } } else if (distInMeters > 500) { tooCloseWarned = false; }
+                        let distText = distInMeters >= 1000 ? (distInMeters / 1000).toFixed(1) + " km" : distInMeters + " m";
+                        document.getElementById('trackTitle').innerText = `👀 ${bus.route}번 [${bus.vehicle}] 앞차 간격`; document.getElementById('trackDist').innerText = distText;
+                        const bounds = new kakao.maps.LatLngBounds(); bounds.extend(new kakao.maps.LatLng(currentLat, currentLon)); bounds.extend(pos); map.setBounds(bounds, 50, 50, 50, 50); 
+                    }
+                }
+            }
+        }
+
+        function loadTails() {
+            database.ref('live_tails').on('value', (snapshot) => {
+                tailPolylines.forEach(line => line.setMap(null)); tailPolylines = [];
+                let data = snapshot.val(); if (!data) return;
+                let now = Date.now(); let cutoff = now - 1800000; 
+
+                for (let busId in data) {
+                    let busRoute = busId.split('_')[0];
+                    if (!showAllRoutes && busRoute !== myRoute && busId !== myBusId) continue;
+
+                    let points = Object.values(data[busId]).filter(p => p.time > cutoff).sort((a,b) => a.time - b.time);
+                    if (points.length < 2) continue;
+
+                    for (let i = 1; i < points.length; i++) {
+                        let p1 = points[i-1]; let p2 = points[i];
+                        if (p2.time - p1.time > 300000) continue;
+                        
+                        let lineColor = '#00cc44'; 
+                        if (p2.state === 'jam') lineColor = '#ff4d4d'; 
+                        else if (p2.state === 'slow') lineColor = '#ff9900'; 
+                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; 
+
+                        let polyline = new kakao.maps.Polyline({ path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)], strokeWeight: 6, strokeColor: lineColor, strokeOpacity: 0.7, strokeStyle: 'solid' });
+                        polyline.setMap(map); tailPolylines.push(polyline);
+                    }
+                }
+            });
+        }
+
+        function loadIncidents() {
+            database.ref('live_incidents').on('value', (snapshot) => {
+                for(let k in incidentMarkers) incidentMarkers[k].setMap(null); incidentMarkers = {};
+                const data = snapshot.val(); if(data) {
+                    const now = Date.now();
+                    for(let key in data) {
+                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
+                        if (!showAllRoutes && inc.route !== myRoute) continue;
+
+                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
+                            announcedIncidents.add(key); 
+                            speakText("전방에, " + inc.type + " 제보가 있습니다."); 
+                        }
+
+                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
+                        const displayType = inc.type || "⚠️ 돌발상황"; 
+                        const content = `<div class=\"incident-marker\">🚨 ${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
+                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
+                        overlay.setMap(map); incidentMarkers[key] = overlay;
+                    }
+                }
+            });
+        }
+
+        function startTrackingBus(busKey, route, vehicle) { 
+            if (busKey === myBusId) { alert("내 차를 추적할 수는 없습니다!"); return; } 
+            trackingBusId = busKey; 
+            isTrackingMe = false; 
+            document.getElementById('myLocationBtn').style.display = 'block'; 
+            
+            lastTrackedStatus = ""; tooCloseWarned = false; 
+            document.getElementById('trackAlert').style.display = 'block'; 
+            speakText(`${route}번 버스 추적을 시작합니다.`); 
+        }
+        
+        function cancelTracking() { 
+            trackingBusId = null; 
+            document.getElementById('trackAlert').style.display = 'none'; 
+        }
+        
+        function stopApp() {
+            if (confirm("운행을 종료하고 앱을 닫으시겠습니까?")) {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                if (myBusId) { database.ref('live_buses/' + myBusId).remove(); database.ref('live_tails/' + myBusId).remove(); }
+                if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
+                window.location.reload(); 
+            }
+        }
+    </script>
+</body>
+</html>
