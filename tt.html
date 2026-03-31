@@ -54,8 +54,9 @@
         .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } 
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
-        .power-btn { background-color: #111; border-color: #444; color: #ccc; } /* 절전 버튼 스타일 */
-        .exit-btn { background-color: #cc0000; border-color: #ff4d4d; } /* 종료 버튼 스타일 */
+        .power-btn { background-color: #111; border-color: #444; color: #ccc; } 
+        .exit-btn { background-color: #cc0000; border-color: #ff4d4d; } 
+        .headway-btn { background-color: #00cc44; border-color: #009933; color: white; } /* 배차 버튼 */
 
         .marquee-wrapper { position: absolute; top: 135px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
@@ -94,11 +95,11 @@
         #myLocationBtn { display: none; position: absolute; bottom: 80px; right: 15px; z-index: 10; background: #00cc44; color: white; border: 2px solid white; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; text-align: center; line-height: 46px; }
         #myLocationBtn:active { transform: scale(0.95); }
 
-        /* 💡 완전 흑백 절전 모드 화면 스타일! */
         #powerSaveScreen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; z-index: 10001; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
-        .ps-time { font-size: 70px; font-weight: 900; color: #555; margin-bottom: 20px; }
-        .ps-speed { font-size: 40px; font-weight: bold; color: #00882b; }
-        .ps-hint { position: absolute; bottom: 50px; font-size: 16px; color: #333; }
+        .ps-location { font-size: 26px; color: #ffcc00; margin-bottom: 20px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .ps-time { font-size: 80px; font-weight: 900; color: #555; margin-bottom: 10px; }
+        .ps-speed { font-size: 45px; font-weight: bold; color: #00cc44; margin-bottom: 20px; }
+        .ps-hint { font-size: 16px; color: #444; position: absolute; bottom: 30px; }
 
         @media screen and (max-width: 600px) {
             .header-overlay { padding: 6px 8px; }
@@ -118,6 +119,10 @@
             .modal-content h3 { font-size: 20px; margin-bottom: 20px; }
             .modal-btn { font-size: 18px; padding: 15px; margin-bottom: 10px; }
             .modal-content .stop-btn { font-size: 16px; padding: 15px; }
+
+            .ps-location { font-size: 20px; margin-bottom: 15px; }
+            .ps-time { font-size: 60px; }
+            .ps-speed { font-size: 35px; margin-bottom: 15px; }
         }
     </style>
 </head>
@@ -146,8 +151,14 @@
     </div>
 
     <div id="powerSaveScreen" onclick="disablePowerSave()">
+        <div class="ps-location" id="psLocation">📍 위치 확인 중...</div>
         <div class="ps-time" id="psTime">00:00</div>
         <div class="ps-speed" id="psSpeed">0 km/h</div>
+        
+        <div id="psHeadwayList" style="width:90%; max-width:340px; background:rgba(255,255,255,0.08); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1);">
+            <div style="color:#aaa; font-size:14px; text-align:center;">앞뒤 배차 간격 확인 중...</div>
+        </div>
+        
         <div class="ps-hint">화면을 아무 곳이나 터치하면 지도로 돌아갑니다</div>
     </div>
 
@@ -160,7 +171,7 @@
             <div class="header-bottom">
                 <div class="status-text"><span id="topStatus">GPS 연결 중... 📡</span></div>
                 <div class="btn-group">
-                    <button class="stop-btn fullscreen-btn" onclick="toggleFullScreen()">🔲 확대</button>
+                    <button class="stop-btn toggle-btn headway-btn" onclick="openHeadwayModal()">🚌 배차</button>
                     <button id="toggleRouteBtn" class="stop-btn toggle-btn" onclick="toggleRouteView()">🗺️ 노선</button>
                     <button class="stop-btn power-btn" onclick="enablePowerSave()">🌙 절전</button>
                     <button class="stop-btn exit-btn" onclick="stopApp()">종료</button>
@@ -190,6 +201,16 @@
                 <option value="차량 고장">🔧 차량 고장</option> 
             </select>
             <button class="report-btn" onclick="openIncidentModal()">🚨 돌발상황 제보</button>
+        </div>
+    </div>
+
+    <div id="headwayModal" class="modal-overlay">
+        <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+            <h3 style="color:#00cc44; margin-bottom:20px;">🚌 앞뒤 배차 간격 현황</h3>
+            <div id="headwayList" style="margin-bottom:20px; font-size:14px; color:#ccc;">
+                배차 데이터를 계산 중입니다...<br>(동료 접속 시 자동 갱신)
+            </div>
+            <button class="stop-btn" style="width:100%; padding:15px; font-size:18px; border-radius:12px; margin-top:10px;" onclick="closeHeadwayModal()">닫기</button>
         </div>
     </div>
 
@@ -228,6 +249,9 @@
     </div>
 
     <script>
+        // 💡 대장님이 발급받으신 대구시 API 키 (추후 서버 연동용으로 안전 보관!)
+        const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
+
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -302,6 +326,10 @@
         let adminClickTimer = null;
         let gpsAlerted = false; 
 
+        let lastGeocodeTime = 0;
+        let lastGeocodeLat = 0;
+        let lastGeocodeLon = 0;
+
         const todayObj = new Date();
         const dateKey = todayObj.getFullYear() + "-" + String(todayObj.getMonth() + 1).padStart(2, '0') + "-" + String(todayObj.getDate()).padStart(2, '0');
 
@@ -368,12 +396,12 @@
             }
         }
 
-        // 💡 2. 완벽한 OLED 흑백 절전 모드 로직!
         let psTimer = null;
         function enablePowerSave() {
             document.getElementById('powerSaveScreen').style.display = 'flex';
             updatePsTime();
-            psTimer = setInterval(updatePsTime, 60000); // 1분마다 시계 업데이트
+            psTimer = setInterval(updatePsTime, 60000); 
+            lastGeocodeTime = 0; 
         }
         function disablePowerSave() {
             document.getElementById('powerSaveScreen').style.display = 'none';
@@ -386,20 +414,36 @@
             document.getElementById('psTime').innerText = `${hh}:${mm}`;
         }
 
+        // 💡 앞뒤 배차 간격 모달 열고 닫기
+        function openHeadwayModal() {
+            document.getElementById('headwayModal').style.display = 'flex';
+            updateHeadwayView(); // 열자마자 즉시 갱신!
+        }
+        function closeHeadwayModal() {
+            document.getElementById('headwayModal').style.display = 'none';
+        }
+
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
             if (myVehicle === "") { alert("차량 번호를 입력해주세요!"); return; }
             
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+            
+            if (window.speechSynthesis) {
+                let u = new SpeechSynthesisUtterance("");
+                u.volume = 0;
+                window.speechSynthesis.speak(u);
+            }
+            requestWakeLock(); 
+
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mapScreen').style.display = 'block';
             document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 [${myVehicle}]`;
 
             setTimeout(() => {
-                let elem = document.documentElement;
-                if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
-                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
-                
                 myBusId = myRoute + "_" + myVehicle;
 
                 database.ref('live_buses/' + myBusId).onDisconnect().remove();
@@ -416,21 +460,15 @@
                     if (text) { document.getElementById('mainMarqueeText').innerText = text; }
                 });
 
-                if (window.speechSynthesis) {
-                    setTimeout(() => { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); }, 500);
-                }
-
                 checkDarkMode();
                 setInterval(checkDarkMode, 60000);
 
-                requestWakeLock(); 
                 initMap(); 
                 startGPS(); 
                 startReceivingData(); 
                 loadIncidents(); 
                 loadTails(); 
                 
-                // 💡 1. 서버 통신 주기를 15초(15000)로 쫙! 늘려서 배터리를 대폭 아낍니다.
                 serverTimer = setInterval(sendMyLocation, 15000);
                 
                 setInterval(function() {
@@ -440,8 +478,8 @@
                     });
                 }, 60000);
 
-                setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!", 1); }, 1500);
-            }, 100);
+                setTimeout(() => { speakText("기사님, 오늘도 활기차게 출발해 볼까요? 안전 운행 하세요!", 1); }, 1000);
+            }, 50);
         }
 
         function initMap() {
@@ -491,7 +529,6 @@
 
         function openAdminModal() {
             document.getElementById('adminModal').style.display = 'flex';
-            
             document.getElementById('adminMarqueeInput').value = document.getElementById('mainMarqueeText').innerText;
             
             const listDiv = document.getElementById('dailyLogList');
@@ -559,6 +596,7 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
+        // 💡 정류장 인덱스 번호도 같이 반환하도록 업그레이드된 함수!
         function getInternalLocation(routeStr, lat, lon) {
             let stops = ROUTE_STOPS[routeStr];
             if (!stops) return null; 
@@ -572,34 +610,38 @@
 
             if (!bestStop) return null;
 
-            if (bestDist <= 150) return bestStop.name + ' 앞';
-            if (bestDist <= 500) return bestStop.name + ' 부근';
-            
-            if (bestDist <= 1200) {
+            let text = '';
+            if (bestDist <= 150) text = bestStop.name + ' 앞';
+            else if (bestDist <= 500) text = bestStop.name + ' 부근';
+            else if (bestDist <= 1200) {
                 let secondDist = Infinity, secondIdx = -1;
                 for (let i = 0; i < stops.length; i++) {
                     if (i === bestIdx) continue;
                     let d2 = getDistance(lat, lon, stops[i].lat, stops[i].lon);
                     if (d2 < secondDist) { secondDist = d2; secondIdx = i; }
                 }
-                
                 if (secondIdx >= 0 && secondDist <= 1500) {
                     let i1 = bestIdx < secondIdx ? bestIdx : secondIdx;
                     let i2 = bestIdx < secondIdx ? secondIdx : bestIdx;
-                    return stops[i1].name + ' ~ ' + stops[i2].name + ' 구간';
+                    text = stops[i1].name + ' ~ ' + stops[i2].name + ' 구간';
+                } else {
+                    text = bestStop.name + ' 방향';
                 }
-                return bestStop.name + ' 방향';
+            } else {
+                text = bestStop.name + ' 방향';
             }
-            return null;
+            
+            // 텍스트, 정류장 순번(idx), 정류장 원본 이름(rawName)을 세트로 묶어서 반환합니다!
+            return { text: text, idx: bestIdx, rawName: bestStop.name };
         }
 
         function submitIncident(incidentType) {
             if (currentLat === 0) return;
             
-            let internalLoc = getInternalLocation(myRoute, currentLat, currentLon);
+            let internalLocInfo = getInternalLocation(myRoute, currentLat, currentLon);
 
-            if (internalLoc) {
-                finalizeIncident(incidentType, internalLoc);
+            if (internalLocInfo) {
+                finalizeIncident(incidentType, internalLocInfo.text);
             } else {
                 geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
@@ -648,12 +690,8 @@
                         currentTrafficState = "good"; 
                     } else {
                         if (slowStartTime === 0) slowStartTime = Date.now(); 
-                        
-                        if (Date.now() - slowStartTime > 40000) {
-                            currentTrafficState = "jam"; 
-                        } else {
-                            currentTrafficState = "slow"; 
-                        }
+                        if (Date.now() - slowStartTime > 40000) { currentTrafficState = "jam"; } 
+                        else { currentTrafficState = "slow"; }
                     }
 
                     if (manualStatus === "운행 중") {
@@ -666,9 +704,22 @@
 
                     document.getElementById('topStatus').innerText = `속도:${currentSpeed}km/h(평균:${avgSpeed})`;
                     
-                    // 💡 절전 모드 화면에도 속도를 실시간으로 뿌려줍니다!
                     if(document.getElementById('powerSaveScreen').style.display === 'flex') {
                         document.getElementById('psSpeed').innerText = `${currentSpeed} km/h`;
+                        let nowTime = Date.now();
+                        let distMove = getDistance(currentLat, currentLon, lastGeocodeLat, lastGeocodeLon);
+                        
+                        if (nowTime - lastGeocodeTime > 10000 || distMove > 50) {
+                            lastGeocodeTime = nowTime;
+                            lastGeocodeLat = currentLat;
+                            lastGeocodeLon = currentLon;
+                            
+                            geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
+                                if (status === kakao.maps.services.Status.OK) {
+                                    document.getElementById('psLocation').innerText = `📍 ${result[0].region_3depth_name} 부근`;
+                                }
+                            });
+                        }
                     }
                     
                     if (isTrackingMe && trackingBusId === null) {
@@ -683,11 +734,8 @@
                             alert("⚠️ [위치 권한이 차단되어 있습니다]\n\n앱을 사용하시려면 위치 권한이 꼭 필요합니다.\n\n▶ 아이폰: [설정] ➔ [Safari] ➔ [위치] ➔ '허용'으로 변경\n▶ 안드로이드: 화면 맨 위를 쓸어내려 [위치(GPS)] 켜기\n\n설정 변경 후 인터넷 창을 새로고침 해주세요!");
                             gpsAlerted = true;
                         }
-                    } else if (error.code === 2) {
-                        statusText = "GPS 신호 없음 ☁️ (야외로 이동)";
-                    } else if (error.code === 3) {
-                        statusText = "GPS 연결 지연 ⏳";
-                    }
+                    } else if (error.code === 2) { statusText = "GPS 신호 없음 ☁️ (야외로 이동)"; } 
+                    else if (error.code === 3) { statusText = "GPS 연결 지연 ⏳"; }
                     document.getElementById('topStatus').innerText = statusText;
                 }, 
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 } 
@@ -714,13 +762,103 @@
             }
         }
 
+        // 💡 실시간으로 접속된 버스들 위치 불러오기
         function startReceivingData() {
-            database.ref('live_buses').on('value', (snapshot) => { lastFirebaseData = snapshot.val(); renderBuses(lastFirebaseData); });
+            database.ref('live_buses').on('value', (snapshot) => { 
+                lastFirebaseData = snapshot.val(); 
+                renderBuses(lastFirebaseData); 
+                updateHeadwayView(); // 💡 데이터가 들어올 때마다 배차 간격도 갱신!!
+            });
+        }
+
+        // 💡 대장님이 기획하신 '앞뒤 배차 간격(헤드웨이)' 완벽 계산 & 화면 출력 마법!
+        function updateHeadwayView() {
+            if (!lastFirebaseData || currentLat === 0) return;
+
+            let buses = [];
+            
+            // 1. 내 노선(예: 609번) 차량들의 정류장 순번(idx)을 싹 다 파악합니다!
+            for (let key in lastFirebaseData) {
+                let bus = lastFirebaseData[key];
+                if (bus.route === myRoute && (Date.now() - bus.last_update_ms < 600000)) {
+                    let locInfo = getInternalLocation(myRoute, bus.lat, bus.lon);
+                    buses.push({
+                        key: key,
+                        vehicle: bus.vehicle,
+                        speed: bus.speed,
+                        time: bus.timestamp,
+                        idx: locInfo ? locInfo.idx : -1,
+                        stopName: locInfo ? locInfo.rawName : "위치 파악중"
+                    });
+                }
+            }
+
+            // 2. 종점 쪽(숫자가 큼)에 가까운 순서대로 줄을 쫙 세웁니다.
+            buses.sort((a, b) => b.idx - a.idx);
+
+            let myPosIndex = buses.findIndex(b => b.key === myBusId);
+            if (myPosIndex === -1) return; // 아직 내 위치가 안 잡혔으면 대기
+
+            let html = '';
+            let psHtml = '';
+
+            // 3. 내 위치를 기준으로 앞 2대, 뒤 2대만 쏙 뽑아옵니다!
+            for (let i = myPosIndex - 2; i <= myPosIndex + 2; i++) {
+                if (i < 0 || i >= buses.length) continue;
+                let b = buses[i];
+                
+                let title = "";
+                let color = "#aaa";
+                let diff = "";
+                let diffNum = 0;
+                
+                // 수학 공식: 정류장 인덱스 차이로 코스 간격을 구함!
+                if (i === myPosIndex - 2) { 
+                    title = "[앞앞차]"; color = "#ff9900"; diffNum = b.idx - buses[myPosIndex].idx;
+                    diff = (diffNum > 0) ? `⬆️ ${diffNum}코스 앞` : "앞차"; 
+                } 
+                else if (i === myPosIndex - 1) { 
+                    title = "[앞 차]"; color = "#ff9900"; diffNum = b.idx - buses[myPosIndex].idx;
+                    diff = (diffNum > 0) ? `⬆️ ${diffNum}코스 앞` : "앞차"; 
+                }
+                else if (i === myPosIndex) { 
+                    title = "[내 차]"; color = "#00cc44"; diff = `⭐ 현재 내 위치`; 
+                }
+                else if (i === myPosIndex + 1) { 
+                    title = "[뒷 차]"; color = "#3b82f6"; diffNum = buses[myPosIndex].idx - b.idx;
+                    diff = (diffNum > 0) ? `⬇️ ${diffNum}코스 뒤` : "뒷차"; 
+                }
+                else if (i === myPosIndex + 2) { 
+                    title = "[뒷뒷차]"; color = "#3b82f6"; diffNum = buses[myPosIndex].idx - b.idx;
+                    diff = (diffNum > 0) ? `⬇️ ${diffNum}코스 뒤` : "뒷차"; 
+                }
+
+                // 모달창 디자인
+                let rowHtml = `
+                    <div style="background:#2c2c2e; margin-bottom:10px; padding:12px; border-radius:10px; border-left:5px solid ${color}; text-align:left; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                        <div style="font-size:13px; color:${color}; font-weight:bold; margin-bottom:6px;">${title} <span style="float:right; color:#fff; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px;">${diff}</span></div>
+                        <div style="font-size:16px; color:#fff; font-weight:bold;">🚌 ${b.vehicle}호 | 📍 ${b.stopName}</div>
+                        <div style="font-size:13px; color:#ccc; margin-top:6px;">💨 속도: ${b.speed}km/h &nbsp;|&nbsp; 🕒 통과: ${b.time}</div>
+                    </div>
+                `;
+                html += rowHtml;
+                
+                // 절전 모드용 미니 디자인
+                let psRowHtml = `
+                    <div style="margin-bottom:8px; font-size:15px; text-align:left; border-left:3px solid ${color}; padding-left:10px;">
+                        <span style="color:${color}; font-weight:bold;">${title}</span> 🚌 ${b.vehicle}호 <span style="float:right; color:#888;">${b.speed}km/h</span><br>
+                        <span style="font-size:13px; color:#aaa;">📍 ${b.stopName} <span style="color:#fff;">(${diff})</span></span>
+                    </div>
+                `;
+                psHtml += psRowHtml;
+            }
+
+            document.getElementById('headwayList').innerHTML = html;
+            document.getElementById('psHeadwayList').innerHTML = psHtml;
         }
 
         function renderBuses(data) {
             let nowMs = Date.now();
-
             for (const key in busMarkers) { if (!data || !data[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } }
             if (!data) return;
 
