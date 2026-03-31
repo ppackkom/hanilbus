@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한일운수 스마트 배차판 (보안 강화버전)</title>
+    <title>한일운수 스마트 배차판 (하이패스 버전)</title>
     
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #000000; color: white; }
@@ -83,12 +83,11 @@
     <script>
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
         
-        // 💡 우체국 4곳 배치! 정부 방화벽을 피하기 위한 초강력 우회로 추가
+        // 💡 [핵심] 1순위를 프록시 없는 '스마트폰 직통 연결(하이패스)'로 설정!
         const PROXIES = [
+            { url: "", type: "direct_bypass" }, // 1. 정부 방화벽을 피해 폰에서 직접 연결!
             { url: "https://api.allorigins.win/get?url=", type: "allorigins" },
-            { url: "https://corsproxy.io/?", type: "direct" },
-            { url: "https://api.codetabs.com/v1/proxy?quest=", type: "direct" },
-            { url: "https://thingproxy.freeboard.io/fetch/", type: "direct" }
+            { url: "https://api.codetabs.com/v1/proxy?quest=", type: "raw" }
         ];
 
         let myRoute = "";
@@ -105,7 +104,8 @@
 
             for (let proxy of PROXIES) {
                 try {
-                    let fetchUrl = proxy.url + encodeURIComponent(targetUrl);
+                    // 1순위 하이패스일 경우 proxy.url이 없으므로 targetUrl로 바로 찌릅니다.
+                    let fetchUrl = proxy.url ? proxy.url + encodeURIComponent(targetUrl) : targetUrl;
                     let response = await fetch(fetchUrl);
                     
                     if (response.ok) {
@@ -169,7 +169,6 @@
             document.getElementById('lastUpdateTime').innerText = "🔄 실시간 데이터 수신 중...";
 
             if (!daeguRouteId) {
-                // 💡 핵심 수정: http -> https 로 완벽 교체!
                 const routeInfoUrl = `https://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
                 
                 try {
@@ -198,7 +197,6 @@
         }
 
         async function fetchBusLocations(routeId) {
-            // 💡 핵심 수정: http -> https 로 완벽 교체!
             const locUrl = `https://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
             
             try {
@@ -234,17 +232,17 @@
         }
 
         function handleApiError(err) {
-            let msg = "❌ 대구시 서버 통신 실패 (네트워크 지연)";
+            let msg = "❌ 대구시 서버 통신 실패 (방화벽 차단)";
             
             if (err.message === "API_KEY_UNREGISTERED") {
-                msg = "❌ API 키가 등록되지 않았습니다.<br><br><span style='font-size:15px; color:#ffcc00;'>새로 발급받으신 직후라면 서버 등록에 최대 1~2시간이 걸립니다!</span>";
+                msg = "❌ API 키가 등록되지 않았습니다.<br><br><span style='font-size:15px; color:#ffcc00;'>서버 동기화 중입니다. 잠시 후 다시 시도해 주세요!</span>";
             } else if (err.message === "API_KEY_LIMIT") {
                 msg = "❌ 일일 데이터 조회 한도 초과";
             } else if (err.message === "API_XML_ERROR") {
-                msg = "❌ 공공데이터포털 시스템 오류<br>(키 형식이 잘못되었을 가능성이 높습니다)";
+                msg = "❌ 공공데이터포털 거절 오류<br>(키 형식이 잘못되었거나 미등록)";
             } else if (err.message === "NOT_JSON") {
-                msg = "❌ 정부 방화벽 차단 (해외 IP 접근 금지 등)";
-            } else if (err.message === "HTTP_403") {
+                msg = "❌ 정부 방화벽 차단 (해외 IP 접근 금지)";
+            } else if (err.message.includes("HTTP_403")) {
                 msg = "❌ 403 출입 금지<br>(정부 방화벽이 차단 중입니다)";
             } else {
                 msg = `❌ 통신 에러 발생: ${err.message}`;
