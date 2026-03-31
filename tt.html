@@ -32,10 +32,8 @@
         .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } 
         .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-weight: bold; } 
         .input-group input:focus, .input-group select:focus { border-color: #ff7f50; box-shadow: 0 0 10px rgba(255, 127, 80, 0.4); background-color: #3a3a3c; }
-        
         .start-btn { background: linear-gradient(135deg, #ff7f50, #ff5722); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); transition: transform 0.1s; } 
         .start-btn:active { transform: scale(0.97); }
-        
         .install-btn { background-color: transparent; color: #ff7f50; border: 2px solid #ff7f50; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 15px; transition: all 0.2s; }
         .install-btn:active { background-color: rgba(255, 127, 80, 0.1); }
 
@@ -56,6 +54,8 @@
         .stop-btn { background-color: rgba(85, 85, 85, 0.8); color: white; border: 1px solid #777; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s; white-space: nowrap; line-height: 1.1; } 
         .toggle-btn { background-color: rgba(0, 102, 255, 0.8); border-color: #005ce6; } 
         .fullscreen-btn { background-color: #444; border-color: #666; } 
+        .power-btn { background-color: #111; border-color: #444; color: #ccc; } /* 절전 버튼 스타일 */
+        .exit-btn { background-color: #cc0000; border-color: #ff4d4d; } /* 종료 버튼 스타일 */
 
         .marquee-wrapper { position: absolute; top: 135px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
@@ -93,6 +93,12 @@
         
         #myLocationBtn { display: none; position: absolute; bottom: 80px; right: 15px; z-index: 10; background: #00cc44; color: white; border: 2px solid white; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; text-align: center; line-height: 46px; }
         #myLocationBtn:active { transform: scale(0.95); }
+
+        /* 💡 완전 흑백 절전 모드 화면 스타일! */
+        #powerSaveScreen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; z-index: 10001; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+        .ps-time { font-size: 70px; font-weight: 900; color: #555; margin-bottom: 20px; }
+        .ps-speed { font-size: 40px; font-weight: bold; color: #00882b; }
+        .ps-hint { position: absolute; bottom: 50px; font-size: 16px; color: #333; }
 
         @media screen and (max-width: 600px) {
             .header-overlay { padding: 6px 8px; }
@@ -139,6 +145,12 @@
         </div>
     </div>
 
+    <div id="powerSaveScreen" onclick="disablePowerSave()">
+        <div class="ps-time" id="psTime">00:00</div>
+        <div class="ps-speed" id="psSpeed">0 km/h</div>
+        <div class="ps-hint">화면을 아무 곳이나 터치하면 지도로 돌아갑니다</div>
+    </div>
+
     <div id="mapScreen">
         <div class="header-overlay">
             <div class="header-top">
@@ -148,9 +160,10 @@
             <div class="header-bottom">
                 <div class="status-text"><span id="topStatus">GPS 연결 중... 📡</span></div>
                 <div class="btn-group">
-                    <button class="stop-btn fullscreen-btn" onclick="toggleFullScreen()">🔲 화면확대</button>
-                    <button id="toggleRouteBtn" class="stop-btn toggle-btn" onclick="toggleRouteView()">🗺️ 전체 노선</button>
-                    <button class="stop-btn" onclick="stopApp()">종료</button>
+                    <button class="stop-btn fullscreen-btn" onclick="toggleFullScreen()">🔲 확대</button>
+                    <button id="toggleRouteBtn" class="stop-btn toggle-btn" onclick="toggleRouteView()">🗺️ 노선</button>
+                    <button class="stop-btn power-btn" onclick="enablePowerSave()">🌙 절전</button>
+                    <button class="stop-btn exit-btn" onclick="stopApp()">종료</button>
                 </div>
             </div>
         </div>
@@ -249,38 +262,7 @@
 
         const ROUTE_STOPS = {
             '204':[{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},{name:'범물청구타운',lat:35.8258,lon:128.6460},{name:'지산우방아파트',lat:35.8310,lon:128.6420},{name:'지산동서맨션',lat:35.8340,lon:128.6390},{name:'대구경찰청',lat:35.8380,lon:128.6350},{name:'황금네거리',lat:35.8450,lon:128.6280},{name:'황금시장',lat:35.8470,lon:128.6230},{name:'중동행정복지센터',lat:35.8500,lon:128.6180},{name:'희망교',lat:35.8530,lon:128.6120},{name:'봉명네거리',lat:35.8560,lon:128.6050},{name:'명덕역',lat:35.8600,lon:128.5980},{name:'남문시장',lat:35.8630,lon:128.5960},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},{name:'경상감영공원',lat:35.8700,lon:128.5920},{name:'대구콘서트하우스',lat:35.8730,lon:128.5900},{name:'중구보건소',lat:35.8750,lon:128.5880},{name:'북비산네거리',lat:35.8800,lon:128.5820},{name:'비산초등학교',lat:35.8820,lon:128.5790},{name:'대평중학교',lat:35.8840,lon:128.5760},{name:'서대구중학교',lat:35.8860,lon:128.5730},{name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},{name:'서구문화회관',lat:35.8880,lon:128.5640},{name:'서대구공단네거리',lat:35.8900,lon:128.5600},{name:'서대구역',lat:35.8840,lon:128.5560},{name:'사수초등학교',lat:35.9060,lon:128.5670},{name:'e편한세상대구금호',lat:35.9100,lon:128.5680},{name:'금호지구종점',lat:35.9140,lon:128.5700}],
-            '609':[
-                {name:'대천동공영차고지',lat:35.8115,lon:128.5140},
-                {name:'진천역',lat:35.8138,lon:128.5230},
-                {name:'이마트월배점',lat:35.8162,lon:128.5258},
-                {name:'조암초등학교',lat:35.8208,lon:128.5303},
-                {name:'월성2동행정복지센터',lat:35.8242,lon:128.5339},
-                {name:'올림픽기념관',lat:35.8288,lon:128.5367},
-                {name:'남부교육지원청',lat:35.8345,lon:128.5445},
-                {name:'서부정류장(관문시장)',lat:35.8367,lon:128.5578},
-                {name:'두류공원네거리',lat:35.8425,lon:128.5632},
-                {name:'성당시장',lat:35.8445,lon:128.5712},
-                {name:'대명사회복지관',lat:35.8502,lon:128.5801},
-                {name:'경북공고',lat:35.8553,lon:128.5872},
-                {name:'남산초등학교',lat:35.8581,lon:128.5898},
-                {name:'청라언덕(신남)역',lat:35.8625,lon:128.5828},
-                {name:'반월당역',lat:35.8655,lon:128.5930},
-                {name:'수성교',lat:35.8631,lon:128.6042},
-                {name:'대구은행역',lat:35.8597,lon:128.6139},
-                {name:'범어역',lat:35.8590,lon:128.6268},
-                {name:'수성구청역',lat:35.8588,lon:128.6356},
-                {name:'만촌역',lat:35.8580,lon:128.6430},
-                {name:'담티역',lat:35.8475,lon:128.6530},
-                {name:'대공원역(연호동)',lat:35.8427,lon:128.6799},
-                {name:'대구스타디움',lat:35.8302,lon:128.6912},
-                {name:'시지중학교',lat:35.8365,lon:128.7025},
-                {name:'사월역',lat:35.8320,lon:128.7150},
-                {name:'경산시장',lat:35.8245,lon:128.7360},
-                {name:'경산시외버스정류장',lat:35.8260,lon:128.7420},
-                {name:'중방네거리',lat:35.8285,lon:128.7450},
-                {name:'임당역',lat:35.8315,lon:128.7485},
-                {name:'영남대앞',lat:35.8350,lon:128.7520}
-            ],
+            '609':[{name:'대천동공영차고지',lat:35.8115,lon:128.5140},{name:'진천역',lat:35.8138,lon:128.5230},{name:'이마트월배점',lat:35.8162,lon:128.5258},{name:'조암초등학교',lat:35.8208,lon:128.5303},{name:'월성2동행정복지센터',lat:35.8242,lon:128.5339},{name:'올림픽기념관',lat:35.8288,lon:128.5367},{name:'남부교육지원청',lat:35.8345,lon:128.5445},{name:'서부정류장(관문시장)',lat:35.8367,lon:128.5578},{name:'두류공원네거리',lat:35.8425,lon:128.5632},{name:'성당시장',lat:35.8445,lon:128.5712},{name:'대명사회복지관',lat:35.8502,lon:128.5801},{name:'경북공고',lat:35.8553,lon:128.5872},{name:'남산초등학교',lat:35.8581,lon:128.5898},{name:'청라언덕(신남)역',lat:35.8625,lon:128.5828},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'수성교',lat:35.8631,lon:128.6042},{name:'대구은행역',lat:35.8597,lon:128.6139},{name:'범어역',lat:35.8590,lon:128.6268},{name:'수성구청역',lat:35.8588,lon:128.6356},{name:'만촌역',lat:35.8580,lon:128.6430},{name:'담티역',lat:35.8475,lon:128.6530},{name:'대공원역(연호동)',lat:35.8427,lon:128.6799},{name:'대구스타디움',lat:35.8302,lon:128.6912},{name:'시지중학교',lat:35.8365,lon:128.7025},{name:'사월역',lat:35.8320,lon:128.7150},{name:'경산시장',lat:35.8245,lon:128.7360},{name:'경산시외버스정류장',lat:35.8260,lon:128.7420},{name:'중방네거리',lat:35.8285,lon:128.7450},{name:'임당역',lat:35.8315,lon:128.7485},{name:'영남대앞',lat:35.8350,lon:128.7520}],
             '937':[{name:'덕원고등학교',lat:35.8350,lon:128.6850},{name:'시지중학교',lat:35.8320,lon:128.6780},{name:'신매역',lat:35.8290,lon:128.7020},{name:'고산역화성파크드림',lat:35.8430,lon:128.6950},{name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'연호동화훼단지',lat:35.8470,lon:128.6720},{name:'방공포병학교',lat:35.8490,lon:128.6640},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'담티역',lat:35.8550,lon:128.6480},{name:'수성대학교',lat:35.8580,lon:128.6420},{name:'구남부정류장',lat:35.8600,lon:128.6360},{name:'만촌2동행정복지센터',lat:35.8630,lon:128.6320},{name:'만촌태왕리더스',lat:35.8640,lon:128.6280},{name:'범어역',lat:35.8710,lon:128.6220},{name:'동대구역',lat:35.8790,lon:128.6280},{name:'평화시장(닭똥집골목)',lat:35.8800,lon:128.6200},{name:'공고네거리',lat:35.8820,lon:128.6150},{name:'경북대학교정문',lat:35.8880,lon:128.6060},{name:'영진전문대학교후문',lat:35.8920,lon:128.5980},{name:'복현오거리',lat:35.8930,lon:128.5950},{name:'엑스코',lat:35.9000,lon:128.6080},{name:'전자상가',lat:35.9020,lon:128.6020},{name:'무태네거리',lat:35.9080,lon:128.5780},{name:'북구구민운동장',lat:35.9180,lon:128.5720},{name:'칠곡그린빌',lat:35.9220,lon:128.5710},{name:'강북경찰서',lat:35.9250,lon:128.5690},{name:'칠곡운암역',lat:35.9280,lon:128.5680},{name:'칠곡우방타운(종점)',lat:35.9390,lon:128.5600}],
             '894':[{name:'경일대학교',lat:35.7950,lon:128.7980},{name:'대구가톨릭대학교',lat:35.8020,lon:128.7820},{name:'하양역',lat:35.8080,lon:128.7750},{name:'대구대정문',lat:35.8180,lon:128.7520},{name:'압량읍사무소',lat:35.8120,lon:128.7550},{name:'영남대앞',lat:35.8280,lon:128.7460},{name:'임당역',lat:35.8240,lon:128.7340},{name:'경산시장',lat:35.8210,lon:128.7400},{name:'옥산네거리',lat:35.8180,lon:128.7300},{name:'대구스타디움',lat:35.8430,lon:128.7020},{name:'경기장네거리',lat:35.8440,lon:128.6950},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'만촌우방1차',lat:35.8620,lon:128.6360},{name:'만촌자이르네',lat:35.8650,lon:128.6290},{name:'수성소방서',lat:35.8460,lon:128.6350},{name:'지산타운',lat:35.8380,lon:128.6440},{name:'범물청구타운',lat:35.8260,lon:128.6480},{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487}],
             'dalseo6':[{name:'남도버스',lat:35.8280,lon:128.5180},{name:'진월초등학교',lat:35.8270,lon:128.5200},{name:'월배역',lat:35.8220,lon:128.5330},{name:'상인초등학교',lat:35.8260,lon:128.5420},{name:'월촌역',lat:35.8330,lon:128.5520},{name:'앞산청구제네스',lat:35.8370,lon:128.5560},{name:'송현역',lat:35.8430,lon:128.5620},{name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},{name:'앞산양궁장',lat:35.8250,lon:128.5800},{name:'안지랑골입구',lat:35.8320,lon:128.5930},{name:'대덕문화전당',lat:35.8380,lon:128.5980},{name:'대명중학교',lat:35.8420,lon:128.6000},{name:'충혼탑',lat:35.8490,lon:128.6040},{name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},{name:'경일여자고등학교',lat:35.8550,lon:128.6070},{name:'앞산빨래터공원',lat:35.8190,lon:128.5860}]
@@ -386,18 +368,33 @@
             }
         }
 
-        // 💡 [핵심 해결책] 멈춤/얼어붙는 현상을 막기 위한 비동기 처리(setTimeout) 마법!
+        // 💡 2. 완벽한 OLED 흑백 절전 모드 로직!
+        let psTimer = null;
+        function enablePowerSave() {
+            document.getElementById('powerSaveScreen').style.display = 'flex';
+            updatePsTime();
+            psTimer = setInterval(updatePsTime, 60000); // 1분마다 시계 업데이트
+        }
+        function disablePowerSave() {
+            document.getElementById('powerSaveScreen').style.display = 'none';
+            clearInterval(psTimer);
+        }
+        function updatePsTime() {
+            let now = new Date();
+            let hh = String(now.getHours()).padStart(2, '0');
+            let mm = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('psTime').innerText = `${hh}:${mm}`;
+        }
+
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
             myVehicle = document.getElementById('vehicleInput').value.trim();
             if (myVehicle === "") { alert("차량 번호를 입력해주세요!"); return; }
             
-            // 1. 답답하지 않게 로그인 화면부터 즉시 지워버리고 지도 화면을 띄워줍니다!
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mapScreen').style.display = 'block';
             document.getElementById('myRouteInfo').innerText = `🗺️ ${myRoute}번 [${myVehicle}]`;
 
-            // 2. 스마트폰이 화면을 바꿀 시간을 딱 0.1초(100ms)만 준 다음, 무거운 기능들을 부드럽게 켭니다.
             setTimeout(() => {
                 let elem = document.documentElement;
                 if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
@@ -419,7 +416,6 @@
                     if (text) { document.getElementById('mainMarqueeText').innerText = text; }
                 });
 
-                // 💡 안드로이드 폰을 종종 얼어붙게 만드는 주범(음성 비서)도 화면이 넘어가고 0.5초 뒤에 조용히 깨웁니다!
                 if (window.speechSynthesis) {
                     setTimeout(() => { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); }, 500);
                 }
@@ -433,7 +429,9 @@
                 startReceivingData(); 
                 loadIncidents(); 
                 loadTails(); 
-                serverTimer = setInterval(sendMyLocation, 5000);
+                
+                // 💡 1. 서버 통신 주기를 15초(15000)로 쫙! 늘려서 배터리를 대폭 아낍니다.
+                serverTimer = setInterval(sendMyLocation, 15000);
                 
                 setInterval(function() {
                     let thirtyMinsAgo = Date.now() - 1800000;
@@ -667,6 +665,11 @@
                     }
 
                     document.getElementById('topStatus').innerText = `속도:${currentSpeed}km/h(평균:${avgSpeed})`;
+                    
+                    // 💡 절전 모드 화면에도 속도를 실시간으로 뿌려줍니다!
+                    if(document.getElementById('powerSaveScreen').style.display === 'flex') {
+                        document.getElementById('psSpeed').innerText = `${currentSpeed} km/h`;
+                    }
                     
                     if (isTrackingMe && trackingBusId === null) {
                         map.setCenter(new kakao.maps.LatLng(currentLat, currentLon));
