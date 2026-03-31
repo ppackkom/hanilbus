@@ -56,7 +56,7 @@
         .fullscreen-btn { background-color: #444; border-color: #666; } 
         .power-btn { background-color: #111; border-color: #444; color: #ccc; } 
         .exit-btn { background-color: #cc0000; border-color: #ff4d4d; } 
-        .headway-btn { background-color: #00cc44; border-color: #009933; color: white; } /* 배차 버튼 */
+        .headway-btn { background-color: #00cc44; border-color: #009933; color: white; } 
 
         .marquee-wrapper { position: absolute; top: 135px; left: 10px; right: 10px; z-index: 2; overflow: hidden; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 5px 0; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
         .marquee-text { display: inline-block; white-space: nowrap; font-size: 14px; color: #ffe600; font-weight: bold; animation: scroll-left 15s linear infinite; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
@@ -249,7 +249,6 @@
     </div>
 
     <script>
-        // 💡 대장님이 발급받으신 대구시 API 키 (추후 서버 연동용으로 안전 보관!)
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
 
         let deferredPrompt;
@@ -284,9 +283,10 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const database = firebase.database();
 
+        // 💡 금구동 종점까지 완벽하게 복구된 609번 정류장 좌표입니다!
         const ROUTE_STOPS = {
             '204':[{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487},{name:'범물청구타운',lat:35.8258,lon:128.6460},{name:'지산우방아파트',lat:35.8310,lon:128.6420},{name:'지산동서맨션',lat:35.8340,lon:128.6390},{name:'대구경찰청',lat:35.8380,lon:128.6350},{name:'황금네거리',lat:35.8450,lon:128.6280},{name:'황금시장',lat:35.8470,lon:128.6230},{name:'중동행정복지센터',lat:35.8500,lon:128.6180},{name:'희망교',lat:35.8530,lon:128.6120},{name:'봉명네거리',lat:35.8560,lon:128.6050},{name:'명덕역',lat:35.8600,lon:128.5980},{name:'남문시장',lat:35.8630,lon:128.5960},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'약령시(동성로입구)',lat:35.8680,lon:128.5950},{name:'경상감영공원',lat:35.8700,lon:128.5920},{name:'대구콘서트하우스',lat:35.8730,lon:128.5900},{name:'중구보건소',lat:35.8750,lon:128.5880},{name:'북비산네거리',lat:35.8800,lon:128.5820},{name:'비산초등학교',lat:35.8820,lon:128.5790},{name:'대평중학교',lat:35.8840,lon:128.5760},{name:'서대구중학교',lat:35.8860,lon:128.5730},{name:'평리5동행정복지센터',lat:35.8870,lon:128.5680},{name:'서구문화회관',lat:35.8880,lon:128.5640},{name:'서대구공단네거리',lat:35.8900,lon:128.5600},{name:'서대구역',lat:35.8840,lon:128.5560},{name:'사수초등학교',lat:35.9060,lon:128.5670},{name:'e편한세상대구금호',lat:35.9100,lon:128.5680},{name:'금호지구종점',lat:35.9140,lon:128.5700}],
-            '609':[{name:'대천동공영차고지',lat:35.8115,lon:128.5140},{name:'진천역',lat:35.8138,lon:128.5230},{name:'이마트월배점',lat:35.8162,lon:128.5258},{name:'조암초등학교',lat:35.8208,lon:128.5303},{name:'월성2동행정복지센터',lat:35.8242,lon:128.5339},{name:'올림픽기념관',lat:35.8288,lon:128.5367},{name:'남부교육지원청',lat:35.8345,lon:128.5445},{name:'서부정류장(관문시장)',lat:35.8367,lon:128.5578},{name:'두류공원네거리',lat:35.8425,lon:128.5632},{name:'성당시장',lat:35.8445,lon:128.5712},{name:'대명사회복지관',lat:35.8502,lon:128.5801},{name:'경북공고',lat:35.8553,lon:128.5872},{name:'남산초등학교',lat:35.8581,lon:128.5898},{name:'청라언덕(신남)역',lat:35.8625,lon:128.5828},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'수성교',lat:35.8631,lon:128.6042},{name:'대구은행역',lat:35.8597,lon:128.6139},{name:'범어역',lat:35.8590,lon:128.6268},{name:'수성구청역',lat:35.8588,lon:128.6356},{name:'만촌역',lat:35.8580,lon:128.6430},{name:'담티역',lat:35.8475,lon:128.6530},{name:'대공원역(연호동)',lat:35.8427,lon:128.6799},{name:'대구스타디움',lat:35.8302,lon:128.6912},{name:'시지중학교',lat:35.8365,lon:128.7025},{name:'사월역',lat:35.8320,lon:128.7150},{name:'경산시장',lat:35.8245,lon:128.7360},{name:'경산시외버스정류장',lat:35.8260,lon:128.7420},{name:'중방네거리',lat:35.8285,lon:128.7450},{name:'임당역',lat:35.8315,lon:128.7485},{name:'영남대앞',lat:35.8350,lon:128.7520}],
+            '609':[{name:'대천동공영차고지',lat:35.8115,lon:128.5140},{name:'진천역',lat:35.8138,lon:128.5230},{name:'이마트월배점',lat:35.8162,lon:128.5258},{name:'조암초등학교',lat:35.8208,lon:128.5303},{name:'월성2동행정복지센터',lat:35.8242,lon:128.5339},{name:'올림픽기념관',lat:35.8288,lon:128.5367},{name:'남부교육지원청',lat:35.8345,lon:128.5445},{name:'서부정류장(관문시장)',lat:35.8367,lon:128.5578},{name:'두류공원네거리',lat:35.8425,lon:128.5632},{name:'성당시장',lat:35.8445,lon:128.5712},{name:'대명사회복지관',lat:35.8502,lon:128.5801},{name:'경북공고',lat:35.8553,lon:128.5872},{name:'남산초등학교',lat:35.8581,lon:128.5898},{name:'청라언덕(신남)역',lat:35.8625,lon:128.5828},{name:'반월당역',lat:35.8655,lon:128.5930},{name:'수성교',lat:35.8631,lon:128.6042},{name:'대구은행역',lat:35.8597,lon:128.6139},{name:'범어역',lat:35.8590,lon:128.6268},{name:'수성구청역',lat:35.8588,lon:128.6356},{name:'만촌역',lat:35.8580,lon:128.6430},{name:'담티역',lat:35.8475,lon:128.6530},{name:'대공원역(연호동)',lat:35.8427,lon:128.6799},{name:'대구스타디움',lat:35.8302,lon:128.6912},{name:'시지중학교',lat:35.8365,lon:128.7025},{name:'사월역',lat:35.8320,lon:128.7150},{name:'영남대앞',lat:35.8350,lon:128.7520},{name:'임당역',lat:35.8315,lon:128.7485},{name:'경산시장',lat:35.8245,lon:128.7360},{name:'경산시외버스정류장',lat:35.8260,lon:128.7420},{name:'중방네거리',lat:35.8285,lon:128.7450},{name:'금구동종점',lat:35.8050,lon:128.7580}],
             '937':[{name:'덕원고등학교',lat:35.8350,lon:128.6850},{name:'시지중학교',lat:35.8320,lon:128.6780},{name:'신매역',lat:35.8290,lon:128.7020},{name:'고산역화성파크드림',lat:35.8430,lon:128.6950},{name:'고산2동행정복지센터',lat:35.8450,lon:128.6920},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'연호동화훼단지',lat:35.8470,lon:128.6720},{name:'방공포병학교',lat:35.8490,lon:128.6640},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'담티역',lat:35.8550,lon:128.6480},{name:'수성대학교',lat:35.8580,lon:128.6420},{name:'구남부정류장',lat:35.8600,lon:128.6360},{name:'만촌2동행정복지센터',lat:35.8630,lon:128.6320},{name:'만촌태왕리더스',lat:35.8640,lon:128.6280},{name:'범어역',lat:35.8710,lon:128.6220},{name:'동대구역',lat:35.8790,lon:128.6280},{name:'평화시장(닭똥집골목)',lat:35.8800,lon:128.6200},{name:'공고네거리',lat:35.8820,lon:128.6150},{name:'경북대학교정문',lat:35.8880,lon:128.6060},{name:'영진전문대학교후문',lat:35.8920,lon:128.5980},{name:'복현오거리',lat:35.8930,lon:128.5950},{name:'엑스코',lat:35.9000,lon:128.6080},{name:'전자상가',lat:35.9020,lon:128.6020},{name:'무태네거리',lat:35.9080,lon:128.5780},{name:'북구구민운동장',lat:35.9180,lon:128.5720},{name:'칠곡그린빌',lat:35.9220,lon:128.5710},{name:'강북경찰서',lat:35.9250,lon:128.5690},{name:'칠곡운암역',lat:35.9280,lon:128.5680},{name:'칠곡우방타운(종점)',lat:35.9390,lon:128.5600}],
             '894':[{name:'경일대학교',lat:35.7950,lon:128.7980},{name:'대구가톨릭대학교',lat:35.8020,lon:128.7820},{name:'하양역',lat:35.8080,lon:128.7750},{name:'대구대정문',lat:35.8180,lon:128.7520},{name:'압량읍사무소',lat:35.8120,lon:128.7550},{name:'영남대앞',lat:35.8280,lon:128.7460},{name:'임당역',lat:35.8240,lon:128.7340},{name:'경산시장',lat:35.8210,lon:128.7400},{name:'옥산네거리',lat:35.8180,lon:128.7300},{name:'대구스타디움',lat:35.8430,lon:128.7020},{name:'경기장네거리',lat:35.8440,lon:128.6950},{name:'수성알파시티역',lat:35.8460,lon:128.6800},{name:'담티고개',lat:35.8530,lon:128.6510},{name:'만촌우방1차',lat:35.8620,lon:128.6360},{name:'만촌자이르네',lat:35.8650,lon:128.6290},{name:'수성소방서',lat:35.8460,lon:128.6350},{name:'지산타운',lat:35.8380,lon:128.6440},{name:'범물청구타운',lat:35.8260,lon:128.6480},{name:'범물1동행정복지센터',lat:35.8234,lon:128.6487}],
             'dalseo6':[{name:'남도버스',lat:35.8280,lon:128.5180},{name:'진월초등학교',lat:35.8270,lon:128.5200},{name:'월배역',lat:35.8220,lon:128.5330},{name:'상인초등학교',lat:35.8260,lon:128.5420},{name:'월촌역',lat:35.8330,lon:128.5520},{name:'앞산청구제네스',lat:35.8370,lon:128.5560},{name:'송현역',lat:35.8430,lon:128.5620},{name:'달서별빛캠핑장',lat:35.8300,lon:128.5750},{name:'앞산양궁장',lat:35.8250,lon:128.5800},{name:'안지랑골입구',lat:35.8320,lon:128.5930},{name:'대덕문화전당',lat:35.8380,lon:128.5980},{name:'대명중학교',lat:35.8420,lon:128.6000},{name:'충혼탑',lat:35.8490,lon:128.6040},{name:'남구종합스포츠타운',lat:35.8510,lon:128.6050},{name:'경일여자고등학교',lat:35.8550,lon:128.6070},{name:'앞산빨래터공원',lat:35.8190,lon:128.5860}]
@@ -414,10 +414,9 @@
             document.getElementById('psTime').innerText = `${hh}:${mm}`;
         }
 
-        // 💡 앞뒤 배차 간격 모달 열고 닫기
         function openHeadwayModal() {
             document.getElementById('headwayModal').style.display = 'flex';
-            updateHeadwayView(); // 열자마자 즉시 갱신!
+            updateHeadwayView(); 
         }
         function closeHeadwayModal() {
             document.getElementById('headwayModal').style.display = 'none';
@@ -596,401 +595,8 @@
             document.getElementById('incidentModal').style.display = 'none';
         }
 
-        // 💡 정류장 인덱스 번호도 같이 반환하도록 업그레이드된 함수!
         function getInternalLocation(routeStr, lat, lon) {
             let stops = ROUTE_STOPS[routeStr];
             if (!stops) return null; 
 
-            let bestDist = Infinity, bestStop = null, bestIdx = -1;
-            
-            for (let i = 0; i < stops.length; i++) {
-                let d = getDistance(lat, lon, stops[i].lat, stops[i].lon);
-                if (d < bestDist) { bestDist = d; bestStop = stops[i]; bestIdx = i; }
-            }
-
-            if (!bestStop) return null;
-
-            let text = '';
-            if (bestDist <= 150) text = bestStop.name + ' 앞';
-            else if (bestDist <= 500) text = bestStop.name + ' 부근';
-            else if (bestDist <= 1200) {
-                let secondDist = Infinity, secondIdx = -1;
-                for (let i = 0; i < stops.length; i++) {
-                    if (i === bestIdx) continue;
-                    let d2 = getDistance(lat, lon, stops[i].lat, stops[i].lon);
-                    if (d2 < secondDist) { secondDist = d2; secondIdx = i; }
-                }
-                if (secondIdx >= 0 && secondDist <= 1500) {
-                    let i1 = bestIdx < secondIdx ? bestIdx : secondIdx;
-                    let i2 = bestIdx < secondIdx ? secondIdx : bestIdx;
-                    text = stops[i1].name + ' ~ ' + stops[i2].name + ' 구간';
-                } else {
-                    text = bestStop.name + ' 방향';
-                }
-            } else {
-                text = bestStop.name + ' 방향';
-            }
-            
-            // 텍스트, 정류장 순번(idx), 정류장 원본 이름(rawName)을 세트로 묶어서 반환합니다!
-            return { text: text, idx: bestIdx, rawName: bestStop.name };
-        }
-
-        function submitIncident(incidentType) {
-            if (currentLat === 0) return;
-            
-            let internalLocInfo = getInternalLocation(myRoute, currentLat, currentLon);
-
-            if (internalLocInfo) {
-                finalizeIncident(incidentType, internalLocInfo.text);
-            } else {
-                geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        finalizeIncident(incidentType, result[0].region_3depth_name + " 부근");
-                    } else {
-                        finalizeIncident(incidentType, "현재 위치"); 
-                    }
-                });
-            }
-        }
-
-        function finalizeIncident(incidentType, locationText) {
-            let finalMessage = incidentType + " (" + locationText + ")";
-            
-            database.ref('live_incidents').push({ 
-                route: myRoute, 
-                lat: currentLat, 
-                lon: currentLon, 
-                time: new Date().toLocaleTimeString(), 
-                timestamp_ms: Date.now(),
-                type: finalMessage 
-            });
-            
-            closeIncidentModal(); 
-            speakText(locationText + ", " + incidentType + " 제보가 완료되었습니다.", 1); 
-        }
-
-        function startGPS() {
-            if (!("geolocation" in navigator)) {
-                document.getElementById('topStatus').innerText = "GPS 미지원 기기 ❌";
-                return;
-            }
-            
-            watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    currentLat = position.coords.latitude; currentLon = position.coords.longitude; currentSpeed = Math.round((position.coords.speed || 0) * 3.6);
-                    
-                    if (manualStatus === "운행 중") {
-                        totalSpeed += currentSpeed;
-                        speedCount++;
-                        avgSpeed = Math.round(totalSpeed / speedCount);
-                    }
-
-                    if (currentSpeed > 15) {
-                        slowStartTime = 0; 
-                        currentTrafficState = "good"; 
-                    } else {
-                        if (slowStartTime === 0) slowStartTime = Date.now(); 
-                        if (Date.now() - slowStartTime > 40000) { currentTrafficState = "jam"; } 
-                        else { currentTrafficState = "slow"; }
-                    }
-
-                    if (manualStatus === "운행 중") {
-                        if (currentTrafficState === "good") currentStatusText = "정상 주행";
-                        else if (currentTrafficState === "slow") currentStatusText = "서행/정차";
-                        else currentStatusText = "정체 (40초+)";
-                    } else {
-                        currentStatusText = manualStatus; 
-                    }
-
-                    document.getElementById('topStatus').innerText = `속도:${currentSpeed}km/h(평균:${avgSpeed})`;
-                    
-                    if(document.getElementById('powerSaveScreen').style.display === 'flex') {
-                        document.getElementById('psSpeed').innerText = `${currentSpeed} km/h`;
-                        let nowTime = Date.now();
-                        let distMove = getDistance(currentLat, currentLon, lastGeocodeLat, lastGeocodeLon);
-                        
-                        if (nowTime - lastGeocodeTime > 10000 || distMove > 50) {
-                            lastGeocodeTime = nowTime;
-                            lastGeocodeLat = currentLat;
-                            lastGeocodeLon = currentLon;
-                            
-                            geocoder.coord2RegionCode(currentLon, currentLat, function(result, status) {
-                                if (status === kakao.maps.services.Status.OK) {
-                                    document.getElementById('psLocation').innerText = `📍 ${result[0].region_3depth_name} 부근`;
-                                }
-                            });
-                        }
-                    }
-                    
-                    if (isTrackingMe && trackingBusId === null) {
-                        map.setCenter(new kakao.maps.LatLng(currentLat, currentLon));
-                    }
-                }, 
-                function(error) {
-                    let statusText = "GPS 오류 📡";
-                    if (error.code === 1) {
-                        statusText = "GPS 권한 거부됨 🚨 (설정 확인)";
-                        if (!gpsAlerted) {
-                            alert("⚠️ [위치 권한이 차단되어 있습니다]\n\n앱을 사용하시려면 위치 권한이 꼭 필요합니다.\n\n▶ 아이폰: [설정] ➔ [Safari] ➔ [위치] ➔ '허용'으로 변경\n▶ 안드로이드: 화면 맨 위를 쓸어내려 [위치(GPS)] 켜기\n\n설정 변경 후 인터넷 창을 새로고침 해주세요!");
-                            gpsAlerted = true;
-                        }
-                    } else if (error.code === 2) { statusText = "GPS 신호 없음 ☁️ (야외로 이동)"; } 
-                    else if (error.code === 3) { statusText = "GPS 연결 지연 ⏳"; }
-                    document.getElementById('topStatus').innerText = statusText;
-                }, 
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 } 
-            );
-        }
-
-        function sendMyLocation() {
-            if (currentLat === 0) return;
-            let now = Date.now();
-
-            if (currentSpeed <= 3 && manualStatus === "운행 중") { if (!stopStartTime) stopStartTime = now; } 
-            else { stopStartTime = null; }
-
-            database.ref('live_buses/' + myBusId).set({
-                route: myRoute, vehicle: myVehicle, status: currentStatusText, speed: currentSpeed, lat: currentLat, lon: currentLon, 
-                timestamp: new Date().toLocaleTimeString(), last_update_ms: now, stopStartTime: stopStartTime 
-            });
-
-            if (now - lastTailTime > 15000) {
-                database.ref('live_tails/' + myBusId).push({ lat: currentLat, lon: currentLon, speed: currentSpeed, state: currentTrafficState, time: now });
-                lastTailTime = now;
-                let cutoff = now - 1800000;
-                database.ref('live_tails/' + myBusId).orderByChild('time').endAt(cutoff).once('value', snapshot => { snapshot.forEach(child => { child.ref.remove(); }); });
-            }
-        }
-
-        // 💡 실시간으로 접속된 버스들 위치 불러오기
-        function startReceivingData() {
-            database.ref('live_buses').on('value', (snapshot) => { 
-                lastFirebaseData = snapshot.val(); 
-                renderBuses(lastFirebaseData); 
-                updateHeadwayView(); // 💡 데이터가 들어올 때마다 배차 간격도 갱신!!
-            });
-        }
-
-        // 💡 대장님이 기획하신 '앞뒤 배차 간격(헤드웨이)' 완벽 계산 & 화면 출력 마법!
-        function updateHeadwayView() {
-            if (!lastFirebaseData || currentLat === 0) return;
-
-            let buses = [];
-            
-            // 1. 내 노선(예: 609번) 차량들의 정류장 순번(idx)을 싹 다 파악합니다!
-            for (let key in lastFirebaseData) {
-                let bus = lastFirebaseData[key];
-                if (bus.route === myRoute && (Date.now() - bus.last_update_ms < 600000)) {
-                    let locInfo = getInternalLocation(myRoute, bus.lat, bus.lon);
-                    buses.push({
-                        key: key,
-                        vehicle: bus.vehicle,
-                        speed: bus.speed,
-                        time: bus.timestamp,
-                        idx: locInfo ? locInfo.idx : -1,
-                        stopName: locInfo ? locInfo.rawName : "위치 파악중"
-                    });
-                }
-            }
-
-            // 2. 종점 쪽(숫자가 큼)에 가까운 순서대로 줄을 쫙 세웁니다.
-            buses.sort((a, b) => b.idx - a.idx);
-
-            let myPosIndex = buses.findIndex(b => b.key === myBusId);
-            if (myPosIndex === -1) return; // 아직 내 위치가 안 잡혔으면 대기
-
-            let html = '';
-            let psHtml = '';
-
-            // 3. 내 위치를 기준으로 앞 2대, 뒤 2대만 쏙 뽑아옵니다!
-            for (let i = myPosIndex - 2; i <= myPosIndex + 2; i++) {
-                if (i < 0 || i >= buses.length) continue;
-                let b = buses[i];
-                
-                let title = "";
-                let color = "#aaa";
-                let diff = "";
-                let diffNum = 0;
-                
-                // 수학 공식: 정류장 인덱스 차이로 코스 간격을 구함!
-                if (i === myPosIndex - 2) { 
-                    title = "[앞앞차]"; color = "#ff9900"; diffNum = b.idx - buses[myPosIndex].idx;
-                    diff = (diffNum > 0) ? `⬆️ ${diffNum}코스 앞` : "앞차"; 
-                } 
-                else if (i === myPosIndex - 1) { 
-                    title = "[앞 차]"; color = "#ff9900"; diffNum = b.idx - buses[myPosIndex].idx;
-                    diff = (diffNum > 0) ? `⬆️ ${diffNum}코스 앞` : "앞차"; 
-                }
-                else if (i === myPosIndex) { 
-                    title = "[내 차]"; color = "#00cc44"; diff = `⭐ 현재 내 위치`; 
-                }
-                else if (i === myPosIndex + 1) { 
-                    title = "[뒷 차]"; color = "#3b82f6"; diffNum = buses[myPosIndex].idx - b.idx;
-                    diff = (diffNum > 0) ? `⬇️ ${diffNum}코스 뒤` : "뒷차"; 
-                }
-                else if (i === myPosIndex + 2) { 
-                    title = "[뒷뒷차]"; color = "#3b82f6"; diffNum = buses[myPosIndex].idx - b.idx;
-                    diff = (diffNum > 0) ? `⬇️ ${diffNum}코스 뒤` : "뒷차"; 
-                }
-
-                // 모달창 디자인
-                let rowHtml = `
-                    <div style="background:#2c2c2e; margin-bottom:10px; padding:12px; border-radius:10px; border-left:5px solid ${color}; text-align:left; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
-                        <div style="font-size:13px; color:${color}; font-weight:bold; margin-bottom:6px;">${title} <span style="float:right; color:#fff; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px;">${diff}</span></div>
-                        <div style="font-size:16px; color:#fff; font-weight:bold;">🚌 ${b.vehicle}호 | 📍 ${b.stopName}</div>
-                        <div style="font-size:13px; color:#ccc; margin-top:6px;">💨 속도: ${b.speed}km/h &nbsp;|&nbsp; 🕒 통과: ${b.time}</div>
-                    </div>
-                `;
-                html += rowHtml;
-                
-                // 절전 모드용 미니 디자인
-                let psRowHtml = `
-                    <div style="margin-bottom:8px; font-size:15px; text-align:left; border-left:3px solid ${color}; padding-left:10px;">
-                        <span style="color:${color}; font-weight:bold;">${title}</span> 🚌 ${b.vehicle}호 <span style="float:right; color:#888;">${b.speed}km/h</span><br>
-                        <span style="font-size:13px; color:#aaa;">📍 ${b.stopName} <span style="color:#fff;">(${diff})</span></span>
-                    </div>
-                `;
-                psHtml += psRowHtml;
-            }
-
-            document.getElementById('headwayList').innerHTML = html;
-            document.getElementById('psHeadwayList').innerHTML = psHtml;
-        }
-
-        function renderBuses(data) {
-            let nowMs = Date.now();
-            for (const key in busMarkers) { if (!data || !data[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } }
-            if (!data) return;
-
-            for (const key in data) {
-                const bus = data[key];
-                if (!bus.last_update_ms || (nowMs - bus.last_update_ms > 600000)) { if (busMarkers[key]) { busMarkers[key].setMap(null); delete busMarkers[key]; } continue; }
-                if (!showAllRoutes && bus.route !== myRoute && key !== myBusId) { if (busMarkers[key]) { busMarkers[key].setMap(null); } continue; }
-
-                if (bus.lat && bus.lon) {
-                    const pos = new kakao.maps.LatLng(bus.lat, bus.lon);
-                    let isMyBus = (key === myBusId) ? " my-bus" : "";
-                    
-                    let labelColor = "good"; 
-                    if (bus.status.includes("정체 (40초+)")) labelColor = "jam"; 
-                    else if (bus.status.includes("서행/정차")) labelColor = "slow"; 
-                    
-                    let displayStatus = `${bus.speed}km/h`; let stopTimerText = ""; 
-                    
-                    if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { labelColor = "break"; displayStatus = bus.status; }
-                    
-                    if (bus.stopStartTime && bus.speed <= 3 && bus.status.includes("정체")) {
-                        let diffSec = Math.floor((nowMs - bus.stopStartTime) / 1000);
-                        if (diffSec >= 60) { let stopMins = Math.floor(diffSec / 60); stopTimerText = `<br><span style=\"color:#ffe6e6; font-size:11px;\">⏱️ ${stopMins}분째 정차중</span>`; labelColor = "jam"; }
-                    }
-                    
-                    let contentHtml = document.createElement('div');
-                    contentHtml.className = `bus-label ${labelColor}${isMyBus}`;
-                    contentHtml.innerHTML = `🚍 ${bus.route}번 [${bus.vehicle}]<br><span style=\"font-size:11px; font-weight:normal;\">${displayStatus}</span>${stopTimerText}`;
-                    contentHtml.onclick = () => { startTrackingBus(key, bus.route, bus.vehicle); };
-
-                    if (busMarkers[key]) {
-                        busMarkers[key].setMap(map); busMarkers[key].setPosition(pos); busMarkers[key].setContent(contentHtml);
-                        if(isMyBus) busMarkers[key].setZIndex(20);
-                    } else {
-                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: contentHtml, yAnchor: 1.2 });
-                        overlay.setMap(map); busMarkers[key] = overlay;
-                        if(isMyBus) overlay.setZIndex(20);
-                    }
-
-                    if (trackingBusId === key && currentLat !== 0) {
-                        const distInMeters = getDistance(currentLat, currentLon, bus.lat, bus.lon);
-                        if (lastTrackedStatus !== bus.status) {
-                            if (bus.status === "가스 충전" || bus.status === "식사/휴식" || bus.status === "차량 고장") { speakText(`앞차가, ${bus.status} 상태로 변경되었습니다.`); } 
-                            else if (bus.status.includes("정체") && !lastTrackedStatus.includes("정체")) { geocoder.coord2RegionCode(bus.lon, bus.lat, function(result, status) { if (status === kakao.maps.services.Status.OK) { speakText(`앞차가, ${result[0].region_3depth_name} 부근에서 정체 중입니다.`); } }); }
-                            lastTrackedStatus = bus.status;
-                        }
-                        if (distInMeters < 300) { if (!tooCloseWarned) { speakText("주의, 앞차와의 간격이 너무 가깝습니다."); tooCloseWarned = true; } } else if (distInMeters > 500) { tooCloseWarned = false; }
-                        let distText = distInMeters >= 1000 ? (distInMeters / 1000).toFixed(1) + " km" : distInMeters + " m";
-                        document.getElementById('trackTitle').innerText = `👀 ${bus.route}번 [${bus.vehicle}] 앞차 간격`; document.getElementById('trackDist').innerText = distText;
-                        const bounds = new kakao.maps.LatLngBounds(); bounds.extend(new kakao.maps.LatLng(currentLat, currentLon)); bounds.extend(pos); map.setBounds(bounds, 50, 50, 50, 50); 
-                    }
-                }
-            }
-        }
-
-        function loadTails() {
-            database.ref('live_tails').on('value', (snapshot) => {
-                tailPolylines.forEach(line => line.setMap(null)); tailPolylines = [];
-                let data = snapshot.val(); if (!data) return;
-                let now = Date.now(); let cutoff = now - 1800000; 
-
-                for (let busId in data) {
-                    let busRoute = busId.split('_')[0];
-                    if (!showAllRoutes && busRoute !== myRoute && busId !== myBusId) continue;
-
-                    let points = Object.values(data[busId]).filter(p => p.time > cutoff).sort((a,b) => a.time - b.time);
-                    if (points.length < 2) continue;
-
-                    for (let i = 1; i < points.length; i++) {
-                        let p1 = points[i-1]; let p2 = points[i];
-                        if (p2.time - p1.time > 300000) continue;
-                        
-                        let lineColor = '#00cc44'; 
-                        if (p2.state === 'jam') lineColor = '#ff4d4d'; 
-                        else if (p2.state === 'slow') lineColor = '#ff9900'; 
-                        else if (!p2.state && p2.speed <= 15) lineColor = '#ff9900'; 
-
-                        let polyline = new kakao.maps.Polyline({ path: [new kakao.maps.LatLng(p1.lat, p1.lon), new kakao.maps.LatLng(p2.lat, p2.lon)], strokeWeight: 6, strokeColor: lineColor, strokeOpacity: 0.7, strokeStyle: 'solid' });
-                        polyline.setMap(map); tailPolylines.push(polyline);
-                    }
-                }
-            });
-        }
-
-        function loadIncidents() {
-            database.ref('live_incidents').on('value', (snapshot) => {
-                for(let k in incidentMarkers) incidentMarkers[k].setMap(null); incidentMarkers = {};
-                const data = snapshot.val(); if(data) {
-                    const now = Date.now();
-                    for(let key in data) {
-                        const inc = data[key]; if (now - inc.timestamp_ms > 1800000) continue; 
-                        if (!showAllRoutes && inc.route !== myRoute) continue;
-
-                        if (inc.timestamp_ms > appStartTime && !announcedIncidents.has(key)) { 
-                            announcedIncidents.add(key); 
-                            speakText("전방에, " + inc.type + " 제보가 있습니다."); 
-                        }
-
-                        const pos = new kakao.maps.LatLng(inc.lat, inc.lon); 
-                        const displayType = inc.type || "⚠️ 돌발상황"; 
-                        const content = `<div class=\"incident-marker\">🚨 ${displayType}<br><span style=\"font-size:10px;\">${inc.time}</span></div>`;
-                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, yAnchor: 1, zIndex: 15 });
-                        overlay.setMap(map); incidentMarkers[key] = overlay;
-                    }
-                }
-            });
-        }
-
-        function startTrackingBus(busKey, route, vehicle) { 
-            if (busKey === myBusId) { alert("내 차를 추적할 수는 없습니다!"); return; } 
-            trackingBusId = busKey; 
-            isTrackingMe = false; 
-            document.getElementById('myLocationBtn').style.display = 'block'; 
-            
-            lastTrackedStatus = ""; tooCloseWarned = false; 
-            document.getElementById('trackAlert').style.display = 'block'; 
-            speakText(`${route}번 버스 추적을 시작합니다.`); 
-        }
-        
-        function cancelTracking() { 
-            trackingBusId = null; 
-            document.getElementById('trackAlert').style.display = 'none'; 
-        }
-        
-        function stopApp() {
-            if (confirm("운행을 종료하고 앱을 닫으시겠습니까?")) {
-                if (document.exitFullscreen) { document.exitFullscreen(); }
-                if (myBusId) { database.ref('live_buses/' + myBusId).remove(); database.ref('live_tails/' + myBusId).remove(); }
-                if (myConnectionKey) liveConnectionsRef.child(myConnectionKey).remove();
-                window.location.reload(); 
-            }
-        }
-    </script>
-</body>
-</html>
+            let bestDist = Infinity, bestStop = null,
