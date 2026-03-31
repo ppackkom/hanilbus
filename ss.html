@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>한일운수 스마트 배차판</title>
+    
+    <style>
+        /* 기본 바탕을 까맣게 세팅 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #1a1a1c; color: white; }
+        
+        /* 1. 로그인 화면 스타일 */
+        #loginScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1c; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .login-box { background-color: #2c2c2e; padding: 40px 30px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid #00cc44; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .login-box h2 { color: #00cc44; margin-top: 0; margin-bottom: 30px; font-size: 26px; } 
+        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 10px; color: #eee; font-size: 18px; font-weight: bold; letter-spacing: 0.5px; } 
+        .input-group select, .input-group input { width: 100%; padding: 18px; font-size: 20px; border-radius: 12px; border: 2px solid #444; background-color: #333; color: white; outline: none; box-sizing: border-box; font-weight: bold; } 
+        .input-group input:focus, .input-group select:focus { border-color: #00cc44; background-color: #3a3a3c; }
+        .start-btn { background: linear-gradient(135deg, #00cc44, #009933); color: white; border: none; padding: 20px; font-size: 22px; font-weight: bold; border-radius: 14px; width: 100%; cursor: pointer; margin-top: 10px; } 
+        .start-btn:active { transform: scale(0.97); }
+
+        /* 2. 순수한 검은색 배차판 화면 */
+        #mainScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; display: none; flex-direction: column; align-items: center; padding-top: 30px; box-sizing: border-box; overflow-y: auto; }
+        
+        .header-title { font-size: 24px; color: #00cc44; font-weight: bold; margin-bottom: 10px; }
+        .update-time { font-size: 13px; color: #888; margin-bottom: 25px; }
+        
+        /* 배차 리스트 디자인 */
+        #headwayContainer { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .bus-card { background: #1e1e20; padding: 18px; border-radius: 14px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
+        .bus-card.ahead { border-left: 6px solid #ff9900; }  /* 앞차는 주황색 */
+        .bus-card.mine { border-left: 6px solid #00cc44; background: #2a332a; }   /* 내차는 초록색 */
+        .bus-card.behind { border-left: 6px solid #3b82f6; } /* 뒷차는 파란색 */
+
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+        .card-role { font-size: 15px; font-weight: bold; }
+        .card-diff { font-size: 13px; color: #fff; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 12px; }
+        
+        .card-main { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 6px; }
+        .card-sub { font-size: 14px; color: #aaa; }
+
+        .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 50px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>🚌 한일운수 배차 상황판</h2>
+            <div class="input-group">
+                <label>📍 노선 선택</label>
+                <select id="routeInput">
+                    <option value="609" selected>609번</option>
+                    <option value="204">204번</option>
+                    <option value="894">894번</option>
+                    <option value="937">937번</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>🚍 내 차량 번호 (4자리)</label>
+                <input type="text" id="vehicleInput" placeholder="예: 1988" maxlength="4">
+            </div>
+            <button class="start-btn" onclick="startApp()">배차 확인 시작 🚀</button>
+        </div>
+    </div>
+
+    <div id="mainScreen">
+        <div class="header-title" id="routeTitle">609번 배차 간격 현황</div>
+        <div class="update-time" id="lastUpdateTime">데이터 불러오는 중...</div>
+        
+        <div id="headwayContainer">
+            <div class="loading-text">
+                📡 대구시청 서버와 통신 중입니다...<br>
+                <span style="font-size:14px; color:#666;">(약 5~10초 소요될 수 있습니다)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 대장님의 대구시 공공데이터 API 키
+        const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
+        // 브라우저 보안벽(CORS)을 우회하는 무료 우체국
+        const CORS_PROXY = "https://api.allorigins.win/get?url=";
+
+        let myRoute = "";
+        let myVehicle = "";
+        let daeguRouteId = ""; 
+        let refreshTimer = null;
+
+        function startApp() {
+            myRoute = document.getElementById('routeInput').value;
+            myVehicle = document.getElementById('vehicleInput').value.trim();
+            
+            if (myVehicle === "" || myVehicle.length < 4) { 
+                alert("차량 번호 4자리를 정확히 입력해주세요! (예: 1988)"); 
+                return; 
+            }
+
+            // 로그인 창 숨기고 메인 배차판 띄우기
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'flex';
+            document.getElementById('routeTitle').innerText = `${myRoute}번 배차 간격 현황`;
+
+            // 즉시 대구시 서버 통신 시작
+            fetchRouteIdAndBuses();
+            
+            // 20초마다 자동으로 갱신
+            refreshTimer = setInterval(fetchRouteIdAndBuses, 20000);
+        }
+
+        // 1단계: 대구시 서버에서 노선의 고유 암호(RouteId) 알아내기
+        function fetchRouteIdAndBuses() {
+            if (!daeguRouteId) {
+                const routeInfoUrl = `http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
+                
+                fetch(CORS_PROXY + encodeURIComponent(routeInfoUrl))
+                    .then(response => response.json())
+                    .then(data => {
+                        let parsed = JSON.parse(data.contents);
+                        let items = parsed.response?.body?.items?.item;
+                        if (items) {
+                            if (Array.isArray(items)) {
+                                let matched = items.find(i => (i.routeno || i.routeNo) == myRoute);
+                                daeguRouteId = matched ? (matched.routeid || matched.routeId) : (items[0].routeid || items[0].routeId);
+                            } else {
+                                daeguRouteId = items.routeid || items.routeId;
+                            }
+                            fetchBusLocations(daeguRouteId); // 고유 암호 찾았으니 위치 가져오기!
+                        } else {
+                            showError("노선 정보를 찾을 수 없습니다.");
+                        }
+                    })
+                    .catch(err => showError("대구시 서버 통신에 실패했습니다. (CORS 우회 지연)"));
+            } else {
+                fetchBusLocations(daeguRouteId); // 이미 암호가 있으면 바로 위치 가져오기!
+            }
+        }
+
+        // 2단계: 획득한 암호로 현재 도로 위 모든 버스 위치 가져오기
+        function fetchBusLocations(routeId) {
+            const locUrl = `http://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
+            
+            fetch(CORS_PROXY + encodeURIComponent(locUrl))
+                .then(response => response.json())
+                .then(data => {
+                    let parsed = JSON.parse(data.contents);
+                    let items = parsed.response?.body?.items?.item;
+                    
+                    if (items) {
+                        if (!Array.isArray(items)) items = [items];
+                        
+                        let buses = [];
+                        items.forEach(item => {
+                            buses.push({
+                                vehicle: (item.vehicleno || item.vehicleNo || "").replace(/[^0-9]/g, ""), // '대구70자1988' -> '1988' 로 추출
+                                nodeOrd: parseInt(item.nodeord || item.nodeOrd), // 정류장 순번 (숫자가 클수록 종점에 가까움)
+                                stopName: item.nodenm || item.nodeNm // 정류장 이름
+                            });
+                        });
+                        
+                        processHeadway(buses); // 앞뒤 차 계산 로직으로 넘김!
+                        
+                        let now = new Date();
+                        document.getElementById('lastUpdateTime').innerText = `마지막 업데이트: ${now.getHours()}시 ${now.getMinutes()}분 ${now.getSeconds()}초`;
+                    } else {
+                        showError("현재 운행 중인 차량이 없습니다.");
+                    }
+                })
+                .catch(err => showError("실시간 위치 데이터를 불러오지 못했습니다."));
+        }
+
+        // 3단계: 내 차를 기준으로 앞 2대, 뒤 2대 쏙 뽑아내기!
+        function processHeadway(buses) {
+            // 정류장 순번(nodeOrd)을 기준으로 내림차순 정렬 (숫자가 큰 차가 앞서가는 차)
+            buses.sort((a, b) => b.nodeOrd - a.nodeOrd);
+
+            // 대장님(내 차)이 몇 번째 순서로 달리고 있는지 찾기
+            let myIndex = buses.findIndex(b => b.vehicle.includes(myVehicle));
+
+            const container = document.getElementById('headwayContainer');
+            container.innerHTML = ""; // 기존 화면 비우기
+
+            if (myIndex === -1) {
+                container.innerHTML = `
+                    <div class="loading-text" style="color:#ff4d4d;">
+                        ❌ 대장님의 차량(${myVehicle}호)이<br>대구시 서버에 아직 잡히지 않았습니다.<br>
+                        <span style="font-size:14px; color:#aaa;">(운행 시작 전이거나, API 지연일 수 있습니다)</span>
+                    </div>`;
+                return;
+            }
+
+            // 내 차 기준 앞 2대(myIndex-2, myIndex-1), 내 차(myIndex), 뒤 2대(myIndex+1, myIndex+2) 그리기
+            for (let i = myIndex - 2; i <= myIndex + 2; i++) {
+                if (i < 0 || i >= buses.length) continue; // 범위 벗어나면 패스
+                
+                let b = buses[i];
+                let typeClass = "";
+                let title = "";
+                let titleColor = "";
+                let diffText = "";
+
+                let diffNodes = Math.abs(buses[myIndex].nodeOrd - b.nodeOrd);
+
+                if (i === myIndex - 2 || i === myIndex - 1) {
+                    typeClass = "ahead";
+                    title = (i === myIndex - 2) ? "앞앞차" : "앞 차";
+                    titleColor = "#ff9900";
+                    diffText = `⬆️ ${diffNodes}코스 앞`;
+                } else if (i === myIndex) {
+                    typeClass = "mine";
+                    title = "내 차";
+                    titleColor = "#00cc44";
+                    diffText = `⭐ 현재 내 위치`;
+                } else if (i === myIndex + 1 || i === myIndex + 2) {
+                    typeClass = "behind";
+                    title = (i === myIndex + 1) ? "뒷 차" : "뒷뒷차";
+                    titleColor = "#3b82f6";
+                    diffText = `⬇️ ${diffNodes}코스 뒤`;
+                }
+
+                // 카드 HTML 만들기
+                let cardHtml = `
+                    <div class="bus-card ${typeClass}">
+                        <div class="card-header">
+                            <span class="card-role" style="color:${titleColor};">[${title}]</span>
+                            <span class="card-diff">${diffText}</span>
+                        </div>
+                        <div class="card-main">🚌 ${b.vehicle}호</div>
+                        <div class="card-sub">📍 ${b.stopName} (정류장 순번: ${b.nodeOrd})</div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('headwayContainer').innerHTML = `
+                <div class="loading-text" style="color:#ff4d4d;">${msg}</div>
+            `;
+        }
+    </script>
+</body>
+</html>
