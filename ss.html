@@ -27,7 +27,7 @@
         .update-time { font-size: 13px; color: #888; margin-bottom: 25px; }
         
         /* 배차 리스트 디자인 */
-        #headwayContainer { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        #headwayContainer { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
         .bus-card { background: #1e1e20; padding: 18px; border-radius: 14px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
         .bus-card.ahead { border-left: 6px solid #ff9900; }  /* 앞차는 주황색 */
@@ -41,7 +41,7 @@
         .card-main { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 6px; }
         .card-sub { font-size: 14px; color: #aaa; }
 
-        .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 50px; line-height: 1.6; }
+        .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 50px; line-height: 1.6; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -81,13 +81,34 @@
     <script>
         // 대장님의 대구시 공공데이터 API 키
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
-        // 브라우저 보안벽(CORS)을 우회하는 무료 우체국
-        const CORS_PROXY = "https://api.allorigins.win/get?url=";
+        
+        // 💡 [핵심] 우회 우체국(Proxy) 2개를 준비합니다! (플랜 A, 플랜 B)
+        const PROXIES = [
+            "https://api.codetabs.com/v1/proxy?quest=", // 1번 우체국 (빠르고 원본 그대로 줌)
+            "https://api.allorigins.win/raw?url="       // 2번 우체국 (백업용)
+        ];
 
         let myRoute = "";
         let myVehicle = "";
         let daeguRouteId = ""; 
         let refreshTimer = null;
+
+        // 💡 듀얼 코어 통신 함수: 1번이 실패하면 자동으로 2번을 시도합니다!
+        async function fetchWithFallback(targetUrl) {
+            for (let proxy of PROXIES) {
+                try {
+                    let response = await fetch(proxy + encodeURIComponent(targetUrl));
+                    if (response.ok) {
+                        let json = await response.json();
+                        return json; // 성공하면 데이터 돌려주기!
+                    }
+                } catch (e) {
+                    console.log("우체국 1곳 실패, 다음 우체국 시도 중...");
+                    continue; // 실패하면 다음 프록시로 넘어감
+                }
+            }
+            throw new Error("모든 우회 서버 통신 실패");
+        }
 
         function startApp() {
             myRoute = document.getElementById('routeInput').value;
@@ -98,12 +119,10 @@
                 return; 
             }
 
-            // 로그인 창 숨기고 메인 배차판 띄우기
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainScreen').style.display = 'flex';
             document.getElementById('routeTitle').innerText = `${myRoute}번 배차 간격 현황`;
 
-            // 즉시 대구시 서버 통신 시작
             fetchRouteIdAndBuses();
             
             // 20초마다 자동으로 갱신
@@ -111,89 +130,87 @@
         }
 
         // 1단계: 대구시 서버에서 노선의 고유 암호(RouteId) 알아내기
-        function fetchRouteIdAndBuses() {
+        async function fetchRouteIdAndBuses() {
             if (!daeguRouteId) {
                 const routeInfoUrl = `http://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
                 
-                fetch(CORS_PROXY + encodeURIComponent(routeInfoUrl))
-                    .then(response => response.json())
-                    .then(data => {
-                        let parsed = JSON.parse(data.contents);
-                        let items = parsed.response?.body?.items?.item;
-                        if (items) {
-                            if (Array.isArray(items)) {
-                                let matched = items.find(i => (i.routeno || i.routeNo) == myRoute);
-                                daeguRouteId = matched ? (matched.routeid || matched.routeId) : (items[0].routeid || items[0].routeId);
-                            } else {
-                                daeguRouteId = items.routeid || items.routeId;
-                            }
-                            fetchBusLocations(daeguRouteId); // 고유 암호 찾았으니 위치 가져오기!
+                try {
+                    let data = await fetchWithFallback(routeInfoUrl);
+                    let items = data.response?.body?.items?.item;
+                    
+                    if (items) {
+                        if (Array.isArray(items)) {
+                            let matched = items.find(i => (i.routeno || i.routeNo) == myRoute);
+                            daeguRouteId = matched ? (matched.routeid || matched.routeId) : (items[0].routeid || items[0].routeId);
                         } else {
-                            showError("노선 정보를 찾을 수 없습니다.");
+                            daeguRouteId = items.routeid || items.routeId;
                         }
-                    })
-                    .catch(err => showError("대구시 서버 통신에 실패했습니다. (CORS 우회 지연)"));
+                        fetchBusLocations(daeguRouteId); // 암호 찾았으니 위치 가져오기!
+                    } else {
+                        showError("노선 정보를 찾을 수 없습니다.");
+                    }
+                } catch (err) {
+                    showError("대구시 서버 통신에 실패했습니다.<br>(네트워크를 확인해주세요)");
+                }
             } else {
-                fetchBusLocations(daeguRouteId); // 이미 암호가 있으면 바로 위치 가져오기!
+                fetchBusLocations(daeguRouteId);
             }
         }
 
         // 2단계: 획득한 암호로 현재 도로 위 모든 버스 위치 가져오기
-        function fetchBusLocations(routeId) {
+        async function fetchBusLocations(routeId) {
             const locUrl = `http://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
             
-            fetch(CORS_PROXY + encodeURIComponent(locUrl))
-                .then(response => response.json())
-                .then(data => {
-                    let parsed = JSON.parse(data.contents);
-                    let items = parsed.response?.body?.items?.item;
+            try {
+                let data = await fetchWithFallback(locUrl);
+                let items = data.response?.body?.items?.item;
+                
+                if (items) {
+                    if (!Array.isArray(items)) items = [items];
                     
-                    if (items) {
-                        if (!Array.isArray(items)) items = [items];
-                        
-                        let buses = [];
-                        items.forEach(item => {
-                            buses.push({
-                                vehicle: (item.vehicleno || item.vehicleNo || "").replace(/[^0-9]/g, ""), // '대구70자1988' -> '1988' 로 추출
-                                nodeOrd: parseInt(item.nodeord || item.nodeOrd), // 정류장 순번 (숫자가 클수록 종점에 가까움)
-                                stopName: item.nodenm || item.nodeNm // 정류장 이름
-                            });
+                    let buses = [];
+                    items.forEach(item => {
+                        buses.push({
+                            vehicle: (item.vehicleno || item.vehicleNo || "").replace(/[^0-9]/g, ""),
+                            nodeOrd: parseInt(item.nodeord || item.nodeOrd),
+                            stopName: item.nodenm || item.nodeNm 
                         });
-                        
-                        processHeadway(buses); // 앞뒤 차 계산 로직으로 넘김!
-                        
-                        let now = new Date();
-                        document.getElementById('lastUpdateTime').innerText = `마지막 업데이트: ${now.getHours()}시 ${now.getMinutes()}분 ${now.getSeconds()}초`;
-                    } else {
-                        showError("현재 운행 중인 차량이 없습니다.");
-                    }
-                })
-                .catch(err => showError("실시간 위치 데이터를 불러오지 못했습니다."));
+                    });
+                    
+                    processHeadway(buses); 
+                    
+                    let now = new Date();
+                    let hh = String(now.getHours()).padStart(2, '0');
+                    let mm = String(now.getMinutes()).padStart(2, '0');
+                    let ss = String(now.getSeconds()).padStart(2, '0');
+                    document.getElementById('lastUpdateTime').innerText = `마지막 업데이트: ${hh}:${mm}:${ss}`;
+                } else {
+                    showError("현재 운행 중인 차량이 없습니다.");
+                }
+            } catch (err) {
+                showError("실시간 위치 데이터를 불러오지 못했습니다.<br>(서버 지연 중)");
+            }
         }
 
         // 3단계: 내 차를 기준으로 앞 2대, 뒤 2대 쏙 뽑아내기!
         function processHeadway(buses) {
-            // 정류장 순번(nodeOrd)을 기준으로 내림차순 정렬 (숫자가 큰 차가 앞서가는 차)
             buses.sort((a, b) => b.nodeOrd - a.nodeOrd);
 
-            // 대장님(내 차)이 몇 번째 순서로 달리고 있는지 찾기
             let myIndex = buses.findIndex(b => b.vehicle.includes(myVehicle));
-
             const container = document.getElementById('headwayContainer');
-            container.innerHTML = ""; // 기존 화면 비우기
+            container.innerHTML = ""; 
 
             if (myIndex === -1) {
                 container.innerHTML = `
                     <div class="loading-text" style="color:#ff4d4d;">
                         ❌ 대장님의 차량(${myVehicle}호)이<br>대구시 서버에 아직 잡히지 않았습니다.<br>
-                        <span style="font-size:14px; color:#aaa;">(운행 시작 전이거나, API 지연일 수 있습니다)</span>
+                        <span style="font-size:14px; color:#aaa;">(운행 시작 전이거나, 통신 지연일 수 있습니다)</span>
                     </div>`;
                 return;
             }
 
-            // 내 차 기준 앞 2대(myIndex-2, myIndex-1), 내 차(myIndex), 뒤 2대(myIndex+1, myIndex+2) 그리기
             for (let i = myIndex - 2; i <= myIndex + 2; i++) {
-                if (i < 0 || i >= buses.length) continue; // 범위 벗어나면 패스
+                if (i < 0 || i >= buses.length) continue; 
                 
                 let b = buses[i];
                 let typeClass = "";
@@ -220,7 +237,6 @@
                     diffText = `⬇️ ${diffNodes}코스 뒤`;
                 }
 
-                // 카드 HTML 만들기
                 let cardHtml = `
                     <div class="bus-card ${typeClass}">
                         <div class="card-header">
