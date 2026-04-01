@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>한일운수 스마트 배차판 (개인서버 완결판)</title>
+    <title>한일운수 스마트 배차판 (최종 무적 NAS버전)</title>
     
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif; background-color: #000000; color: white; }
@@ -40,15 +40,13 @@
         .loading-text { font-size: 18px; color: #aaa; text-align: center; margin-top: 30px; line-height: 1.6; font-weight: bold; word-break: keep-all; }
         .refresh-btn { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: 2px solid #555; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .refresh-btn:active { transform: scale(0.9); }
-        
-        .debug-box { font-size: 12px; color: #888; background: #111; padding: 12px; border-radius: 8px; margin-top: 20px; text-align: left; word-break: break-all; border: 1px solid #333; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
     <div id="loginScreen">
         <div class="login-box">
-            <h2>🚌 스마트 배차판</h2>
+            <h2>🚌 스마트 배차판 (개인NAS)</h2>
             <div class="input-group">
                 <label>📍 노선 선택</label>
                 <select id="routeInput">
@@ -72,8 +70,8 @@
         
         <div id="headwayContainer">
             <div class="loading-text">
-                📡 대장님의 구글 서버와 통신 중입니다...<br>
-                <span style="font-size:14px; color:#666;">(데이터를 가져오는 데 2~3초 소요됩니다)</span>
+                📡 대장님의 NAS 서버와 통신 중입니다...<br>
+                <span style="font-size:14px; color:#666;">(데이터를 가져오는 데 1~2초 소요됩니다)</span>
             </div>
         </div>
 
@@ -81,11 +79,11 @@
     </div>
 
     <script>
-        // 💡 대장님이 발급받으신 완벽한 API 키!
+        // 💡 대구시 API 키
         const DAEGU_API_KEY = "fbe75f2e8a775701a90ce236bf7ddb5ba419136f8f1510a8a0b8989e45ecb5b0";
         
-        // 💡 대장님이 직접 개설하신 무적의 구글 개인 서버 주소!
-        const GOOGLE_PROXY = "https://script.google.com/macros/s/AKfycbxxfDqD1ck9hmUR86hhurfE7TyxdYUDRVwEwpqGvOQkU66amq3bSEpYMQt--_Ur8UJhoA/exec?url=";
+        // 🚨 [핵심] 대장님이 직접 구축하신 평생 무료 NAS 서버 주소!
+        const NAS_PROXY = "http://ppackkom.ipdisk.co.kr:8080/bus_proxy.php?url=";
 
         let myRoute = "";
         let myVehicle = "";
@@ -93,32 +91,24 @@
         let refreshTimer = null;
         let isFetching = false; 
 
-        // 오직 구글 서버만 믿고 갑니다!
-        async function fetchWithGoogleProxy(targetUrl) {
-            let fetchUrl = GOOGLE_PROXY + encodeURIComponent(targetUrl);
-            
+        // 💡 무적의 NAS 서버를 통한 다이렉트 통신!
+        async function fetchWithNasProxy(targetUrl) {
             try {
+                let fetchUrl = NAS_PROXY + encodeURIComponent(targetUrl);
                 let response = await fetch(fetchUrl);
-                let text = await response.text();
-
-                // 만약 구글 서버에서 에러를 보냈다면?
-                if (text.includes("URL이 없습니다") || text.includes("Exception")) {
-                    throw new Error("GOOGLE_SERVER_ERROR: " + text);
-                }
-
-                // 정상적으로 JSON 데이터가 왔는지 확인
-                try {
-                    let jsonData = JSON.parse(text);
-                    return jsonData;
-                } catch(e) {
-                    // JSON이 아니라 XML(에러 메시지)이 왔을 경우
-                    if (text.includes('<OpenAPI_ServiceResponse>')) {
+                
+                if (response.ok) {
+                    let text = await response.text();
+                    
+                    if (text && text.includes('<OpenAPI_ServiceResponse>')) {
+                        if(text.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) throw new Error("API_KEY_UNREGISTERED");
                         if(text.includes('LIMITED_NUMBER_OF_SERVICE_REQUESTS_EXCEEDS_ERROR')) throw new Error("API_KEY_LIMIT");
-                        if(text.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR') || text.includes('INVALID_REQUEST_PARAMETER_ERROR')) throw new Error("API_KEY_UNREGISTERED");
-                        throw new Error("API_XML_ERROR: " + text);
-                    } else {
-                        throw new Error("NOT_JSON: " + text);
+                        throw new Error("API_XML_ERROR");
                     }
+
+                    return JSON.parse(text);
+                } else {
+                    throw new Error(`HTTP_${response.status}`);
                 }
             } catch (e) {
                 throw e; 
@@ -142,7 +132,7 @@
             document.getElementById('routeTitle').innerText = `${myRoute}번 배차 현황`;
 
             fetchRouteIdAndBuses();
-            refreshTimer = setInterval(fetchRouteIdAndBuses, 20000); // 20초 갱신
+            refreshTimer = setInterval(fetchRouteIdAndBuses, 20000); // 20초마다 자동 갱신
         }
 
         async function fetchRouteIdAndBuses() {
@@ -154,7 +144,7 @@
                 const routeInfoUrl = `https://apis.data.go.kr/1613000/BusRouteInfoInqireService/getRouteNoList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=10&_type=json&cityCode=22&routeNo=${encodeURIComponent(myRoute)}`;
                 
                 try {
-                    let data = await fetchWithGoogleProxy(routeInfoUrl);
+                    let data = await fetchWithNasProxy(routeInfoUrl);
                     let items = data.response?.body?.items?.item;
                     
                     if (items) {
@@ -166,7 +156,7 @@
                         }
                         fetchBusLocations(daeguRouteId); 
                     } else {
-                        showError("❌ 정부 서버에 해당 노선 정보가 없습니다.");
+                        showError("❌ 노선 정보를 찾을 수 없습니다.");
                         isFetching = false;
                     }
                 } catch (err) {
@@ -182,7 +172,7 @@
             const locUrl = `https://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList?serviceKey=${DAEGU_API_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=22&routeId=${routeId}`;
             
             try {
-                let data = await fetchWithGoogleProxy(locUrl);
+                let data = await fetchWithNasProxy(locUrl);
                 let items = data.response?.body?.items?.item;
                 
                 if (items) {
@@ -215,24 +205,18 @@
 
         function handleApiError(err) {
             let msg = "❌ 서버 통신 오류 발생";
-            let rawData = err.message;
             
-            if (err.message.includes("API_KEY_UNREGISTERED")) {
-                msg = "❌ 정부 서버에서 아직 열쇠(API 키)를 승인하지 않았습니다.<br><span style='font-size:14px; color:#ffcc00;'>신청 후 하루 정도 동기화 시간이 필요할 수 있습니다.</span>";
-            } else if (err.message.includes("API_KEY_LIMIT")) {
+            if (err.message === "API_KEY_UNREGISTERED") {
+                msg = "❌ 정부 서버 키가 미등록 상태입니다.<br><span style='font-size:14px; color:#ffcc00;'>동기화 중입니다. 잠시 후 시도해 주세요.</span>";
+            } else if (err.message === "API_KEY_LIMIT") {
                 msg = "❌ 일일 데이터 조회 한도 초과";
-            } else if (err.message.includes("NOT_JSON") || err.message.includes("GOOGLE_SERVER_ERROR")) {
-                msg = "❌ 구글 서버 또는 정부 서버에서 잘못된 데이터를 반환했습니다.";
+            } else if (err.message.includes("Failed to fetch")) {
+                msg = "❌ NAS 서버 연결 실패<br><span style='font-size:14px; color:#ffcc00;'>NAS가 켜져 있는지 확인해 주세요!</span>";
+            } else {
+                msg = `❌ 에러 발생: ${err.message}`;
             }
             
-            let html = `<div class="loading-text" style="color:#ff4d4d;">${msg}</div>`;
-            
-            // 엑스레이 출력 (진짜 원인 파악용)
-            let shortText = rawData.substring(0, 200) + (rawData.length > 200 ? "..." : "");
-            shortText = shortText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            html += `<div class="debug-box"><strong>[엑스레이 데이터]</strong><br>${shortText}</div>`;
-            
-            document.getElementById('headwayContainer').innerHTML = html;
+            showError(msg);
         }
 
         function processHeadway(buses) {
@@ -245,8 +229,8 @@
             if (myIndex === -1) {
                 container.innerHTML = `
                     <div class="loading-text" style="color:#ffcc00;">
-                        ⏳ 대장님의 차량(${myVehicle}호)이<br>정부 서버에 아직 잡히지 않았습니다.<br><br>
-                        <span style="font-size:15px; color:#aaa;">운행 시작 전이거나 통신 지연일 수 있습니다.<br>우측 하단의 🔄 버튼을 눌러 다시 찾아보세요!</span>
+                        ⏳ 대장님의 차량(${myVehicle}호)이<br>대구시 서버에 아직 잡히지 않았습니다.<br><br>
+                        <span style="font-size:15px; color:#aaa;">우측 하단의 🔄 버튼을 눌러 다시 찾아보세요!</span>
                     </div>`;
                 return;
             }
@@ -281,6 +265,10 @@
                 `;
                 container.innerHTML += cardHtml;
             }
+        }
+
+        function showError(msg) {
+            document.getElementById('headwayContainer').innerHTML = `<div class="loading-text" style="color:#ff4d4d;">${msg}</div>`;
         }
     </script>
 </body>
