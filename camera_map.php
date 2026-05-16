@@ -19,7 +19,7 @@ if (isset($_POST['bsId'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>카메라 지점 등록</title>
     
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=7b13b7fcb5e91627558af56e0a3fe252"></script>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801&libraries"></script>
     
     <style>
         body, html { margin:0; padding:0; height:100%; overflow:hidden; }
