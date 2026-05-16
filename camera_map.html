@@ -3,41 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>카메라 지점 등록 (Github 버전)</title>
+    <title>카메라 지점 검색 등록</title>
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ebd0806246b5a31d27d9f53ac6cf7801&libraries"></script>
     <style>
-        body, html { margin:0; padding:0; height:100%; overflow:hidden; }
+        body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family: sans-serif; }
         #map { width:100%; height:100%; }
-        .ui-box { position:fixed; bottom:20px; left:5%; width:90%; background:white; padding:15px; border-radius:15px; z-index:1000; box-shadow:0 0 20px rgba(0,0,0,0.3); display:none; }
-        input { width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:8px; font-size:16px; }
-        button { width:100%; padding:15px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:bold; }
+        .ui-box { position:fixed; bottom:20px; left:5%; width:90%; background:white; padding:15px; border-radius:15px; z-index:1000; box-shadow:0 0 20px rgba(0,0,0,0.4); }
+        input { width:100%; box-sizing:border-box; padding:12px; margin-bottom:10px; border:2px solid #cbd5e1; border-radius:8px; font-size:16px; font-weight:bold; }
+        button { width:100%; padding:15px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="uiBox" class="ui-box">
-        <h4 style="margin:0 0 10px 0; color:#334155;">이 근처에 카메라가 있나요?</h4>
+        <h4 style="margin:0 0 10px 0; color:#1e293b;">📸 정류장 검색 후 카메라 등록</h4>
         
-        <form action="http://ppackkom.ipdisk.co.kr:8443/camera_save.php" method="POST">
-            <input type="hidden" name="returnUrl" value="https://ppackkom.github.io/hanilbus/camera_map.html">
+        <form action="http://ppackkom.ipdisk.co.kr:8443/camera_save.php" method="POST" id="camForm">
+            <input type="hidden" name="returnUrl" value="여기에_깃허브주소_입력.html">
             <input type="hidden" name="bsId" id="bsIdInput">
-            <input type="text" name="msg" placeholder="예: 시지중학교 앞 50km 주의" required>
-            <button type="submit">🚀 나스 서버로 등록 전송</button>
+            
+            <input type="text" id="stopSearch" list="stopList" placeholder="🔍 정류장 이름 검색 (예: 시지)" autocomplete="off">
+            <datalist id="stopList"></datalist>
+            
+            <input type="text" name="msg" placeholder="🚨 경고 문구 (예: 50km 과속)" required>
+            <button type="submit" onclick="return checkBsId()">나스 서버로 전송</button>
         </form>
     </div>
 
     <script>
         var mapContainer = document.getElementById('map'), 
-            mapOption = { center: new kakao.maps.LatLng(35.849, 128.765), level: 4 };
+            mapOption = { center: new kakao.maps.LatLng(35.849, 128.765), level: 5 };
         var map = new kakao.maps.Map(mapContainer, mapOption);
 
-        kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-            var bsId = prompt("이 지점의 정류장 ID를 입력해주세요 (앱 하단에 나오는 10자리 숫자)");
-            if(bsId) {
-                document.getElementById('bsIdInput').value = bsId;
-                document.getElementById('uiBox').style.display = 'block';
+        // 나스 서버에서 정류장 목록을 가져와서 검색창에 채워넣기!
+        let stopsData = {};
+        fetch('http://ppackkom.ipdisk.co.kr:8443/bus_stops.json')
+            .then(res => res.json())
+            .then(data => {
+                stopsData = data;
+                const dl = document.getElementById('stopList');
+                for(let id in data) {
+                    let opt = document.createElement('option');
+                    // "시지중학교앞 [1234567890]" 형태로 표시
+                    opt.value = data[id] + " [" + id + "]";
+                    dl.appendChild(opt);
+                }
+            }).catch(e => console.log("정류장 목록 로딩 실패"));
+
+        // 전송 버튼 누를 때 괄호 안의 10자리 숫자만 쏙 뽑아내는 마법!
+        function checkBsId() {
+            const searchVal = document.getElementById('stopSearch').value;
+            const match = searchVal.match(/\[(\d{10})\]/);
+            if(match) {
+                document.getElementById('bsIdInput').value = match[1]; // 10자리 숫자 추출
+                return true;
+            } else {
+                alert("목록에서 정류장을 정확히 선택해주세요!");
+                return false;
             }
-        });
+        }
     </script>
 </body>
 </html>
